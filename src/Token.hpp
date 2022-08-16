@@ -14,10 +14,11 @@ namespace CMM {
 
 using std::string;
 
-Token::Token(TokenType tokenType; const string &tokenStr; int lineno) : 
-    __tokenType(TokenType), 
+Token::Token(TokenType tokenType, const string &tokenStr, int lineno) : 
+    __tokenType(tokenType),
     __tokenStr(tokenStr), 
-    __lineno(lineno) { }
+    __lineno(lineno) 
+{ }
 
 TokenType Token::tokenType() const
 {
@@ -29,14 +30,14 @@ string &Token::tokenStr()
     return __tokenStr;
 }
 
-
 const string &Token::tokenStr() const
 {
     return __tokenStr;
 }
 
-
-int Token::lineNo() const
+int Token::lineno() const
 {
-    return __lineNo;
+    return __lineno;
+}
+
 }

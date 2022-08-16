@@ -17,7 +17,7 @@ class Token
 {
 public:
 
-    explicit Token(TokenType typeType; const string &tokneStr, int lineno);
+    explicit Token(TokenType typeType, const string &tokneStr, int lineno);
 
     TokenType tokenType() const;
 
@@ -31,6 +31,6 @@ private:
     TokenType __tokenType;
     string __tokenStr;
     int __lineno;
-}
+};
 
 }
