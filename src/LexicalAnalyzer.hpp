@@ -67,7 +67,6 @@ void LexicalAnalyzer::__nextTokenStartStage(const char *&codePtr,
         if (*codePtr == '\n') {
             lineNo++;
         }
-
         codePtr++;
     } else {
         switch (*codePtr) {

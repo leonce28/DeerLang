@@ -11,7 +11,7 @@
 #include <boost/program_options.hpp>
 #include "Core.h"
 #include "LexicalAnalyzer.h"
-// #include "SyntaxAnalyzer.h"
+#include "SyntaxAnalyzer.h"
 // #include "SemanticAnalyzer.h"
 // #include "CodeGenerator.h"
 // #include "IO.h"
@@ -90,9 +90,9 @@ void Core::__generateCode() const
 
         auto tokenList = lexicalAnalyzer.lexicalAnalysis();
 
-        // SyntaxAnalyzer syntaxAnalyzer(tokenList);
+        SyntaxAnalyzer syntaxAnalyzer(tokenList);
 
-        // auto root = syntaxAnalyzer.syntaxAnalysis();
+        auto root = syntaxAnalyzer.syntaxAnalysis();
 
         // SemanticAnalyzer semanticAnalyzer(root);
 
