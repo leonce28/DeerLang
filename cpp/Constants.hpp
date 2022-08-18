@@ -38,6 +38,10 @@ CMM
 Usage)";
 
 
+////////////////////////////////////////////////////////////////////////////////
+// Keyword Map
+////////////////////////////////////////////////////////////////////////////////
+
 const unordered_map<string, TokenType> KEYWORD_MAP
 {
     {"void",   TokenType::Void},
@@ -48,4 +52,5 @@ const unordered_map<string, TokenType> KEYWORD_MAP
     {"return", TokenType::Return},
 };
 
-}
+
+}  // End namespace CMM

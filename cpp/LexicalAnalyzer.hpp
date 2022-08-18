@@ -18,7 +18,12 @@
 #include "LexerStage.hpp"
 #include "Constants.hpp"
 
-namespace CMM {
+namespace CMM 
+{
+
+////////////////////////////////////////////////////////////////////////////////
+// Using
+////////////////////////////////////////////////////////////////////////////////
 
 using std::string;
 using std::getline;
@@ -27,9 +32,19 @@ using std::ifstream;
 using std::runtime_error;
 using boost::format;
 
-LexicalAnalyzer::LexicalAnalyzer(const string &inputFilePath) :
+
+////////////////////////////////////////////////////////////////////////////////
+// Constructor
+////////////////////////////////////////////////////////////////////////////////
+
+LexicalAnalyzer::LexicalAnalyzer(const string& inputFilePath) :
     __inputFilePath(inputFilePath)
 { }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Lexical Analysis
+////////////////////////////////////////////////////////////////////////////////
 
 vector<Token> LexicalAnalyzer::lexicalAnalysis() const
 {
@@ -54,8 +69,8 @@ void LexicalAnalyzer::__invalidChar(char curChar, int lineNo)
 // Next Token LexerStage::Start Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenStartStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &lineNo)
+void LexicalAnalyzer::__nextTokenStartStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int& lineNo)
 {
     if (isalpha(*codePtr)) {
         lexerStage = LexerStage::InId;
@@ -67,6 +82,7 @@ void LexicalAnalyzer::__nextTokenStartStage(const char *&codePtr,
         if (*codePtr == '\n') {
             lineNo++;
         }
+
         codePtr++;
     } else {
         switch (*codePtr) {
@@ -178,15 +194,16 @@ void LexicalAnalyzer::__nextTokenStartStage(const char *&codePtr,
 // Next Token LexerStage::InId Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInIDStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInIDStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     if (isalpha(*codePtr)) {
         tokenStr += *codePtr++;
     } else {
         lexerStage = LexerStage::Done;
 
-        tokenType = KEYWORD_MAP.count(tokenStr) ? KEYWORD_MAP.at(tokenStr) : TokenType::Id;
+        tokenType = KEYWORD_MAP.count(tokenStr) ?
+            KEYWORD_MAP.at(tokenStr) : TokenType::Id;
     }
 }
 
@@ -195,8 +212,8 @@ void LexicalAnalyzer::__nextTokenInIDStage(const char *&codePtr,
 // Next Token LexerStage::InNumber Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInNumberStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInNumberStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     if (isdigit(*codePtr)) {
         tokenStr += *codePtr++;
@@ -211,8 +228,8 @@ void LexicalAnalyzer::__nextTokenInNumberStage(const char *&codePtr,
 // Next Token LexerStage::InDivide Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInDivideStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInDivideStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     if (*codePtr == '*') {
         lexerStage = LexerStage::InComment;
@@ -229,8 +246,8 @@ void LexicalAnalyzer::__nextTokenInDivideStage(const char *&codePtr,
 // Next Token LexerStage::InComment Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInCommentStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &, string &, int &lineNo)
+void LexicalAnalyzer::__nextTokenInCommentStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType&, string&, int& lineNo)
 {
     if (*codePtr == '*') {
         lexerStage = LexerStage::EndComment;
@@ -246,8 +263,8 @@ void LexicalAnalyzer::__nextTokenInCommentStage(const char *&codePtr,
 // Next Token LexerStage::EndComment Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenEndCommentStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &, string &, int &lineNo)
+void LexicalAnalyzer::__nextTokenEndCommentStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType&, string&, int& lineNo)
 {
     if (*codePtr == '/') {
         lexerStage = LexerStage::Start;
@@ -267,8 +284,8 @@ void LexicalAnalyzer::__nextTokenEndCommentStage(const char *&codePtr,
 // Next Token LexerStage::InLess Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInLessStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInLessStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     lexerStage = LexerStage::Done;
 
@@ -285,8 +302,8 @@ void LexicalAnalyzer::__nextTokenInLessStage(const char *&codePtr,
 // Next Token LexerStage::InGreater Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInGreaterStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInGreaterStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     lexerStage = LexerStage::Done;
 
@@ -303,8 +320,8 @@ void LexicalAnalyzer::__nextTokenInGreaterStage(const char *&codePtr,
 // Next Token LexerStage::InAssign Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInAssignStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &)
+void LexicalAnalyzer::__nextTokenInAssignStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int&)
 {
     lexerStage = LexerStage::Done;
 
@@ -321,8 +338,8 @@ void LexicalAnalyzer::__nextTokenInAssignStage(const char *&codePtr,
 // Next Token LexerStage::InNot Stage
 ////////////////////////////////////////////////////////////////////////////////
 
-void LexicalAnalyzer::__nextTokenInNotStage(const char *&codePtr,
-    LexerStage &lexerStage, TokenType &tokenType, string &tokenStr, int &lineNo)
+void LexicalAnalyzer::__nextTokenInNotStage(const char*& codePtr,
+    LexerStage& lexerStage, TokenType& tokenType, string& tokenStr, int& lineNo)
 {
     if (*codePtr == '=') {
         lexerStage = LexerStage::Done;
@@ -338,7 +355,7 @@ void LexicalAnalyzer::__nextTokenInNotStage(const char *&codePtr,
 // Next Token
 ////////////////////////////////////////////////////////////////////////////////
 
-Token LexicalAnalyzer::__nextToken(const char *&codePtr, int &lineNo)
+Token LexicalAnalyzer::__nextToken(const char*& codePtr, int& lineNo)
 {
     LexerStage lexerStage = LexerStage::Start;
     TokenType tokenType;
@@ -433,14 +450,20 @@ Token LexicalAnalyzer::__nextToken(const char *&codePtr, int &lineNo)
 vector<Token> LexicalAnalyzer::__lexicalAnalysis() const
 {
     vector<Token> tokenList;
+
     ifstream f(__inputFilePath);
     string codeStr;
     int lineNo = 1;
+
     getline(f, codeStr, '\0');
+
     auto codePtr = codeStr.c_str();
 
-    for (auto tokenObj = __nextToken(codePtr, lineNo); ; tokenObj = __nextToken(codePtr, lineNo)) {
+    for (auto tokenObj = __nextToken(codePtr, lineNo);
+        /* See below */;
+        tokenObj = __nextToken(codePtr, lineNo)) {
         tokenList.push_back(tokenObj);
+
         if (tokenObj.tokenType() == TokenType::END) {
             break;
         }

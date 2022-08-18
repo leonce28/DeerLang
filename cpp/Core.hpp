@@ -12,10 +12,10 @@
 #include "Core.h"
 #include "LexicalAnalyzer.h"
 #include "SyntaxAnalyzer.h"
-// #include "SemanticAnalyzer.h"
-// #include "CodeGenerator.h"
-// #include "IO.h"
-// #include "VM.h"
+#include "SemanticAnalyzer.h"
+#include "CodeGenerator.h"
+#include "IO.h"
+#include "VM.h"
 #include "Constants.hpp"
 
 namespace CMM
@@ -60,10 +60,17 @@ void Core::__inputArguments()
     po::options_description desc(DESCRIPTION_STR);
 
     desc.add_options()
+
         ("help,h", "show this help message and exit")
-        (",i", po::value<string>(&__cmmFilePath), "Input CMM File Path")
-        (",o", po::value<string>(&__outputFilePath)->default_value("a.out"), "Output ASM File Path")
-        (",r", po::value<string>(&__asmFilePath), "Input ASM File Path (For Running)");
+
+        (",i", po::value<string>(&__cmmFilePath),
+            "Input CMM File Path")
+
+        (",o", po::value<string>(&__outputFilePath)->default_value("a.out"),
+            "Output ASM File Path")
+
+        (",r", po::value<string>(&__asmFilePath),
+            "Input ASM File Path (For Running)");
 
     po::variables_map vm;
     po::store(po::parse_command_line(__ARGC, __ARGV, desc), vm);
@@ -94,21 +101,34 @@ void Core::__generateCode() const
 
         auto root = syntaxAnalyzer.syntaxAnalysis();
 
-        // SemanticAnalyzer semanticAnalyzer(root);
+        SemanticAnalyzer semanticAnalyzer(root);
 
-        // auto symbolTable = semanticAnalyzer.semanticAnalysis();
+        auto symbolTable = semanticAnalyzer.semanticAnalysis();
 
-        // CodeGenerator codeGenerator(root, symbolTable);
+        CodeGenerator codeGenerator(root, symbolTable);
 
-        // auto codeList = codeGenerator.generateCode();
+        auto codeList = codeGenerator.generateCode();
 
-        // IO::outputInstruction(__outputFilePath, codeList);
+        IO::outputInstruction(__outputFilePath, codeList);
 
-        // delete root;
+        delete root;
+    }
+}
 
-        for (auto &t : tokenList) {
-            cout << t.tokenStr() << " " << endl;
-        }
+
+////////////////////////////////////////////////////////////////////////////////
+// Exec Code
+////////////////////////////////////////////////////////////////////////////////
+
+void Core::__execCode() const
+{
+    if (!__asmFilePath.empty())
+    {
+        auto codeList = IO::parseInstructionFile(__asmFilePath);
+
+        VM vm(codeList);
+
+        vm.run();
     }
 }
 
@@ -121,6 +141,7 @@ void Core::__main()
 {
     __inputArguments();
     __generateCode();
+    __execCode();
 }
 
 

@@ -52,6 +52,10 @@ private:
     void __generateCode() const;
 
 
+    // Exec Code
+    void __execCode() const;
+
+
     // Main
     void __main();
 };
