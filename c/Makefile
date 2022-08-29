@@ -1,29 +1,38 @@
-# Makefile for CMM
+# 声明编译器
+CC = g++
+# 声明编译选项
+FLAGS = -g -c -Wall -std=c11
 
-ifeq ($(OS), Windows_NT)
+# 程序名
+TARGET = compiler
+# 当前项目的根目录
+ROOT = $(PWD)
+# 可执行文件存放路径
+BINDIR = bin
+# 编译的源码目录, 递归遍历3级子目录
+SRCDIR = $(shell find $(ROOT)/src -maxdepth 3 -type d)
+# 编译生成可执行文件
+BIN = $(ROOT)/$(BINDIR)/$(TARGET)
+# 定义宏
+DEF = -DLINUX -DENABLE_EPOLL
+# 源文件
+SRCLIST = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
+# 头文件
+INCLIST = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.h))
+# 将.c替换成.o
+OBJLIST = $(patsubst %.c, %.o, $(SRCLIST))
 
-all:
-	if not exist ..\bin (mkdir ..\bin)
-	g++ -DNDEBUG -O3 -std=gnu++17 -o ..\bin\CMM-C CMM.cpp -lboost_program_options
+# 编译TARGET
+all: $(TARGET)
 
-debug:
-	if not exist ..\bin (mkdir ..\bin)
-	g++ -g -std=gnu++17 -Wall -o ..\bin\CMM-C CMM.cpp -lboost_program_options
+$(TARGET): $(OBJLIST)
+	mkdir -p bin
+	$(CC) $^ -o $(BINDIR)/$@
 
-clean:
-	if exist ..\bin\CMM-C.exe (del /F ..\bin\CMM-C.exe)
+%.o: %.cpp
+	$(CC) $(FLAGS) $(DEF) $^ -o $@ 
 
-else
+clean: 
+	rm -rf $(OBJLIST) $(BIN)
 
-all:
-	mkdir -p ../bin
-	g++ -DNDEBUG -O3 -std=gnu++17 -o ../bin/CMM-C CMM.cpp -lboost_program_options
-
-debug:
-	mkdir -p ../bin
-	g++ -g -std=gnu++17 -Wall -o ../bin/CMM-C CMM.cpp -lboost_program_options
-
-clean:
-	rm -f ../bin/CMM-C
-
-endif
+.PHONY: all clean
