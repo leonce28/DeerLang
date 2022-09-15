@@ -11,6 +11,8 @@ void _usage()
     printf("  -o <file> \toutput asm file path, default a.out.\n");
     printf("  -r <file> \texecute asm file, default a.out.\n");
     printf("  -h \t\tshow this help message and exit.\n");
+
+    exit(0);
 }
 
 int init_args(int argc, char **argv, parse_handler *handler)
@@ -30,20 +32,22 @@ int init_args(int argc, char **argv, parse_handler *handler)
             case 'h':
             default:
                 _usage();
-                exit(0);
                 break;
         }
     }
 
     if (strlen(handler->input_cmm_path) == 0) {
         strcpy(handler->input_cmm_path, "a.cmm");
+        printf("use cmm default compiler file: a.cmm.\n");
     }
     if (strlen(handler->output_asm_path) == 0) {
         strcpy(handler->output_asm_path, "a.out");
+        printf("use asm default output file: a.out.\n");
     }
     if (strlen(handler->input_asm_path) == 0) {
         strcpy(handler->input_asm_path, "a.out");
+        printf("use asm default input file: a.out.\n");
     }
 
-    return CMM_INIT_ARGUMENT_SUCCESS;
+    return CMM_SUCCESS;
 }

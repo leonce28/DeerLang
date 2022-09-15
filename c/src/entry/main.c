@@ -11,28 +11,29 @@ int main(int argc, char **argv)
     parse_handler *handler;
 
     ret = get_parse_handler_instance(&handler);
-    if (ret != CMM_GET_INSTANCE_SUCCESS) {
+    if (ret != CMM_SUCCESS) {
         printf("get parse handler instance failed, ret: %d\n", ret);
         return ret;
     }
 
     ret = init_args(argc, argv, handler);
-    if (ret != CMM_INIT_ARGUMENT_SUCCESS) {
+    if (ret != CMM_SUCCESS) {
         printf("init arguments failed, ret: %d\n", ret);
         return ret;
     }
 
     ret = generate_code(handler);
-    if (ret != CMM_GENERATE_CODE_SUCCESS) {
+    if (ret != CMM_SUCCESS) {
         printf("generate code failed, ret: %d\n", ret);
         return ret;
     }
 
     ret = execute_code(handler);
-    if (ret != CMM_EXECUTE_CODE_SUCCESS) {
+    if (ret != CMM_SUCCESS) {
         printf("execute code failed, ret: %d\n", ret);
         return ret;
     }
 
+    printf("finished.\n");
     return 0;
 }
