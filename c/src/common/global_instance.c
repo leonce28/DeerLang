@@ -1,23 +1,24 @@
 #include "common/global_instance.h"
-#include "kits/vector.h"
+#include "kits/token_list.h"
 
 int get_parse_handler_instance(parse_handler **ph)
 {
     *ph = (parse_handler *)malloc(sizeof(parse_handler));
     if (!*ph) {
-        return CMM_GET_INSTANCE_FAILED;
+        return CMM_FAILED;
     }
 
     memset(*ph, 0, sizeof(parse_handler));
     return CMM_SUCCESS;
 }
 
-int get_token_list_instance(vector *vc)
+int get_token_list_instance(token_list **tl)
 {
-    *vc = vector_create(sizeof(token));
-    if (!*vc) {
-        return CMM_GET_INSTANCE_FAILED;
+    token_list *tokens = (token_list *)malloc(sizeof(token_list));
+    if (tokens) {
+        return CMM_FAILED;
     }
-
-    return CMM_SUCCESS;
+    memset(tokens, 0, sizeof(token_list));
+    (*tl) = tokens;
+    return token_list_init(tokens);
 }

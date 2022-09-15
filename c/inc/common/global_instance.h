@@ -6,4 +6,4 @@
 #include "kits/vector.h"
 
 int get_parse_handler_instance(parse_handler **ph);
-int get_token_list_instance(vector *vc);
+int get_token_list_instance(token_list **tl);

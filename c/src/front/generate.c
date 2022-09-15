@@ -5,7 +5,7 @@
 int generate_code(parse_handler *handler)
 {
     int ret;
-    vector tokens;
+    token_list *tokens;
 
     ret = get_token_list_instance(&tokens);
     if (ret != CMM_SUCCESS) {
@@ -13,11 +13,11 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
-    ret = lexical_analysis(handler->input_cmm_path, tokens);
-    if (ret != CMM_SUCCESS) {
-        printf("get token list instance failed, ret: %d\n", ret);
-        return ret;
-    }
+    // ret = lexical_analysis(handler->input_cmm_path, tokens);
+    // if (ret != CMM_SUCCESS) {
+    //     printf("get token list instance failed, ret: %d\n", ret);
+    //     return ret;
+    // }
 
     return CMM_SUCCESS;
 }
