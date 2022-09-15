@@ -14,6 +14,7 @@ int main(int argc, char **argv)
         printf("init arguments failed, ret: %d\n", ret);
         return ret;
     }
+    printf("input file path: %s\n", handler.input_file_path);
 
     ret = generate_code(&handler);
     if (ret != CMM_GENERATE_CODE_SUCCESS) {
