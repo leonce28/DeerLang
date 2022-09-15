@@ -1,4 +1,4 @@
-#include "generate.h"
+#include "front/generate.h"
 
 int generate_code(parse_handler *handler)
 {

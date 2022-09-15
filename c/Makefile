@@ -29,7 +29,7 @@ OBJLIST = $(patsubst %.c, %.o, $(SRCLIST))
 CC = gcc
 
 # 声明头文件路径
-CFLAGS = -I./src/
+CFLAGS = -I./inc/ -I./src/
 
 # 声明编译选项
 OPTIONS = -g -c -Wall -std=c17
