@@ -35,8 +35,15 @@ int init_args(int argc, char **argv, parse_handler *handler)
         }
     }
 
-    printf("input_cmm_path: %s\n", handler->input_cmm_path);
-    printf("output_asm_path: %s\n", handler->output_asm_path);
-    printf("input_asm_path: %s\n", handler->input_asm_path);
+    if (strlen(handler->input_cmm_path) == 0) {
+        strcpy(handler->input_cmm_path, "a.cmm");
+    }
+    if (strlen(handler->output_asm_path) == 0) {
+        strcpy(handler->output_asm_path, "a.out");
+    }
+    if (strlen(handler->input_asm_path) == 0) {
+        strcpy(handler->input_asm_path, "a.out");
+    }
+
     return CMM_INIT_ARGUMENT_SUCCESS;
 }
