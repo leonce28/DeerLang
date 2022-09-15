@@ -13,6 +13,7 @@ typedef struct _parse_handler {
 typedef struct _funcs {
     funcs_init_fp init;
     funcs_push_fp push;
+    funcs_print_fp print;
 } funcs;
 
 typedef struct _token {

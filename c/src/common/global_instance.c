@@ -15,7 +15,7 @@ int get_parse_handler_instance(parse_handler **ph)
 int get_token_list_instance(token_list **tl)
 {
     token_list *tokens = (token_list *)malloc(sizeof(token_list));
-    if (tokens) {
+    if (!tokens) {
         return CMM_FAILED;
     }
     memset(tokens, 0, sizeof(token_list));
