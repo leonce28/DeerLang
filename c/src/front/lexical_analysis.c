@@ -149,18 +149,6 @@ static void _next_stage_start(lexical *lex, token *t)
     }
 }
 
-/*
-const unordered_map<string, TokenType> KEYWORD_MAP
-{
-    {"void",   TokenType::Void},
-    {"int",    TokenType::Int},
-    {"if",     TokenType::If},
-    {"else",   TokenType::Else},
-    {"while",  TokenType::While},
-    {"return", TokenType::Return},
-};
-*/
-
 static void _set_token_id_type(token *t)
 {
     if (strcmp(t->token_str, "void") == 0) {
@@ -233,6 +221,8 @@ static void _next_stage_end_comment(lexical *lex, token *t)
             t->line_no++;
         }
     }
+
+    lex->str++;
 }
 
 static void _next_stage_in_less(lexical *lex, token *t)

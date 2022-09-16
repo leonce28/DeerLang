@@ -86,7 +86,7 @@ void token_push_char(token *t, char ch)
         exit(0);
     }
 
-    t->token_str[t->token_len] = ch;
+    t->token_str[t->token_len++] = ch;
 }
 
 int token_list_print(void *arg1)
