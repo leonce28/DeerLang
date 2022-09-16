@@ -32,6 +32,7 @@ typedef struct _token_list {
 
 typedef struct _lexical {
     char *str;
+    int line_no;
     lexer_stage stage;
 } lexical;
 

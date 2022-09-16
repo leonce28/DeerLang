@@ -58,7 +58,7 @@ static void _next_stage_start(lexical *lex, token *t)
         token_push_char(t, *lex->str++);
     } else if (isspace(*lex->str)) {
         if (*lex->str == '\n') {
-            t->line_no++;
+            lex->line_no++; 
         }
         lex->str++;
     } else {
@@ -66,17 +66,17 @@ static void _next_stage_start(lexical *lex, token *t)
             case '+':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_PLUS;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '-':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_MINUS;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '*':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_MULTIPLY;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '/':
                 lex->stage = STAGE_IN_DIVIDE;
@@ -84,59 +84,59 @@ static void _next_stage_start(lexical *lex, token *t)
                 break;
             case '<':
                 lex->stage = STAGE_IN_LESS;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '>':
                 lex->stage = STAGE_IN_GREATER;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '=':
                 lex->stage = STAGE_IN_ASSIGN;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '!':
                 lex->stage = STAGE_IN_NOT;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case ';':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_SEMICOLON;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case ',':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_COMMA;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '(':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_LEFT_ROUND_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case ')':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_RIGHT_ROUND_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '[':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_LEFT_SQUARE_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case ']':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_RIGHT_SQUARE_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '{':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_LEFT_CURLY_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '}':
                 lex->stage = STAGE_DONE;
                 t->token_type = TOKEN_RIGHT_CURLY_BRACKET;
-                lex->str++;
+                token_push_char(t, *lex->str++);
                 break;
             case '\0':
                 lex->stage = STAGE_DONE;
@@ -205,7 +205,7 @@ static void _next_stage_in_comment(lexical *lex, token *t)
     if (*lex->str == '*') {
         lex->stage = STAGE_END_COMMENT;
     } else if (*lex->str == '\n') {
-        t->line_no++;
+        lex->line_no++; 
     }
 
     lex->str++;
@@ -218,7 +218,7 @@ static void _next_stage_end_comment(lexical *lex, token *t)
     } else if (*lex->str != '*') {
         lex->stage = STAGE_IN_COMMENT;
         if (*lex->str == '\n') {
-            t->line_no++;
+            lex->line_no++; 
         }
     }
 
@@ -272,10 +272,9 @@ static void _next_stage_in_not(lexical *lex, token *t)
     }
 }
 
-static token *_next_token(lexical *lex, int line_no)
+static token *_next_token(lexical *lex)
 {
-    lex->stage = STAGE_START;
-    token *t = create_token(line_no, NULL, TOKEN_END);
+    token *t = create_token(0, NULL, TOKEN_END);
     while (lex->stage != STAGE_DONE) {
         switch (lex->stage) {
             case STAGE_START:
@@ -314,26 +313,26 @@ static token *_next_token(lexical *lex, int line_no)
         }
     }
 
-    printf("token: { line_no: %d, token_str: %s, token_type: %d } \n", t->line_no, t->token_str, t->token_type);
+    t->line_no = lex->line_no;
     return t;
 }
 
 int lexical_analysis(const char *cmm_file_path, token_list *tokens)
 {
-    int line_no = 1;
     token *t;
     char *code_str;
-    lexical lex;
+    lexical lex = { NULL, 1 , STAGE_START };
     if (CMM_SUCCESS != _read_code_string(cmm_file_path, &lex.str) || lex.str == NULL) {
         printf("lexical analysis read code string failed. \n");
         return CMM_FAILED;
     }
 
     code_str = lex.str;
-    t = _next_token(&lex, line_no);
+    t = _next_token(&lex);
     while (t != NULL && t->token_type != TOKEN_END) {
         tokens->op->push(tokens, t);
-        t = _next_token(&lex, line_no);
+        lex.stage = STAGE_START;
+        t = _next_token(&lex);
     }
 
     free(code_str);

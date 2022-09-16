@@ -58,7 +58,7 @@ void print_token(token *t)
 {
     assert(t != NULL);
 
-    printf("{ no: %d, str: %s, type: %d }", t->line_no, t->token_str, t->token_type);
+    printf("\t\t\tline_no: %d,\n\t\t\ttoken_str: \"%s\",\n\t\t\ttoken_len: %d,\n\t\t\ttoken_type: %d\n", t->line_no, t->token_str, t->token_len, t->token_type);
 }
 
 token *create_token(int line_no, const char *str, int type)
@@ -95,11 +95,17 @@ int token_list_print(void *arg1)
 
     int idx;
     token_list *tl = (token_list *)arg1;
+    printf("token_list: [\n");
     for (idx = 0; idx < tl->size; ++idx) {
-        printf("idx: %d, token: ", idx);
+        printf("\t{\n\t\tidx: %d,\n\t\ttoken: {\n", idx);
         print_token(tl->data[idx]);
+        printf("\t\t}\n\t}");
+        if (idx != tl->size - 1) {
+            printf(",");
+        }
         printf("\n");
     }
+    printf("]\n");
 
     return CMM_SUCCESS;
 }

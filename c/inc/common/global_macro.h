@@ -29,7 +29,7 @@ enum _token_type{
     // Operator
     TOKEN_PLUS,                 // +
     TOKEN_MINUS,                // -
-    TOKEN_MULTIPLY,             // *
+    TOKEN_MULTIPLY = 1010,      // *
     TOKEN_DIVIDE,               // /
     TOKEN_LESS,                 // <
     TOKEN_LESS_EQUAL,           // <=
@@ -39,7 +39,7 @@ enum _token_type{
     TOKEN_NOT_EQUAL,            // !=
     TOKEN_ASSIGN,               // =
     TOKEN_SEMICOLON,            // ;
-    TOKEN_COMMA,                // ,
+    TOKEN_COMMA = 1020,         // ,
     TOKEN_LEFT_ROUND_BRACKET,   // (
     TOKEN_RIGHT_ROUND_BRACKET,  // )
     TOKEN_LEFT_SQUARE_BRACKET,  // [
@@ -48,12 +48,12 @@ enum _token_type{
     TOKEN_RIGHT_CURLY_BRACKET,  // }
 
     // End
-    TOKEN_END,                  // END
+    TOKEN_END = 1027,           // END
 
     // Ast
     TOKEN_DECL_LIST,            // AST: DeclList
     TOKEN_VAR_DECL,             // AST: VarDecl
-    TOKEN_FUNC_DECL,            // AST: FuncDecl
+    TOKEN_FUNC_DECL = 1030,     // AST: FuncDecl
     TOKEN_PARAM_LIST,           // AST: ParamList
     TOKEN_PARAM,                // AST: Param
     TOKEN_COMPOUND_STMT,        // AST: CompoundStmt
@@ -63,7 +63,7 @@ enum _token_type{
     TOKEN_WHILE_STMT,           // AST: WhileStmt
     TOKEN_RETURN_STMT,          // AST: ReturnStmt
     TOKEN_EXPR,                 // AST: Expr
-    TOKEN_VAR,                  // AST: Var
+    TOKEN_VAR = 1040,           // AST: Var
     TOKEN_SIMPLE_EXPR,          // AST: SimpleExpr
     TOKEN_ADD_EXPR,             // AST: AddExpr
     TOKEN_TERM,                 // AST: Term
@@ -82,5 +82,5 @@ typedef enum _lexer_stage {
     STAGE_IN_ASSIGN,
     STAGE_IN_NOT,
     STAGE_END_COMMENT,
-    STAGE_DONE
+    STAGE_DONE = 2010,
 } lexer_stage; 
