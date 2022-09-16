@@ -36,3 +36,8 @@ typedef struct _lexical {
     lexer_stage stage;
 } lexical;
 
+typedef struct _syntax_tree {
+    char *str;
+} syntax_tree;
+
+
