@@ -18,8 +18,9 @@ typedef struct _funcs {
 
 typedef struct _token {
     int token_type;
-    char token_str[TOKEN_STR_MAX];
     int line_no;
+    int token_len;
+    char token_str[TOKEN_STR_MAX];
 } token;
 
 typedef struct _token_list {
@@ -28,5 +29,4 @@ typedef struct _token_list {
     token **data;
     funcs *op;
 } token_list;
-
 

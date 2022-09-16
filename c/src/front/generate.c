@@ -13,17 +13,12 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
-    // tokens->op->push((void *)tokens, (void *)create_token(1, "test1", 1));
-    // tokens->op->push((void *)tokens, (void *)create_token(2, "test2", 2));
-    // tokens->op->push((void *)tokens, (void *)create_token(3, "test3", 3));
-    // tokens->op->push((void *)tokens, (void *)create_token(4, "test4", 4));
-    // tokens->op->print((void *)tokens);
-
     ret = lexical_analysis(handler->input_cmm_path, tokens);
     if (ret != CMM_SUCCESS) {
         printf("get token list instance failed, ret: %d\n", ret);
         return ret;
     }
 
+    tokens->op->print((void *)tokens);
     return CMM_SUCCESS;
 }

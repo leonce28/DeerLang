@@ -6,12 +6,9 @@
 
 int token_list_init(token_list *tokens)
 {
-    int idx;
-    if (tokens == NULL) {
-        printf("tokens is NULL.\n");
-        return CMM_FAILED;
-    }
+    assert(tokens != NULL);
 
+    int idx;
     tokens->data = (token **)malloc(TOKEN_LIST_MAX * sizeof(token *));
     if (tokens->data == NULL) {
         printf("tokens->data is NULL.\n");
@@ -42,10 +39,7 @@ int token_list_init(token_list *tokens)
 
 int token_list_push(void *arg1, void *arg2)
 {
-    if (arg1 == NULL || arg2 == NULL) {
-        printf("token_list_push param is null.\n");
-        return CMM_FAILED;
-    }
+    assert(arg1 != NULL && arg2 != NULL);
 
     token_list *tl = (token_list *)arg1;
     token *t = (token *)arg2;
@@ -63,23 +57,42 @@ int token_list_push(void *arg1, void *arg2)
 void print_token(token *t)
 {
     assert(t != NULL);
+
     printf("{ no: %d, str: %s, type: %d }", t->line_no, t->token_str, t->token_type);
 }
 
-token *create_token(int no, char *str, int type)
+token *create_token(int line_no, const char *str, int type)
 {
     token *t = (token *)malloc(sizeof(token));
     memset(t, 0, sizeof(token));
 
-    t->line_no = no;
+    t->line_no = line_no;
     t->token_type = type;
-    strcpy(t->token_str, str);
+    t->token_len = 0;
+
+    if (str != NULL) {
+        t->token_len = MIN(TOKEN_STR_MAX, strlen(str));
+        strncpy(t->token_str, str, t->token_len);
+    }
     return t;
+}
+
+void token_push_char(token *t, char ch)
+{
+    assert(t != NULL);
+    
+    if (t->token_len >= TOKEN_STR_MAX) {
+        printf("token length is too long for token_str array, max length: %d.\n", TOKEN_STR_MAX);
+        exit(0);
+    }
+
+    t->token_str[t->token_len] = ch;
 }
 
 int token_list_print(void *arg1)
 {
     assert(arg1 != NULL);
+
     int idx;
     token_list *tl = (token_list *)arg1;
     for (idx = 0; idx < tl->size; ++idx) {
