@@ -30,3 +30,8 @@ typedef struct _token_list {
     funcs *op;
 } token_list;
 
+typedef struct _lexical {
+    char *str;
+    lexer_stage stage;
+} lexical;
+
