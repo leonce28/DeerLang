@@ -17,9 +17,9 @@ void _usage()
 
 int init_args(int argc, char **argv, parse_handler *handler)
 {
-    int op;
-    while ((op = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
-        switch (op) {
+    int option;
+    while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
+        switch (option) {
             case 'o':
                 strncpy(handler->output_asm_path, optarg, FILE_PATH_MAX);
                 break;

@@ -1,5 +1,5 @@
 #include "common/global_instance.h"
-#include "kits/token_list.h"
+#include "common/global_funcs.h"
 
 int get_parse_handler_instance(parse_handler **ph)
 {
@@ -21,4 +21,16 @@ int get_token_list_instance(token_list **tl)
     memset(tokens, 0, sizeof(token_list));
     (*tl) = tokens;
     return token_list_init(tokens);
+}
+
+int get_syntax_tree_instance(syntax_tree **st)
+{
+    syntax_tree *ast = (syntax_tree *)malloc(sizeof(syntax_tree));
+    if (!ast) {
+        return CMM_FAILED;
+    }
+
+    memset(ast, 0, sizeof(syntax_tree));
+    (*st) = ast;
+    return syntax_tree_init(ast);
 }

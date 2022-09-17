@@ -21,9 +21,14 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
-    // tokens->op->print((void *)tokens);
+    // token_list_print(tokens);
+    ret = get_syntax_tree_instance(&ast);
+    if (ret != CMM_SUCCESS) {
+        printf("get syntax tree instance failed, ret: %d\n", ret);
+        return ret;
+    }
 
-    ret = syntax_analysis(tokens, &ast);
+    ret = syntax_analysis(tokens, ast);
     if (ret != CMM_SUCCESS) {
         printf("syntax analysis failed, ret: %d\n", ret);
         return ret;

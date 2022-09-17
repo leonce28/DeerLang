@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "front/lexical_analysis.h"
 #include "common/global_macro.h"
+#include "common/global_funcs.h"
 
 static int _read_code_string(const char *cmm_file_path, char **str)
 {
@@ -330,7 +331,7 @@ int lexical_analysis(const char *cmm_file_path, token_list *tokens)
     code_str = lex.str;
     t = _next_token(&lex);
     while (t != NULL && t->token_type != TOKEN_END) {
-        tokens->op->push(tokens, t);
+        token_list_push(tokens, t);
         lex.stage = STAGE_START;
         t = _next_token(&lex);
     }
