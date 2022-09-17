@@ -8,16 +8,45 @@ static void _invalid_token(token *t)
     exit(0);
 }
 
-void _var_declared(token *t, syntax_tree *ast)
+void _match_token(int type, analyzer *analy)
+{
+    if (ANALY_TOKEN_TYPE(analy) == type) {
+        analy->token_idx++;
+    } else {
+        _invalid_token(ANALY_TOKEN_PTR(analy));
+    }
+}
+
+void _type(analyzer *analy)
+{
+    /*
+        EBNF:
+            Type ::= int
+                | void
+    */
+   
+    if (ANALY_TOKEN_TYPE(analy) == TOKEN_INT ||
+        ANALY_TOKEN_TYPE(analy) == TOKEN_VOID) {
+        NEW_AST_NODE(analy->ast, ANALY_TOKEN_PTR(analy)->token_str, ANALY_TOKEN_PTR(analy)->token_type);
+        _match_token(ANALY_TOKEN_TYPE(analy), analy);
+    } else {
+        _invalid_token(ANALY_TOKEN_PTR(analy));
+    }
+}
+
+void _var_declared(analyzer *analy)
 {
     /*
         EBNF:
             var_declared ::= type id [ '[' number ']' ] ';'
     */
+    NEW_AST_NODE(analy->ast, "VarDecl", TOKEN_VAR_DECL);
 
-    // root = new AST(TokenType::VarDecl, "VarDecl", { nullptr, nullptr });
+    _type(analy);;
 
-    // __Type(root->subList()[0], tokenPtr);
+    if (ANALY_TOKEN_TYPE(analy) == TOKEN_ID) {
+
+    }
 
     // if (tokenPtr->tokenType() == TokenType::Id) {
     //     root->subList()[1] = new AST(tokenPtr);
@@ -39,7 +68,7 @@ void _var_declared(token *t, syntax_tree *ast)
     // __matchToken(TokenType::Semicolon, tokenPtr);
 }
 
-void _func_declared(token *t, syntax_tree *ast)
+void _func_declared(analyzer *analy)
 {
     /*
         EBNF:
@@ -66,57 +95,58 @@ void _func_declared(token *t, syntax_tree *ast)
     // __CompoundStmt(root->subList()[3], tokenPtr);
 }
 
-void _declared(token *t, syntax_tree *ast)
+void _declared(analyzer *analy)
 {
     /*
         EBNF:
             declared ::= var_declared
                     | func_declared
     */
+    token *t = analy->tokens->data[analy->token_idx];
+    token *t_1 = analy->tokens->data[analy->token_idx + 1];
+    token *t_2 = analy->tokens->data[analy->token_idx + 2];
 
     if (t->token_type != TOKEN_INT && 
-        t-> token_type != TOKEN_VOID) {
+        t->token_type != TOKEN_VOID) {
         _invalid_token(t);
     }
 
-    token *t_1 = t + 1;
     if (t_1->token_type != TOKEN_INT) {
         _invalid_token(t_1);
     }
 
-    token *t_2 = t + 2;
     if (t_2->token_type == TOKEN_LEFT_SQUARE_BRACKET ||
         t_2->token_type == TOKEN_SEMICOLON) {
-        _var_declared(t, ast);
+        _var_declared(analy);
     } else if (t_2->token_type == TOKEN_LEFT_ROUND_BRACKET) {
-        _func_declared(t, ast);
+        _func_declared(analy);
     } else {
         _invalid_token(t_2);
     }
 }
 
-void _declared_list(const token_list *tokens, syntax_tree *ast) 
+void _declared_list(analyzer *analy) 
 {
     /*
         EBNF:
             declared_list ::= declared { declared }
     */
-    token *t = tokens->data[0];
-    _declared(t, ast);
-
-    while (t->token_type != TOKEN_END) {
-        syntax_tree_prepare(ast);
-        _declared(t, ast);
+   NEW_AST_NODE(analy->ast, "DeclList", TOKEN_DECL_LIST);
+    while (analy->tokens->data[analy->token_idx]->token_type != TOKEN_END) {
+        token_print(analy->tokens->data[analy->token_idx]);
+        MOVE_AST_NODE(analy);
+        _declared(analy);
    }
 
 }
 
-int syntax_analysis(const token_list *tokens, syntax_tree *ast)
+int syntax_analysis(token_list *tokens, syntax_tree **ast)
 {
     /*
         EBNF:
             Program ::= DeclList
     */
-    _declared_list(tokens, ast);
+    analyzer analy = { tokens, *ast, 0 };
+    _declared_list(&analy);
     return CMM_SUCCESS;
 }

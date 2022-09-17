@@ -29,9 +29,16 @@ typedef struct _lexical {
 } lexical;
 
 typedef struct _syntax_tree {
-    int sub_len;
+    int sub_idx;
     token *data;
     struct _syntax_tree **sub_list;
 } syntax_tree;
+
+typedef struct _analyzer {
+    token_list *tokens;
+    syntax_tree *ast;
+    int token_idx;
+} analyzer;
+
 
 

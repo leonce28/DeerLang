@@ -4,7 +4,7 @@
 #include <assert.h>
 #include "common/global_funcs.h"
 
-static void _print_token(token *t)
+static void _token_print(token *t)
 {
     assert(t != NULL);
 
@@ -12,7 +12,15 @@ static void _print_token(token *t)
     t->line_no, t->token_str, t->token_len, t->token_type);
 }
 
-token *create_token(int line_no, const char *str, int type)
+void token_print(token *t)
+{
+    assert(t != NULL);
+
+    printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
+    t->line_no, t->token_str, t->token_len, t->token_type);
+}
+
+token *create_token(const char *str, int type)
 {
     token *t = (token *)malloc(sizeof(token));
     if (t == NULL) {
@@ -20,9 +28,9 @@ token *create_token(int line_no, const char *str, int type)
     }
 
     memset(t, 0, sizeof(token));
-    t->line_no = line_no;
     t->token_type = type;
     t->token_len = 0;
+    t->line_no = 0;
 
     if (str != NULL) {
         t->token_len = MIN(TOKEN_STR_MAX, strlen(str));
@@ -78,13 +86,14 @@ void token_list_print(token_list *tl)
     printf("token_list: [\n");
     for (idx = 0; idx < tl->size; ++idx) {
         printf("\t{\n\t\tidx: %d,\n\t\ttoken: {\n", idx);
-        _print_token(tl->data[idx]);
+        _token_print(tl->data[idx]);
         printf("\t\t}\n\t}");
         if (idx != tl->size - 1) {
             printf(",");
         }
         printf("\n");
     }
+
     printf("]\n");
 }
 
@@ -100,23 +109,31 @@ void token_push_char(token *t, char ch)
     t->token_str[t->token_len++] = ch;
 }
 
-int syntax_tree_init(syntax_tree *tree)
+syntax_tree *create_syntax_tree_node(token *t)
 {
-    assert(tree != NULL);
+    syntax_tree *ast = (syntax_tree *)malloc(sizeof(syntax_tree));
+    memset(ast, 0, sizeof(syntax_tree));
+    ast->data = t;
+    ast->sub_list = (syntax_tree **)malloc(AST_LIST_MAX * sizeof(syntax_tree *));
+    ast->sub_idx = 0;
 
-    tree->data = create_token(0, "DeclList", TOKEN_DECL_LIST);
-    tree->sub_list = (syntax_tree **)malloc(AST_LIST_MAX * sizeof(syntax_tree *));
-    tree->sub_len = 0;
-
-    if (tree->sub_list == NULL) {
-        printf("tree->sub_list is NULL.\n");
-        return CMM_FAILED;
-    }
-
-    return CMM_SUCCESS;
+    return ast;
 }
 
-int syntax_tree_prepare(syntax_tree *st)
+syntax_tree *syntax_tree_end(syntax_tree *st)
 {
-    return CMM_SUCCESS;
+    assert(st != NULL);
+
+    if (st->sub_idx >= AST_LIST_MAX) {
+        printf("syntax_tree sub_list length is too long, max size: %d.\n", AST_LIST_MAX);
+        exit(0);
+    }
+
+    st->sub_list[st->sub_idx] = (syntax_tree *)malloc(sizeof(syntax_tree));
+    if (st->sub_list[st->sub_idx] == NULL) {
+        printf("st->sub_list[st->sub_idx] is null, exit.\n");
+        exit(0);
+    }
+
+    return st->sub_list[st->sub_idx++];
 }

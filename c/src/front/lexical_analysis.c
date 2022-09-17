@@ -275,7 +275,7 @@ static void _next_stage_in_not(lexical *lex, token *t)
 
 static token *_next_token(lexical *lex)
 {
-    token *t = create_token(0, NULL, TOKEN_END);
+    token *t = create_token(NULL, TOKEN_END);
     while (lex->stage != STAGE_DONE) {
         switch (lex->stage) {
             case STAGE_START:
