@@ -18,7 +18,7 @@ void token_push_char(token *t, char ch);
 ////////////////////////////////////////////////////////////////////////////////
 // syntax_tree_list
 ////////////////////////////////////////////////////////////////////////////////
-syntax_tree *create_syntax_tree_node(token *t);
+syntax_tree *create_ast_node(token *t);
 syntax_tree *syntax_tree_end(syntax_tree *st);
 
 // int syntax_tree_push(void *arg1, void *arg2);

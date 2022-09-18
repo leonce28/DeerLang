@@ -7,10 +7,14 @@
 #define AST_LIST_MAX    1024
 #define MIN(a, b)       (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)       (((a) > (b)) ? (a) : (b))
-#define NEW_AST_NODE(ast, str, type)    do { ast = create_syntax_tree_node(create_token(str, type)); ast->sub_idx++; } while(0)
-#define MOVE_AST_NODE(analy)            do { analy->ast = analy->ast->sub_list[analy->ast->sub_idx]; } while(0)
-#define ANALY_TOKEN_PTR(analy)          (analy->tokens->data[analy->token_idx])
-#define ANALY_TOKEN_TYPE(analy)         (ANALY_TOKEN_PTR(analy)->token_type)
+#define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
+#define ANALY_TOKEN_PTR()           (tokens->data[*token_idx])
+#define ANALY_TOKEN_PTR2(idx)       (tokens->data[*token_idx + idx])
+#define ANALY_TOKEN_TYPE()          (tokens->data[*token_idx]->token_type)
+#define ANALY_TOKEN_TYPE2(idx)      (tokens->data[*token_idx + idx]->token_type)
+#define NEW_AST_NODE(_str, _type)   create_ast_node(create_token(_str, _type))
+#define NEW_AST_NODE2(_token)       create_ast_node(_token)
+#define NEW_AST_NODE3()             create_ast_node(ANALY_TOKEN_PTR())
 
 enum {
     CMM_FAILED = -1,            // failed

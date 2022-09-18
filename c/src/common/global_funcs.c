@@ -109,15 +109,15 @@ void token_push_char(token *t, char ch)
     t->token_str[t->token_len++] = ch;
 }
 
-syntax_tree *create_syntax_tree_node(token *t)
+syntax_tree *create_ast_node(token *t)
 {
-    syntax_tree *ast = (syntax_tree *)malloc(sizeof(syntax_tree));
-    memset(ast, 0, sizeof(syntax_tree));
-    ast->data = t;
-    ast->sub_list = (syntax_tree **)malloc(AST_LIST_MAX * sizeof(syntax_tree *));
-    ast->sub_idx = 0;
+    syntax_tree *node = (syntax_tree *)malloc(sizeof(syntax_tree));
+    memset(node, 0, sizeof(syntax_tree));
+    node->data = t;
+    node->sub_list = (syntax_tree **)malloc(AST_LIST_MAX * sizeof(syntax_tree *));
+    node->sub_idx = 0;
 
-    return ast;
+    return node;
 }
 
 syntax_tree *syntax_tree_end(syntax_tree *st)

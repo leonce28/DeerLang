@@ -22,6 +22,11 @@ typedef struct _token_list {
     token **data;
 } token_list;
 
+// typedef struct _token_list_iterator {
+//     token_list *tokens;
+//     int token_idx;
+// } tl_iterator;
+
 typedef struct _lexical {
     char *str;
     int line_no;
@@ -33,12 +38,6 @@ typedef struct _syntax_tree {
     token *data;
     struct _syntax_tree **sub_list;
 } syntax_tree;
-
-typedef struct _analyzer {
-    token_list *tokens;
-    syntax_tree *ast;
-    int token_idx;
-} analyzer;
 
 
 
