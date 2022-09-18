@@ -5,6 +5,7 @@
 #include "front/lexical_analysis.h"
 #include "common/global_macro.h"
 #include "common/global_funcs.h"
+#include "common/global_instance.h"
 
 static int _read_code_string(const char *cmm_file_path, char **str)
 {
@@ -318,11 +319,17 @@ static token *_next_token(lexical *lex)
     return t;
 }
 
-int lexical_analysis(const char *cmm_file_path, token_list *tokens)
+int lexical_analysis(const char *cmm_file_path, token_list **tl_ptr)
 {
     token *t;
     char *code_str;
     lexical lex = { NULL, 1 , STAGE_START };
+
+    if (CMM_SUCCESS != get_token_list_instance(tl_ptr)) {
+        printf("get token list instance failed. \n");
+        return CMM_FAILED;
+    }
+
     if (CMM_SUCCESS != _read_code_string(cmm_file_path, &lex.str) || lex.str == NULL) {
         printf("lexical analysis read code string failed. \n");
         return CMM_FAILED;
@@ -331,7 +338,7 @@ int lexical_analysis(const char *cmm_file_path, token_list *tokens)
     code_str = lex.str;
     t = _next_token(&lex);
     while (t != NULL && t->token_type != TOKEN_END) {
-        token_list_push(tokens, t);
+        token_list_push(*tl_ptr, t);
         lex.stage = STAGE_START;
         t = _next_token(&lex);
     }

@@ -1,7 +1,7 @@
 #include "front/generate.h"
 #include "front/lexical_analysis.h"
 #include "front/syntax_analyzer.h"
-#include "common/global_instance.h"
+#include "common/global_funcs.h"
 
 int generate_code(parse_handler *handler)
 {
@@ -9,25 +9,19 @@ int generate_code(parse_handler *handler)
     token_list *tokens;
     syntax_tree *ast;
 
-    ret = get_token_list_instance(&tokens);
-    if (ret != CMM_SUCCESS) {
-        printf("get token list instance failed, ret: %d\n", ret);
-        return ret;
-    }
-
-    ret = lexical_analysis(handler->input_cmm_path, tokens);
+    ret = lexical_analysis(handler->input_cmm_path, &tokens);
     if (ret != CMM_SUCCESS) {
         printf("lexical analysis failed, ret: %d\n", ret);
         return ret;
     }
-
-    // token_list_print(tokens);
 
     ret = syntax_analysis(tokens, &ast);
     if (ret != CMM_SUCCESS) {
         printf("syntax analysis failed, ret: %d\n", ret);
         return ret;
     }
+
+    syntax_tree_print(ast);
 
     // SemanticAnalyzer semanticAnalyzer(ast);
 

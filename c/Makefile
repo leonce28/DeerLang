@@ -32,7 +32,7 @@ CC = gcc
 CFLAGS = -I./inc/ -I./src/
 
 # 声明编译选项
-OPTIONS = -g -c -Wall -std=c17
+OPTIONS = -g -c -Wall -std=c2x
 
 # 编译TARGET
 all: $(TARGET)

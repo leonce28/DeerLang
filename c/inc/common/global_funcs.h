@@ -5,21 +5,19 @@
 // token
 ////////////////////////////////////////////////////////////////////////////////
 token *create_token(const char *str, int type);
-void token_print(token *t);
+void token_print(const token_list *tokens, int token_idx);
 
 ////////////////////////////////////////////////////////////////////////////////
 // token_list
 ////////////////////////////////////////////////////////////////////////////////
 int token_list_init(token_list *tl);
 int token_list_push(token_list *tl, token *t);
-void token_list_print(token_list *tl);
+void token_list_print(const token_list *tl);
 void token_push_char(token *t, char ch);
 
 ////////////////////////////////////////////////////////////////////////////////
 // syntax_tree_list
 ////////////////////////////////////////////////////////////////////////////////
 syntax_tree *create_ast_node(token *t);
-syntax_tree *syntax_tree_end(syntax_tree *st);
+void syntax_tree_print(const syntax_tree *ast);
 
-// int syntax_tree_push(void *arg1, void *arg2);
-// int syntax_tree_print(void *arg1);

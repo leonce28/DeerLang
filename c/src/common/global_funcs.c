@@ -12,12 +12,14 @@ static void _token_print(token *t)
     t->line_no, t->token_str, t->token_len, t->token_type);
 }
 
-void token_print(token *t)
+void token_print(const token_list *tokens, int token_idx)
 {
-    assert(t != NULL);
+    assert(tokens != NULL);
 
-    printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
-    t->line_no, t->token_str, t->token_len, t->token_type);
+    token *t = tokens->data[token_idx];
+    printf("%d: { line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n", 
+        token_idx, t->line_no, t->token_str, 
+        t->token_len, t->token_type);
 }
 
 token *create_token(const char *str, int type)
@@ -78,7 +80,7 @@ int token_list_push(token_list *tl, token *t)
     return CMM_SUCCESS;
 }
 
-void token_list_print(token_list *tl)
+void token_list_print(const token_list *tl)
 {
     assert(tl != NULL);
 
@@ -120,20 +122,34 @@ syntax_tree *create_ast_node(token *t)
     return node;
 }
 
-syntax_tree *syntax_tree_end(syntax_tree *st)
+static void _ast_print_node(const syntax_tree *node, int deep)
 {
-    assert(st != NULL);
-
-    if (st->sub_idx >= AST_LIST_MAX) {
-        printf("syntax_tree sub_list length is too long, max size: %d.\n", AST_LIST_MAX);
-        exit(0);
+    assert(node != NULL);
+    int tab_size = deep;
+    while (tab_size-- > 0) {
+        printf("   ");
     }
+    printf("deep: %d, sub_size: %d, token: ", deep, node->sub_idx);
+    printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
+        node->data->line_no, node->data->token_str,
+        node->data->token_len, node->data->token_type);
+}
 
-    st->sub_list[st->sub_idx] = (syntax_tree *)malloc(sizeof(syntax_tree));
-    if (st->sub_list[st->sub_idx] == NULL) {
-        printf("st->sub_list[st->sub_idx] is null, exit.\n");
-        exit(0);
+static void _syntax_tree_print(const syntax_tree *node, int deep)
+{
+    int si;
+    if (node != NULL) {
+        _ast_print_node(node, deep);
+        for (si = 0; si < node->sub_idx; ++si) {
+            if (node->sub_list[si] != NULL) {
+                _syntax_tree_print(node->sub_list[si], deep + 1);
+            }
+        }
     }
+}
 
-    return st->sub_list[st->sub_idx++];
+void syntax_tree_print(const syntax_tree *ast)
+{   
+    int deep = 0;
+    _syntax_tree_print(ast, deep);
 }

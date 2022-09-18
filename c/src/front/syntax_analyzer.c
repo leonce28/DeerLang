@@ -4,6 +4,7 @@
 
 void _expr(token_list *tokens, int *token_idx, syntax_tree **ast);
 void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast);
+void _compound_stmt(token_list *tokens, int *token_idx, syntax_tree **ast);
 
 static void _invalid_token(token *t)
 {
@@ -14,7 +15,6 @@ static void _invalid_token(token *t)
 void _match_token(int type, token_list *tokens, int *token_idx)
 {
     if (ANALY_TOKEN_TYPE() == type) {
-        token_print(tokens->data[*token_idx]);
         (*token_idx)++;
     } else {
         _invalid_token(ANALY_TOKEN_PTR());
@@ -401,19 +401,14 @@ void _simple_expr(token_list *tokens, int *token_idx, syntax_tree **ast)
 
     _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
 
-    switch (ANALY_TOKEN_TYPE()) {
-        case TOKEN_LESS:
-        case TOKEN_LESS_EQUAL:
-        case TOKEN_GREATER:
-        case TOKEN_GREATER_EQUAL:
-        case TOKEN_EQUAL:
-        case TOKEN_NOT_EQUAL:
-            _rel_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-            _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-            break;
-        default:
-            _invalid_token(ANALY_TOKEN_PTR());
-            break;
+    if (ANALY_TOKEN_TYPE() == TOKEN_LESS || 
+        ANALY_TOKEN_TYPE() == TOKEN_LESS_EQUAL ||
+        ANALY_TOKEN_TYPE() == TOKEN_GREATER ||
+        ANALY_TOKEN_TYPE() == TOKEN_GREATER_EQUAL ||
+        ANALY_TOKEN_TYPE() == TOKEN_EQUAL ||
+        ANALY_TOKEN_TYPE() == TOKEN_NOT_EQUAL) {
+        _rel_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+        _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
     }
 }
 
@@ -448,6 +443,7 @@ void _expr(token_list *tokens, int *token_idx, syntax_tree **ast)
 
         // revert node
         free(node->sub_list[0]);
+        node->sub_list[0] = NULL;
         node->sub_idx = 0;
         *token_idx = idx;
 
@@ -456,7 +452,7 @@ void _expr(token_list *tokens, int *token_idx, syntax_tree **ast)
             _match_token(TOKEN_ASSIGN, tokens, token_idx);
             _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
         } else {
-            _simple_expr(tokens, token_idx, &node->sub_list[0]);
+            _simple_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
         }
     }
 
@@ -562,6 +558,9 @@ void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
         case TOKEN_LEFT_ROUND_BRACKET:
         case TOKEN_NUMBER:
             _expr_stmt(tokens, token_idx, ast);
+            break;
+        case TOKEN_LEFT_CURLY_BRACKET:
+            _compound_stmt(tokens, token_idx, ast);
             break;
         case TOKEN_IF:
             _if_stmt(tokens, token_idx, ast);
@@ -676,17 +675,18 @@ void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
     }
 }
 
-void _declared_list(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _declared_list(token_list *tokens, syntax_tree **ast)
 {
     /*
         EBNF:
             declared_list ::= declared { declared }
     */
+    int token_idx = 0;
     syntax_tree *node = NEW_AST_NODE("DeclList", TOKEN_DECL_LIST);
 
-    while (ANALY_TOKEN_TYPE() != TOKEN_END) {
-        _declared(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-   }
+    while (token_idx < tokens->size) {
+        _declared(tokens, &token_idx, &node->sub_list[node->sub_idx++]);
+    }
 
     *ast = node;
 }
@@ -697,7 +697,6 @@ int syntax_analysis(token_list *tokens, syntax_tree **ast)
         EBNF:
             program ::= declared_list
     */
-    int token_idx = 0;
-    _declared_list(tokens, &token_idx, ast);
+    _declared_list(tokens, ast);
     return CMM_SUCCESS;
 }
