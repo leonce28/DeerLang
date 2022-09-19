@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "front/lexical_analysis.h"
+#include "front/lexical_analyzer.h"
 #include "common/global_macro.h"
 #include "common/global_funcs.h"
-#include "common/global_instance.h"
 
 static int _read_code_string(const char *cmm_file_path, char **str)
 {
@@ -36,6 +35,17 @@ static int _read_code_string(const char *cmm_file_path, char **str)
     fclose(fp);
 
     return CMM_SUCCESS;
+}
+
+static int _get_token_list_instance(token_list **tl)
+{
+    token_list *tokens = (token_list *)malloc(sizeof(token_list));
+    if (!tokens) {
+        return CMM_FAILED;
+    }
+    memset(tokens, 0, sizeof(token_list));
+    (*tl) = tokens;
+    return token_list_init(tokens);
 }
 
 static void _invalid_char(char ch, int line_no)
@@ -325,7 +335,7 @@ int lexical_analysis(const char *cmm_file_path, token_list **tl_ptr)
     char *code_str;
     lexical lex = { NULL, 1 , STAGE_START };
 
-    if (CMM_SUCCESS != get_token_list_instance(tl_ptr)) {
+    if (CMM_SUCCESS != _get_token_list_instance(tl_ptr)) {
         printf("get token list instance failed. \n");
         return CMM_FAILED;
     }

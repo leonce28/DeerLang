@@ -1,13 +1,15 @@
 #include "front/generate.h"
-#include "front/lexical_analysis.h"
-#include "front/syntax_analyzer.h"
 #include "common/global_funcs.h"
+#include "front/lexical_analyzer.h"
+#include "front/syntax_analyzer.h"
+#include "back/semantic_analyzer.h"
 
 int generate_code(parse_handler *handler)
 {
     int ret;
     token_list *tokens;
     syntax_tree *ast;
+    symbol_table *table;
 
     ret = lexical_analysis(handler->input_cmm_path, &tokens);
     if (ret != CMM_SUCCESS) {
@@ -21,11 +23,11 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
-    syntax_tree_print(ast);
-
-    // SemanticAnalyzer semanticAnalyzer(ast);
-
-    // auto symbolTable = semanticAnalyzer.semanticAnalysis();
+    ret = semantic_analysis(ast, &table);
+    if (ret != CMM_SUCCESS) {
+        printf("semantic analysis failed, ret: %d\n", ret);
+        return ret;
+    }
 
     // CodeGenerator codeGenerator(root, symbolTable);
 
