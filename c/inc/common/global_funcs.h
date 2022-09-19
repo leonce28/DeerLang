@@ -21,3 +21,9 @@ void token_push_char(token *t, char ch);
 syntax_tree *create_ast_node(token *t);
 void syntax_tree_print(const syntax_tree *ast);
 
+////////////////////////////////////////////////////////////////////////////////
+// symbol_table
+////////////////////////////////////////////////////////////////////////////////
+symbol_table *create_symbol_table();
+symbol_space *create_symbol_space(const char *space_name);
+symbol *create_symbol(const char *var_name, int var_idx, int var_size);

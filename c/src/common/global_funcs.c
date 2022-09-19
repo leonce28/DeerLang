@@ -149,7 +149,44 @@ static void _syntax_tree_print(const syntax_tree *node, int deep)
 }
 
 void syntax_tree_print(const syntax_tree *ast)
-{   
+{
     int deep = 0;
     _syntax_tree_print(ast, deep);
 }
+
+symbol *create_symbol(const char *var_name, int var_idx, int var_size)
+{
+    assert(var_name != NULL);
+
+    symbol *s = (symbol *)malloc(sizeof(symbol));
+    memset(s, 0, sizeof(symbol));
+    strncpy(s->var_name, var_name, MIN(VAR_NAME_MAX, strlen(var_name)));
+    s->var_idx = var_idx;
+    s->var_size = var_size;
+
+    return s;
+}
+
+symbol_space *create_symbol_space(const char* space_name)
+{
+    assert(space_name != NULL);
+
+    symbol_space *space = (symbol_space *)malloc(sizeof(symbol_space));
+    memset(space, 0, sizeof(symbol_space));
+    strncpy(space->space_name, space_name, MIN(SCOPE_NAME_MAX, strlen(space_name)));
+    space->s_idx = 0;
+    space->s = (symbol **)malloc(TABLE_SYMBOL_MAX * sizeof(symbol *));
+
+    return space;
+}
+
+symbol_table *create_symbol_table()
+{
+    symbol_table *table = (symbol_table *)malloc(sizeof(symbol_table));
+    memset(table, 0, sizeof(symbol_table));
+    table->ss_idx = 0;
+    table->ss = (symbol_space **)malloc(TABLE_SPACE_MAX * sizeof(symbol_space *));
+
+    return table;
+}
+

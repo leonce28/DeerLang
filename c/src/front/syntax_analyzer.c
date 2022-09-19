@@ -118,7 +118,7 @@ void _params(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            params ::= [ params_list ]
+            params ::= [ param_list ]
     */
 
     if (ANALY_TOKEN_TYPE() == TOKEN_INT ||
@@ -131,7 +131,7 @@ void _var_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            VarDecl ::= Type ID [ '[' NUMBER ']' ] ';'
+            var_decl ::= type id [ '[' number ']' ] ';'
     */
 
     syntax_tree *node = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);

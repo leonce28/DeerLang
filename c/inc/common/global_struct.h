@@ -40,10 +40,16 @@ typedef struct _symbol {
     int var_size;
 } symbol;
 
-typedef struct _symbol_table {
-    char func_name[FUNC_NAME_MAX];  // scope, default "__GLOBAL__"
-    int sb_idx;
+typedef struct symbol_space {
+    char space_name[SCOPE_NAME_MAX];
+    int s_idx;
     symbol **s;
+} symbol_space;
+
+// 1 symbol_table => n symbol_space; 1 symbol_space => n symbol
+typedef struct _symbol_table {
+    int ss_idx;
+    symbol_space **ss;
 } symbol_table;
 
 
