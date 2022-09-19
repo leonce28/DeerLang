@@ -19,6 +19,7 @@ int semantic_analysis(const syntax_tree *ast, symbol_table **st)
 
         // declared ::= var_declared | func_declared
         declared = declared_list->sub_list[dl_idx];
+        printf("deep 1: %s\n", declared->data->token_str);
         if (declared->data->token_type == TOKEN_FUNC_DECL) {
 
             // func_declared ::= type id '(' params ')' compound_stmt
@@ -36,7 +37,8 @@ int semantic_analysis(const syntax_tree *ast, symbol_table **st)
 
                     // param ::= type id [ '[' ']' ]
                     param = params->sub_list[p_idx];
-                    space->s[space->s_idx++] = create_symbol(param->data->token_str, var_idx++, 0);
+                    space->s[space->s_idx++] = create_symbol(param->sub_list[1]->data->token_str, var_idx++, 0);
+                    printf("\tdeep 2 param: %s\n", param->sub_list[1]->data->token_str);
                 }
             }
 
@@ -52,6 +54,8 @@ int semantic_analysis(const syntax_tree *ast, symbol_table **st)
                 var_id = var_decl->sub_list[1];
                 var_size = var_decl->sub_list[2] != NULL ? atoi(var_decl->sub_list[2]->data->token_str) : 0;
                 space->s[space->s_idx++] = create_symbol(var_id->data->token_str, var_idx, var_size);
+
+                printf("\tdeep 2 var_id: %s\n", var_id->data->token_str);
 
                 var_idx += var_size + 1;
             }

@@ -1,7 +1,7 @@
 /*
     LexerStage.hpp
     ==============
-        Enum class LexerStage implementation.
+        Enum class __LexerStage implementation.
 */
 
 #pragma once
@@ -9,23 +9,54 @@
 namespace CMM
 {
 
-////////////////////////////////////////////////////////////////////////////////
-// Enum Class LexerStage
-////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Enum Class __LexerStage
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class LexerStage
+enum class __LexerStage
 {
-    Start,
-    InId,
-    InNumber,
-    InDivide,
-    InComment,
-    EndComment,
-    InLess,
-    InGreater,
-    InAssign,
-    InNot,
-    Done
+    // __Start
+    __Start,
+
+    // abc...
+    //  ^^^^^
+    __InId,
+
+    // 123...
+    //  ^^^^^
+    __InNumber,
+
+    // /?
+    //  ^
+    __InDivide,
+
+    // /* ...
+    //    ^^^
+    __InComment,
+
+    // ... */
+    //      ^
+    __EndComment,
+
+    // <?
+    //  ^
+    __InLess,
+
+    // >?
+    //  ^
+    __InGreater,
+
+    // =?
+    //  ^
+    __InAssign,
+
+    // !?
+    //  ^
+    __InNot,
+
+    // Done
+    __Done,
 };
 
-} // End of namespace CMM
+
+}  // End namespace CMM
