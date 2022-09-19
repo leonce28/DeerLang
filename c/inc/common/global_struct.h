@@ -34,8 +34,16 @@ typedef struct _syntax_tree {
     struct _syntax_tree **sub_list;
 } syntax_tree;
 
+typedef struct _symbol {
+    char var_name[VAR_NAME_MAX];
+    int var_idx;
+    int var_size;
+} symbol;
+
 typedef struct _symbol_table {
-    char *str;
+    char func_name[FUNC_NAME_MAX];  // scope, default "__GLOBAL__"
+    int sb_idx;
+    symbol **s;
 } symbol_table;
 
 
