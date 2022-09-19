@@ -617,6 +617,8 @@ void _compound_stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
     _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
 
     _match_token(TOKEN_RIGHT_CURLY_BRACKET, tokens, token_idx);
+
+    *ast = node;
 }
 
 void _func_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
