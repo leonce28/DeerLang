@@ -1,15 +1,14 @@
 #include <stdio.h>
-#include "common/global_struct.h"
+#include "common/global_funcs.h"
 #include "frontend/generate.h"
 #include "backend/execute.h"
-#include "kits/arguments.h"
 
 int main(int argc, char **argv)
 {
     int ret;
     parse_handler handler;
 
-    ret = init_args(argc, argv, &handler);
+    ret = arguments_init(argc, argv, &handler);
     if (ret != CMM_SUCCESS) {
         printf("init arguments failed, ret: %d\n", ret);
         return ret;

@@ -9,7 +9,7 @@ int generate_code(parse_handler *handler)
     int ret;
     token_list *tokens;
     syntax_tree *ast;
-    // symbol_table *table;
+    symbol_table *table;
 
     ret = lexical_analysis(handler->input_cmm_path, &tokens);
     if (ret != CMM_SUCCESS) {
@@ -25,13 +25,13 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
-    syntax_tree_print(ast);
+    // syntax_tree_print(ast);
 
-    // ret = semantic_analysis(ast, &table);
-    // if (ret != CMM_SUCCESS) {
-    //     printf("semantic analysis failed, ret: %d\n", ret);
-    //     return ret;
-    // }
+    ret = semantic_analysis(ast, &table);
+    if (ret != CMM_SUCCESS) {
+        printf("semantic analysis failed, ret: %d\n", ret);
+        return ret;
+    }
 
     // CodeGenerator codeGenerator(root, symbolTable);
 

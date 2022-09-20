@@ -4,12 +4,61 @@
 #include <assert.h>
 #include "common/global_funcs.h"
 
+extern char *optarg;
+extern int getopt();
+
+void _arguments_usage()
+{
+    printf("usage: compiler [option]\n");
+    printf("option: \n");
+    printf("  -i <file> \tinput cmm file path, default a.cmm.\n");
+    printf("  -o <file> \toutput asm file path, default a.out.\n");
+    printf("  -r <file> \texecute asm file, default a.out.\n");
+    printf("  -h \t\tshow this help message and exit.\n");
+
+    exit(0);
+}
+
 static void _token_print(token *t)
 {
     assert(t != NULL);
 
-    printf("\t\t\tline_no: %d,\n\t\t\ttoken_str: \"%s\",\n\t\t\ttoken_len: %d,\n\t\t\ttoken_type: %d\n", 
+    printf("\t\t\tline_no: %d,\n\t\t\ttoken_str: \"%s\",\n\t\t\ttoken_len: %d,\n\t\t\ttoken_type: %d\n",
     t->line_no, t->token_str, t->token_len, t->token_type);
+}
+
+int arguments_init(int argc, char **argv, parse_handler *handler)
+{
+    int option;
+    while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
+        switch (option) {
+            case 'o':
+                strncpy(handler->output_asm_path, optarg, FILE_PATH_MAX);
+                break;
+            case 'i':
+                strncpy(handler->input_cmm_path, optarg, FILE_PATH_MAX);
+                break;
+            case 'r':
+                strncpy(handler->input_asm_path, optarg, FILE_PATH_MAX);
+                break;
+            case 'h':
+            default:
+                _arguments_usage();
+                break;
+        }
+    }
+
+    if (strlen(handler->input_cmm_path) == 0) {
+        strcpy(handler->input_cmm_path, "a.cmm");
+    }
+    if (strlen(handler->output_asm_path) == 0) {
+        strcpy(handler->output_asm_path, "a.out");
+    }
+    if (strlen(handler->input_asm_path) == 0) {
+        strcpy(handler->input_asm_path, "a.out");
+    }
+
+    return CMM_SUCCESS;
 }
 
 void token_print(const token_list *tokens, int token_idx)
