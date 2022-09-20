@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "front/lexical_analyzer.h"
+#include "frontend/lexical_analyzer.h"
 #include "common/global_macro.h"
 #include "common/global_funcs.h"
 

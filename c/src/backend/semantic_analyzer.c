@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "back/semantic_analyzer.h"
+#include "backend/semantic_analyzer.h"
 #include "common/global_funcs.h"
 
 

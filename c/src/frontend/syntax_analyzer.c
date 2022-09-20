@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "front/syntax_analyzer.h"
+#include "frontend/syntax_analyzer.h"
 #include "common/global_funcs.h"
 
 void _expr(token_list *tokens, int *token_idx, syntax_tree **ast);

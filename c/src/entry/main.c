@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "common/global_struct.h"
-#include "front/generate.h"
+#include "frontend/generate.h"
+#include "backend/execute.h"
 #include "kits/arguments.h"
-#include "back/execute.h"
 
 int main(int argc, char **argv)
 {
