@@ -23,6 +23,8 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
+    syntax_tree_print(ast);
+
     ret = semantic_analysis(ast, &table);
     if (ret != CMM_SUCCESS) {
         printf("semantic analysis failed, ret: %d\n", ret);
