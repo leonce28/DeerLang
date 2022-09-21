@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "common/global_funcs.h"
-#include "frontend/generate.h"
-#include "backend/execute.h"
+#include "backend/execute_asm.h"
+#include "kits/generate.h"
 
 int main(int argc, char **argv)
 {
@@ -14,7 +14,7 @@ int main(int argc, char **argv)
         return ret;
     }
 
-    ret = generate_code(&handler);
+    ret = generate_asm(&handler);
     if (ret != CMM_SUCCESS) {
         printf("generate code failed, ret: %d\n", ret);
         return ret;

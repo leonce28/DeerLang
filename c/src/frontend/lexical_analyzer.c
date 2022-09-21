@@ -6,14 +6,14 @@
 #include "common/global_macro.h"
 #include "common/global_funcs.h"
 
-static int _read_code_string(const char *cmm_file_path, char **str)
+static int _read_code_string(const char *cmm_path, char **str)
 {
     FILE *fp;
     size_t file_length, count = 1;
 
-    fp = fopen(cmm_file_path, "r");
+    fp = fopen(cmm_path, "r");
     if (fp == NULL) {
-        printf("fopen file failed, file path: %s.\n", cmm_file_path);
+        printf("fopen file failed, file path: %s.\n", cmm_path);
         return CMM_FAILED;
     }
 
@@ -28,7 +28,7 @@ static int _read_code_string(const char *cmm_file_path, char **str)
     }
 
     if (count != fread((*str), file_length, count, fp)) {
-        printf("fread cmm file failed, file path: %s.\n", cmm_file_path);
+        printf("fread cmm file failed, file path: %s.\n", cmm_path);
         return CMM_FAILED;
     }
 
@@ -329,7 +329,7 @@ static token *_next_token(lexical *lex)
     return t;
 }
 
-int lexical_analysis(const char *cmm_file_path, token_list **tl_ptr)
+int lexical_analysis(const char *cmm_path, token_list **tl_ptr)
 {
     token *t;
     char *code_str;
@@ -340,7 +340,7 @@ int lexical_analysis(const char *cmm_file_path, token_list **tl_ptr)
         return CMM_FAILED;
     }
 
-    if (CMM_SUCCESS != _read_code_string(cmm_file_path, &lex.str) || lex.str == NULL) {
+    if (CMM_SUCCESS != _read_code_string(cmm_path, &lex.str) || lex.str == NULL) {
         printf("lexical analysis read code string failed. \n");
         return CMM_FAILED;
     }

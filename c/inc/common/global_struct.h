@@ -4,9 +4,8 @@
 #include "global_macro.h"
 
 typedef struct _parse_handler {
-    char input_cmm_path[FILE_PATH_MAX];
-    char input_asm_path[FILE_PATH_MAX];
-    char output_asm_path[FILE_PATH_MAX];
+    char cmm_path[FILE_PATH_MAX];
+    char asm_path[FILE_PATH_MAX];
 } parse_handler;
 
 typedef struct _token {
@@ -46,11 +45,14 @@ typedef struct symbol_space {
     symbol **s;
 } symbol_space;
 
-// 1 symbol_table => n symbol_space; 1 symbol_space => n symbol
 typedef struct _symbol_table {
     int ss_idx;
     symbol_space **ss;
 } symbol_table;
+
+typedef struct _code_list {
+    char *name;
+} code_list;
 
 
 
