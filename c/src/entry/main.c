@@ -5,25 +5,18 @@
 
 int main(int argc, char **argv)
 {
-    int ret;
     parse_handler handler;
 
-    ret = arguments_init(argc, argv, &handler);
-    if (ret != CMM_SUCCESS) {
-        printf("init arguments failed, ret: %d\n", ret);
-        return ret;
+    if (arguments_init(argc, argv, &handler)) {
+        invild_call("init arguments");
     }
 
-    ret = generate_asm(&handler);
-    if (ret != CMM_SUCCESS) {
-        printf("generate code failed, ret: %d\n", ret);
-        return ret;
+    if (generate_asm(&handler)) {
+        invild_call("generate code");
     }
 
-    ret = execute_code(&handler);
-    if (ret != CMM_SUCCESS) {
-        printf("execute code failed, ret: %d\n", ret);
-        return ret;
+    if (execute_code(&handler)) {
+        invild_call("execute code");
     }
 
     printf("finished.\n");

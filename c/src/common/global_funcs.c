@@ -7,6 +7,13 @@
 extern char *optarg;
 extern int getopt();
 
+void invild_call(const char *state)
+{
+    assert(state != NULL);
+    printf("%s failed\n", state);
+    exit(0);
+}
+
 void _arguments_usage()
 {
     printf("usage: compiler [option]\n");
@@ -47,6 +54,8 @@ int arguments_init(int argc, char **argv, parse_handler *handler)
                 break;
         }
     }
+
+    memset(handler, 0, sizeof(parse_handler));
 
     if (strlen(handler->cmm_path) == 0) {
         strcpy(handler->cmm_path, "a.cmm");
@@ -219,7 +228,7 @@ symbol_space *create_symbol_space(const char* space_name)
 
     symbol_space *space = (symbol_space *)malloc(sizeof(symbol_space));
     memset(space, 0, sizeof(symbol_space));
-    strncpy(space->space_name, space_name, MIN(SCOPE_NAME_MAX, strlen(space_name)));
+    strncpy(space->space_name, space_name, MIN(FUNC_NAME_MAX, strlen(space_name)));
     space->s_idx = 0;
     space->s = (symbol **)malloc(TABLE_SYMBOL_MAX * sizeof(symbol *));
 
@@ -273,6 +282,14 @@ void symbol_table_print(const symbol_table *table)
                 table->ss[table_idx]->s[space_idx]->var_name);
         }
     }
+}
 
+code_list *create_code_list()
+{
+    code_list *cl = (code_list *)malloc(sizeof(code_list));
+    memset(cl, 0, sizeof(code_list));
+    cl->c_idx = 0;
+    cl->c = (code **)malloc(CODE_LSIT_MAX * sizeof(code *));
+    return cl;
 }
 

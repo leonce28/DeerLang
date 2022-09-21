@@ -7,13 +7,6 @@
 #include "backend/semantic_analyzer.h"
 #include "backend/code_generator.h"
 
-void _invild_state(const char *state)
-{
-    assert(state != NULL);
-    printf("%s failed\n", state);
-    exit(0);
-}
-
 int generate_asm(parse_handler *handler)
 {
     token_list *tokens;
@@ -21,25 +14,23 @@ int generate_asm(parse_handler *handler)
     symbol_table *table;
     code_list *codes;
 
-    if (!lexical_analysis(handler->cmm_path, &tokens)) {
-        _invild_state("lexical analysis");
+    if (lexical_analysis(handler->cmm_path, &tokens)) {
+        invild_call("lexical analysis");
     }
-
     // token_list_print(tokens);
 
-    if (!syntax_analysis(tokens, &ast)) {
-        _invild_state("syntax analysis");
+    if (syntax_analysis(tokens, &ast)) {
+        invild_call("syntax analysis");
     }
-
     // syntax_tree_print(ast);
 
-    if (!semantic_analysis(ast, &table)) {
-        _invild_state("semantic analysis");
+    if (semantic_analysis(ast, &table)) {
+        invild_call("semantic analysis");
     }
-
     // symbol_table_print(table);
-    if (!generate_code(ast, table, handler, &codes)) {
-        _invild_state("generate code");
+
+    if (generate_code(ast, table, handler, &codes)) {
+        invild_call("generate code");
     }
 
     return CMM_SUCCESS;
