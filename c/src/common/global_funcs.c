@@ -261,3 +261,21 @@ symbol_table *create_symbol_table()
     return table;
 }
 
+void symbol_table_print(const symbol_table *table)
+{
+    assert(table != NULL);
+    
+    int table_idx, space_idx;
+    for (table_idx = 0; table_idx < table->ss_idx; ++table_idx) {
+        printf("space_name: %s, size: %d\n", table->ss[table_idx]->space_name, table->ss[table_idx]->s_idx);
+        
+        for (space_idx = 0; space_idx < table->ss[table_idx]->s_idx; ++space_idx) {
+            printf("\tvar_idx: %d, var_size: %d, var_name: %s\n", 
+                table->ss[table_idx]->s[space_idx]->var_idx,
+                table->ss[table_idx]->s[space_idx]->var_size,
+                table->ss[table_idx]->s[space_idx]->var_name);
+        }
+    }
+
+}
+

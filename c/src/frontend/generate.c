@@ -33,6 +33,7 @@ int generate_code(parse_handler *handler)
         return ret;
     }
 
+    symbol_table_print(table);
     // CodeGenerator codeGenerator(root, symbolTable);
 
     // auto codeList = codeGenerator.generateCode();

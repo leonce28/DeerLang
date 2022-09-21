@@ -16,7 +16,7 @@ static void _analysis_local_declared(const syntax_tree *local_declared, int *var
         node = local_declared->sub_list[idx];
         var_size = node->sub_list[2] != NULL ? atoi(node->sub_list[2]->data->token_str) : 0;
 
-        (*space)->s[(*space)->s_idx++] = create_symbol(node->sub_list[2]->data->token_str, *var_idx, var_size);
+        (*space)->s[(*space)->s_idx++] = create_symbol(node->sub_list[1]->data->token_str, *var_idx, var_size);
         *var_idx += var_size + 1;
     }
 }
@@ -39,14 +39,12 @@ static void _analysis_func_declared(const syntax_tree *func_declared, symbol_tab
             // param ::= type id [ '[' ']' ]
             sub = node->sub_list[idx];
 
-            printf("\tdeep 2 param id: %s\n", sub->sub_list[1]->data->token_str);
             space->s[space->s_idx++] = create_symbol(sub->sub_list[1]->data->token_str, var_idx++, 0);
         }
     }
 
     // local_decl 
-    _analysis_local_declared(func_declared->sub_list[4], &var_idx, &space);
-
+    _analysis_local_declared(func_declared->sub_list[3], &var_idx, &space);
 
     // stmt_list todo
 }
@@ -63,7 +61,6 @@ int semantic_analysis(const syntax_tree *ast, symbol_table **table)
         // declared ::= var_declared | func_declared
         declared = ast->sub_list[ast_idx];
 
-        printf("deep 1: %s\n", declared->data->token_str);
         if (declared->data->token_type == TOKEN_FUNC_DECL) {
             _analysis_func_declared(declared, table);
         } else {
