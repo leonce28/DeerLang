@@ -40,36 +40,6 @@ void _type(token_list *tokens, int *token_idx, syntax_tree **ast)
     *ast = node;
 }
 
-void _var_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
-{
-    /*
-        EBNF:
-            var_declared ::= type id [ '[' number ']' ] ';'
-    */
-    syntax_tree *node = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
-
-    _type(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
-    } else {
-        _invalid_token(ANALY_TOKEN_PTR());
-    }
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, tokens, token_idx);
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_NUMBER, tokens, token_idx);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, tokens, token_idx);
-    }
-
-    _match_token(TOKEN_SEMICOLON, tokens, token_idx);
-
-    *ast = node;
-}
-
-
 void _param(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
@@ -148,7 +118,7 @@ void _var_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
     if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
         _match_token(TOKEN_LEFT_SQUARE_BRACKET, tokens, token_idx);
 
-        node->sub_list[node->sub_idx] = NEW_AST_NODE3();
+        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
 
         _match_token(TOKEN_NUMBER, tokens, token_idx);
         _match_token(TOKEN_RIGHT_SQUARE_BRACKET, tokens, token_idx);
@@ -159,11 +129,11 @@ void _var_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
     *ast = node;
 }
 
-void _local_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _local_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            local_decl ::= { var_decl }
+            local_declared ::= { var_decl }
     */
     syntax_tree *node = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
 
@@ -633,7 +603,7 @@ void _func_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 
     _match_token(TOKEN_LEFT_CURLY_BRACKET, tokens, token_idx);
 
-    _local_decl(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _local_declared(tokens, token_idx, &node->sub_list[node->sub_idx++]);
 
     _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
 
@@ -661,7 +631,7 @@ void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 
     if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_SQUARE_BRACKET ||
         ANALY_TOKEN_TYPE2(2) == TOKEN_SEMICOLON) {
-        _var_declared(tokens, token_idx, ast);
+        _local_declared(tokens, token_idx, ast);
     } else if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_ROUND_BRACKET) {
         _func_declared(tokens, token_idx, ast);
     } else {

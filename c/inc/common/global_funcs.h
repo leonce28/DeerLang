@@ -4,7 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // arguments
 ////////////////////////////////////////////////////////////////////////////////
-
 int arguments_init(int argc, char **argv, parse_handler *handler);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,4 +31,6 @@ void syntax_tree_print(const syntax_tree *ast);
 ////////////////////////////////////////////////////////////////////////////////
 symbol_table *create_symbol_table();
 symbol_space *create_symbol_space(const char *space_name);
+symbol_space *get_global_space(const symbol_table *table);
+symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
 symbol *create_symbol(const char *var_name, int var_idx, int var_size);

@@ -229,13 +229,35 @@ symbol_space *create_symbol_space(const char* space_name)
     return space;
 }
 
+symbol_space *get_global_space(const symbol_table *table)
+{
+    assert(table != NULL && (table->ss_idx > 0));
+    return table->ss[0];
+}
+
+symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
+{
+    assert(table != NULL && (*table) != NULL && space_name != NULL);
+    int ss_idx;
+    
+    for (ss_idx = 0; ss_idx < (*table)->ss_idx; ++ss_idx) {
+        if (strcmp(space_name, (*table)->ss[ss_idx]->space_name) == 0) {
+            return (*table)->ss[ss_idx];
+        }
+    }
+
+    (*table)->ss[(*table)->ss_idx] = create_symbol_space(space_name);
+
+    return (*table)->ss[(*table)->ss_idx++];
+}
+
 symbol_table *create_symbol_table()
 {
     symbol_table *table = (symbol_table *)malloc(sizeof(symbol_table));
     memset(table, 0, sizeof(symbol_table));
     table->ss_idx = 0;
     table->ss = (symbol_space **)malloc(TABLE_SPACE_MAX * sizeof(symbol_space *));
-
+    table->ss[table->ss_idx++] = create_symbol_space(NAMESPACE_GLOBAL);
     return table;
 }
 

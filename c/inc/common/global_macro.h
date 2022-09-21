@@ -9,6 +9,7 @@
 #define AST_LIST_MAX        1024
 #define TABLE_SYMBOL_MAX    1024
 #define TABLE_SPACE_MAX     1024
+#define NAMESPACE_GLOBAL    "__GLOBAL__"
 #define MIN(a, b)       (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)       (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
