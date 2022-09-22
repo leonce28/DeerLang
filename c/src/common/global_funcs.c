@@ -40,13 +40,13 @@ int arguments_init(int argc, char **argv, parse_handler *handler)
     while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
         switch (option) {
             case 'o':
-                strncpy(handler->asm_path, optarg, FILE_PATH_MAX);
+                strncpy(handler->asm_file, optarg, FILE_PATH_MAX);
                 break;
             case 'i':
-                strncpy(handler->cmm_path, optarg, FILE_PATH_MAX);
+                strncpy(handler->cmm_file, optarg, FILE_PATH_MAX);
                 break;
             case 'r':
-                strncpy(handler->asm_path, optarg, FILE_PATH_MAX);
+                strncpy(handler->asm_file, optarg, FILE_PATH_MAX);
                 break;
             case 'h':
             default:
@@ -57,11 +57,11 @@ int arguments_init(int argc, char **argv, parse_handler *handler)
 
     memset(handler, 0, sizeof(parse_handler));
 
-    if (strlen(handler->cmm_path) == 0) {
-        strcpy(handler->cmm_path, "a.cmm");
+    if (strlen(handler->cmm_file) == 0) {
+        strcpy(handler->cmm_file, "a.cmm");
     }
-    if (strlen(handler->asm_path) == 0) {
-        strcpy(handler->asm_path, "a.out");
+    if (strlen(handler->asm_file) == 0) {
+        strcpy(handler->asm_file, "a.out");
     }
 
     return CMM_SUCCESS;

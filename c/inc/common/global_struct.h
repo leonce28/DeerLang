@@ -4,8 +4,8 @@
 #include "global_macro.h"
 
 typedef struct _parse_handler {
-    char cmm_path[FILE_PATH_MAX];
-    char asm_path[FILE_PATH_MAX];
+    char cmm_file[FILE_PATH_MAX];
+    char asm_file[FILE_PATH_MAX];
 } parse_handler;
 
 typedef struct _token {

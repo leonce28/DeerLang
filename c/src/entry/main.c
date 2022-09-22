@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "common/global_funcs.h"
-#include "backend/execute_asm.h"
-#include "kits/generate.h"
+#include "kits/file_operator.h"
 
 int main(int argc, char **argv)
 {
@@ -11,11 +10,11 @@ int main(int argc, char **argv)
         invild_call("init arguments");
     }
 
-    if (generate_asm(&handler)) {
+    if (generate_asm(handler.cmm_file, handler.asm_file)) {
         invild_call("generate code");
     }
 
-    if (execute_code(&handler)) {
+    if (execute_code(handler.asm_file)) {
         invild_call("execute code");
     }
 

@@ -19,7 +19,7 @@ int _translate_call(code_list **codes)
     return CMM_SUCCESS;
 }
 
-int generate_code(const syntax_tree *ast, const symbol_table *table, parse_handler *handler, code_list **codes)
+int generate_code(const syntax_tree *ast, const symbol_table *table, code_list **codes)
 {
 
     if (_create_code_map(ast, table, codes)) {
