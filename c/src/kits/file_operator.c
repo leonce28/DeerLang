@@ -45,7 +45,7 @@ int generate_asm(const char *cmm_file, char *asm_file)
     token_list *tokens;
     syntax_tree *ast;
     symbol_table *table;
-    code_list *codes;
+    unordered_code_map *ucm;
 
     if (read_code_string(cmm_file, &cmm_str)) {
         invild_call("read code string");
@@ -66,7 +66,7 @@ int generate_asm(const char *cmm_file, char *asm_file)
     }
     // symbol_table_print(table);
 
-    if (generate_code(ast, table, &codes)) {
+    if (generate_code(ast, table, &ucm)) {
         invild_call("generate code");
     }
 

@@ -1,36 +1,37 @@
+#include <assert.h>
 #include "backend/code_generator.h"
 #include "common/global_funcs.h"
 
-int _create_code_map(const syntax_tree *ast, const symbol_table *table, code_list **codes)
+int _create_unordered_code_map(const syntax_tree *ast, const symbol_table *table, unordered_code_map **ucm)
 {
-    code_list *cl = create_code_list();
+    assert(ast != NULL && table != NULL);
+    unordered_code_map *u = create_unordered_code_map();
 
-    *codes = cl;
+    *ucm = u;
     return CMM_SUCCESS;
 }
 
-int _merge_code_map(code_list **codes)
-{
-    return CMM_SUCCESS;
-}
-
-int _translate_call(code_list **codes)
+int _merge_code_map(unordered_code_map **ucm)
 {
     return CMM_SUCCESS;
 }
 
-int generate_code(const syntax_tree *ast, const symbol_table *table, code_list **codes)
+int _translate_call(unordered_code_map **ucm)
 {
+    return CMM_SUCCESS;
+}
 
-    if (_create_code_map(ast, table, codes)) {
+int generate_code(const syntax_tree *ast, const symbol_table *table, unordered_code_map **ucm)
+{  
+    if (_create_unordered_code_map(ast, table, ucm)) {
         invild_call("create code map");
     }
 
-    if (_merge_code_map(codes)) {
+    if (_merge_code_map(ucm)) {
         invild_call("merge code map");
     }
 
-    if (_translate_call(codes)) {
+    if (_translate_call(ucm)) {
         invild_call("translate call");
     }
 

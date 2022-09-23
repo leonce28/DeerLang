@@ -50,15 +50,25 @@ typedef struct _symbol_table {
     symbol_space **ss;
 } symbol_table;
 
+// struct code = { int instruction, string func_name }
+//          => pair<__Instruction, string>
 typedef struct _code {
     int instruction;
     char func_name[FUNC_NAME_MAX];
 } code;
 
-typedef struct _code_list {
+// struct code_list = { int c_idx, string map_name, code c[] >
+//          => <string, vector<pair<__Instruction, string>>
+typedef struct _code_map {
     int c_idx;
+    char map_name[MAP_NAME_MAX];
     code **c;
-} code_list;
+} code_map;
 
-
+// struct unordered_code_map = { int m_idx, code_map maps[] }
+//          => unordered_map<string, vector<pair<__Instruction, string>>>
+typedef struct _unordered_code_map {
+    int m_idx;
+    code_map **maps;
+} unordered_code_map;
 

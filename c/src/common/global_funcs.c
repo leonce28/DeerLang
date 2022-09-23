@@ -284,12 +284,36 @@ void symbol_table_print(const symbol_table *table)
     }
 }
 
-code_list *create_code_list()
+// code_list *create_code_list()
+// {
+//     code_list *cl = (code_list *)malloc(sizeof(code_list));
+//     memset(cl, 0, sizeof(code_list));
+//     cl->c_idx = 0;
+//     cl->c = (code **)malloc(CODE_LSIT_MAX * sizeof(code *));
+//     return cl;
+// }
+
+code_map *create_code_map(const char *map_name)
 {
-    code_list *cl = (code_list *)malloc(sizeof(code_list));
-    memset(cl, 0, sizeof(code_list));
-    cl->c_idx = 0;
-    cl->c = (code **)malloc(CODE_LSIT_MAX * sizeof(code *));
-    return cl;
+    assert(map_name != NULL);
+
+    code_map *maps = (code_map *)malloc(sizeof(code_map));
+    memset(maps, 0, sizeof(code_map));
+
+    strncpy(maps->map_name, map_name, MIN(MAP_NAME_MAX, strlen(map_name)));
+    maps->c_idx = 0;
+    maps->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
+
+    return maps;
 }
 
+unordered_code_map *create_unordered_code_map()
+{
+    unordered_code_map *ucm = (unordered_code_map *)malloc(sizeof(unordered_code_map));
+    memset(ucm, 0, sizeof(unordered_code_map));
+    ucm->m_idx = 0;
+    ucm->maps = (code_map **)malloc(CODE_MAPS_MAX * sizeof(code_map *));
+
+    ucm->maps[ucm->m_idx++] = create_code_map(NAMESPACE_GLOBAL);
+    return ucm;
+}

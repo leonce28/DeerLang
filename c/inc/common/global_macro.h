@@ -3,11 +3,14 @@
 #define TOKEN_SIZE_DEF      256
 #define FILE_PATH_MAX       512
 #define TOKEN_STR_MAX       32
+#define MAP_NAME_MAX        64
 #define FUNC_NAME_MAX       64
 #define VAR_NAME_MAX        32
 #define TOKEN_LIST_MAX      512
 #define AST_LIST_MAX        1024
 #define CODE_LSIT_MAX       1024
+#define CODE_MAPS_MAX       1024
+#define MASP_CODE_MAX       1024
 #define TABLE_SYMBOL_MAX    1024
 #define TABLE_SPACE_MAX     1024
 #define NAMESPACE_GLOBAL    "__GLOBAL__"
