@@ -334,7 +334,7 @@ int lexical_analysis(char *cmm_str, token_list **tl_ptr)
     lexical lex = { cmm_str, 1 , STAGE_START };
 
     if (_get_token_list_instance(tl_ptr)) {
-        invild_call("get token list instance");
+        invalid_call("get token list instance");
     }
 
     t = _next_token(&lex);

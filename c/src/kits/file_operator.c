@@ -48,26 +48,26 @@ int generate_asm(const char *cmm_file, char *asm_file)
     unordered_code_map *ucm;
 
     if (read_code_string(cmm_file, &cmm_str)) {
-        invild_call("read code string");
+        invalid_call("read code string");
     }
 
     if (lexical_analysis(cmm_str, &tokens)) {
-        invild_call("lexical analysis");
+        invalid_call("lexical analysis");
     }
     // token_list_print(tokens);
 
     if (syntax_analysis(tokens, &ast)) {
-        invild_call("syntax analysis");
+        invalid_call("syntax analysis");
     }
     // syntax_tree_print(ast);
 
     if (semantic_analysis(ast, &table)) {
-        invild_call("semantic analysis");
+        invalid_call("semantic analysis");
     }
     // symbol_table_print(table);
 
     if (generate_code(ast, table, &ucm)) {
-        invild_call("generate code");
+        invalid_call("generate code");
     }
 
     strcpy(asm_file, cmm_file);

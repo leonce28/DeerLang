@@ -6,18 +6,12 @@ void _expr(token_list *tokens, int *token_idx, syntax_tree **ast);
 void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast);
 void _stmt_list(token_list *tokens, int *token_idx, syntax_tree **ast);
 
-static void _invalid_token(token *t)
-{
-    printf("invalid token: %s in line %d\n", t->token_str, t->line_no);
-    exit(0);
-}
-
 void _match_token(int type, token_list *tokens, int *token_idx)
 {
     if (ANALY_TOKEN_TYPE() == type) {
         (*token_idx)++;
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 }
 
@@ -34,7 +28,7 @@ void _type(token_list *tokens, int *token_idx, syntax_tree **ast)
         node = NEW_AST_NODE2(ANALY_TOKEN_PTR());
         _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     *ast = node;
@@ -54,7 +48,7 @@ void _param(token_list *tokens, int *token_idx, syntax_tree **ast)
         node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
         _match_token(TOKEN_ID, tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
@@ -112,7 +106,7 @@ void _var_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
         node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
         _match_token(TOKEN_ID, tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
@@ -177,7 +171,7 @@ void _call(token_list *tokens, int *token_idx, syntax_tree **ast)
         node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
         _match_token(TOKEN_ID, tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
@@ -206,7 +200,7 @@ void _var(token_list *tokens, int *token_idx, syntax_tree **ast)
         node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
         _match_token(TOKEN_ID, tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
@@ -232,7 +226,7 @@ void _mul_op(token_list *tokens, int *token_idx, syntax_tree **ast)
         node = NEW_AST_NODE3();
         _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     *ast = node;
@@ -265,7 +259,7 @@ void _factor(token_list *tokens, int *token_idx, syntax_tree **ast)
             }
             break;
         default:
-            _invalid_token(ANALY_TOKEN_PTR());
+            invalid_token(ANALY_TOKEN_PTR());
             break;
    }
 }
@@ -283,7 +277,7 @@ void _add_op(token_list *tokens, int *token_idx, syntax_tree **ast)
         node = NEW_AST_NODE3();
         _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     *ast = node;
@@ -353,7 +347,7 @@ void _rel_op(token_list *tokens, int *token_idx, syntax_tree **ast)
             break;
    
        default:
-            _invalid_token(ANALY_TOKEN_PTR());
+            invalid_token(ANALY_TOKEN_PTR());
             break;
    }
 
@@ -398,7 +392,7 @@ void _expr(token_list *tokens, int *token_idx, syntax_tree **ast)
         *ast = node;
         return;
     } else if (ANALY_TOKEN_TYPE() != TOKEN_ID) {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     if (ANALY_TOKEN_TYPE2(1) == TOKEN_LEFT_ROUND_BRACKET) {
@@ -549,7 +543,7 @@ void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
             _return_stmt(tokens, token_idx, ast);
             break;
         default:
-            _invalid_token(ANALY_TOKEN_PTR());
+            invalid_token(ANALY_TOKEN_PTR());
             break;
    }
 }
@@ -592,7 +586,7 @@ void _func_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
         node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
         _match_token(TOKEN_ID, tokens, token_idx);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
@@ -616,17 +610,17 @@ void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            declared ::= var_declared
+            declared ::= local_declared
                     | func_declared
     */
 
     if (ANALY_TOKEN_TYPE() != TOKEN_INT &&
         ANALY_TOKEN_TYPE() != TOKEN_VOID) {
-        _invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(ANALY_TOKEN_PTR());
     }
 
     if (ANALY_TOKEN_TYPE2(1) != TOKEN_ID) {
-        _invalid_token(ANALY_TOKEN_PTR2(1));
+        invalid_token(ANALY_TOKEN_PTR2(1));
     }
 
     if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_SQUARE_BRACKET ||
@@ -635,7 +629,7 @@ void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
     } else if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_ROUND_BRACKET) {
         _func_declared(tokens, token_idx, ast);
     } else {
-        _invalid_token(ANALY_TOKEN_PTR2(2));
+        invalid_token(ANALY_TOKEN_PTR2(2));
     }
 }
 

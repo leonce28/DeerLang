@@ -7,10 +7,16 @@
 extern char *optarg;
 extern int getopt();
 
-void invild_call(const char *state)
+void invalid_call(const char *state)
 {
     assert(state != NULL);
     printf("%s failed\n", state);
+    exit(0);
+}
+
+void invalid_token(const token *t)
+{
+    printf("invalid token: %s in line %d\n", t->token_str, t->line_no);
     exit(0);
 }
 
@@ -283,15 +289,6 @@ void symbol_table_print(const symbol_table *table)
         }
     }
 }
-
-// code_list *create_code_list()
-// {
-//     code_list *cl = (code_list *)malloc(sizeof(code_list));
-//     memset(cl, 0, sizeof(code_list));
-//     cl->c_idx = 0;
-//     cl->c = (code **)malloc(CODE_LSIT_MAX * sizeof(code *));
-//     return cl;
-// }
 
 code_map *create_code_map(const char *map_name)
 {

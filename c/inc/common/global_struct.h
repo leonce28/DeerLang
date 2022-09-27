@@ -57,12 +57,18 @@ typedef struct _code {
     char func_name[FUNC_NAME_MAX];
 } code;
 
-// struct code_list = { int c_idx, string map_name, code c[] >
+// struct code_list = { int c_idx, code c[] }
+//          => vector<pair<__Instruction, string>
+typedef struct _code_list {
+    int c_idx;
+    code **c;
+} code_list;
+
+// struct code_map = { char map_name[], code_list cl }
 //          => <string, vector<pair<__Instruction, string>>
 typedef struct _code_map {
-    int c_idx;
     char map_name[MAP_NAME_MAX];
-    code **c;
+    code_list cl;
 } code_map;
 
 // struct unordered_code_map = { int m_idx, code_map maps[] }
