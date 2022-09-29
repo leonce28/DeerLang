@@ -287,7 +287,7 @@ void _term(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            term ::= factor { mul_op Factor }
+            term ::= factor { mul_op factor }
     */
     syntax_tree *node = NEW_AST_NODE("Term", TOKEN_TERM);
 

@@ -32,7 +32,7 @@ enum {
 
 enum _token_type{
     // Word
-    TOKEN_ID = 100,            // Id
+    TOKEN_ID = 100,             // Id
     TOKEN_NUMBER,               // Number
 
     // Keyword
@@ -46,7 +46,7 @@ enum _token_type{
     // Operator
     TOKEN_PLUS,                 // +
     TOKEN_MINUS,                // -
-    TOKEN_MULTIPLY = 110,      // *
+    TOKEN_MULTIPLY = 110,       // *
     TOKEN_DIVIDE,               // /
     TOKEN_LESS,                 // <
     TOKEN_LESS_EQUAL,           // <=
@@ -56,7 +56,7 @@ enum _token_type{
     TOKEN_NOT_EQUAL,            // !=
     TOKEN_ASSIGN,               // =
     TOKEN_SEMICOLON,            // ;
-    TOKEN_COMMA = 120,         // ,
+    TOKEN_COMMA = 120,          // ,
     TOKEN_LEFT_ROUND_BRACKET,   // (
     TOKEN_RIGHT_ROUND_BRACKET,  // )
     TOKEN_LEFT_SQUARE_BRACKET,  // [
@@ -70,7 +70,7 @@ enum _token_type{
     // Ast
     TOKEN_DECL_LIST,            // AST: DeclList
     TOKEN_VAR_DECL,             // AST: VarDecl
-    TOKEN_FUNC_DECL = 130,     // AST: FuncDecl
+    TOKEN_FUNC_DECL = 130,      // AST: FuncDecl
     TOKEN_PARAM_LIST,           // AST: ParamList
     TOKEN_PARAM,                // AST: Param
     TOKEN_COMPOUND_STMT,        // AST: CompoundStmt
@@ -80,7 +80,7 @@ enum _token_type{
     TOKEN_WHILE_STMT,           // AST: WhileStmt
     TOKEN_RETURN_STMT,          // AST: ReturnStmt
     TOKEN_EXPR,                 // AST: Expr
-    TOKEN_VAR = 140,           // AST: Var
+    TOKEN_VAR = 140,            // AST: Var
     TOKEN_SIMPLE_EXPR,          // AST: SimpleExpr
     TOKEN_ADD_EXPR,             // AST: AddExpr
     TOKEN_TERM,                 // AST: Term
