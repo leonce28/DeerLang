@@ -64,17 +64,28 @@ typedef struct _code_list {
     code **c;
 } code_list;
 
-// struct code_map = { char map_name[], code_list cl }
+// struct map_list = { char name[], code_list cl }
 //          => <string, vector<pair<__Instruction, string>>
+typedef struct _map_list {
+    char name[MAP_NAME_MAX];
+    code_list *cl;
+} map_list;
+
+// struct code_map = { int m_idx, map_list maps[] }
+//          => unordered_map<string, vector<pair<__Instruction, string>>>
 typedef struct _code_map {
-    char map_name[MAP_NAME_MAX];
-    code_list cl;
+    int m_idx;
+    map_list **maps;
 } code_map;
 
-// struct unordered_code_map = { int m_idx, code_map maps[] }
-//          => unordered_map<string, vector<pair<__Instruction, string>>>
-typedef struct _unordered_code_map {
-    int m_idx;
-    code_map **maps;
-} unordered_code_map;
+typedef struct _code_generator_handler {
+    char size[VAR_SIZE_MAX];
+    char *cur_space;
+    const syntax_tree *tree;
+    syntax_tree *node;
+    const symbol_table *table;
+    code_map *c_map;
+    code_list *cl;
+    code_list *g_cl;
+} code_generator_handler;
 

@@ -1,21 +1,22 @@
 #pragma once
 
-#define TOKEN_SIZE_DEF      256
-#define FILE_PATH_MAX       512
-#define TOKEN_STR_MAX       32
-#define MAP_NAME_MAX        64
-#define FUNC_NAME_MAX       64
-#define VAR_NAME_MAX        32
-#define TOKEN_LIST_MAX      512
-#define AST_LIST_MAX        1024
-#define CODE_LSIT_MAX       1024
-#define CODE_MAPS_MAX       1024
-#define MASP_CODE_MAX       1024
-#define TABLE_SYMBOL_MAX    1024
-#define TABLE_SPACE_MAX     1024
-#define NAMESPACE_GLOBAL    "__GLOBAL__"
-#define MIN(a, b)       (((a) < (b)) ? (a) : (b))
-#define MAX(a, b)       (((a) > (b)) ? (a) : (b))
+#define VAR_SIZE_MAX                  32
+#define VAR_NAME_MAX                  32
+#define TOKEN_STR_MAX                 32
+#define MAP_NAME_MAX                  64
+#define FUNC_NAME_MAX                 64
+#define TOKEN_SIZE_DEF               256
+#define FILE_PATH_MAX                512
+#define TOKEN_LIST_MAX               512
+#define AST_LIST_MAX                1024
+#define MAP_LIST_MAX                1024
+#define CODE_LSIT_MAX               1024
+#define MASP_CODE_MAX               1024
+#define TABLE_SYMBOL_MAX            1024
+#define TABLE_SPACE_MAX             1024
+#define NAMESPACE_GLOBAL            "__GLOBAL__"
+#define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
 #define ANALY_TOKEN_PTR()           (tokens->data[*token_idx])
 #define ANALY_TOKEN_PTR2(idx)       (tokens->data[*token_idx + idx])
@@ -24,6 +25,7 @@
 #define NEW_AST_NODE(_str, _type)   create_ast_node(create_token(_str, _type))
 #define NEW_AST_NODE2(_token)       create_ast_node(_token)
 #define NEW_AST_NODE3()             create_ast_node(ANALY_TOKEN_PTR())
+#define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->token_type == _t)
 
 enum {
     CMM_FAILED = -1,            // failed

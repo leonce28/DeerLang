@@ -1,188 +1,179 @@
-#include <assert.h>
+#include <string.h>
 #include "backend/code_generator.h"
 #include "common/global_funcs.h"
+void _generate_expr_code(code_generator_handler *cgh);
+void _generate_stmt_list_code(code_generator_handler *cgh);
 
-void _generate_number_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_number_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
-    code_list_push(cl, INS_LDC, node->data->token_str);
+    code_list_push(cgh->cl, INS_LDC, cgh->node->data->token_str);
 }
 
-void _generate_call_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_call_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     // call ::= id '(' [ arg_list ] ')'
+    syntax_tree *node = cgh->node;
 
     // xxx = input();
     if (strcmp(node->sub_list[0]->data->token_str, "input") == 0) {
-        code_list_push(cl, INS_IN, node->data->token_str);
+        code_list_push(cgh->cl, INS_IN, node->data->token_str);
     }
 
     // output(xxx);
     else if (strcmp(node->sub_list[0]->data->token_str, "output") == 0) {
-        _generate_expr_code(node->sub_list[1]->sub_list[0], func_name, cl);
-        code_list_push(cl, INS_OUT, node->data->token_str);
+        cgh->node = node->sub_list[1]->sub_list[0];
+        _generate_expr_code(cgh);
+
+        code_list_push(cgh->cl, INS_OUT, node->data->token_str);
     }
 }
 
-void _generate_var_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_var_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
 
 }
 
-void _generate_factor_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_factor_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     // factor ::= '(' expr ')' | var | call | num
-    switch (node->data->token_type) {
+    switch (cgh->node->data->token_type) {
         case TOKEN_EXPR:
-            _generate_expr_code(node, func_name, cl);
+            _generate_expr_code(cgh);
         case TOKEN_NUMBER:
-            _generate_number_code(node, func_name, cl);
+            _generate_number_code(cgh);
         case TOKEN_CALL:
-            _generate_call_code(node, func_name, cl);
+            _generate_call_code(cgh);
         case TOKEN_VAR:
-            _generate_var_code(node, func_name, cl);
+            _generate_var_code(cgh);
         default:
-            invalid_token(node->data);
+            invalid_token(cgh->node->data);
     }
 }
 
-void _generate_mul_op_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_mul_op_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    // mul_op ::= '*' | '/')
+    if (TOKEN_TYPE_MATCH(cgh->node, TOKEN_MULTIPLY)) {
+        code_list_push(cgh->cl, INS_MUL, "");
+    } else {
+        code_list_push(cgh->cl, INS_DIV, "");
+    }
 }
 
-void _generate_term_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_term_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     int idx;
+    syntax_tree *node = cgh->node;
+
     // term ::= factor { mul_op factor }
-    _generate_factor_code(node->sub_list[0], func_name, cl);
+    cgh->node = node->sub_list[0];
+    _generate_factor_code(cgh);
 
     for (idx = 1; idx < node->sub_idx; idx += 2) {
-        core_list_push(cl, INS_PUSH, "");
-        _generate_factor_code(node->sub_list[idx + 1], func_name, cl);
-        _generate_mul_op_code(node->sub_list[idx], func_name, cl);
-        core_list_push(cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_PUSH, "");
+
+        cgh->node = node->sub_list[idx + 1];
+        _generate_factor_code(cgh);
+
+        cgh->node = node->sub_list[idx];
+        _generate_mul_op_code(cgh);
+
+        code_list_push(cgh->cl, INS_POP, "");
     }
 }
 
-void _generate_add_op_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_add_op_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
+
 }
 
-void _generate_add_expr_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_add_expr_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     int idx;
+    syntax_tree *node = cgh->node;
+
     // add_expr ::= term { add_op term }
-    _generate_term_code(node->sub_list[0], func_name, cl);
+    cgh->node = node->sub_list[0];
+    _generate_term_code(cgh);
 
     for (idx = 1; idx < node->sub_idx; idx += 2) {
-        core_list_push(cl, INS_PUSH, "");
-        _generate_term_code(node->sub_list[idx + 1], func_name, cl);
-        _generate_add_op_code(node->sub_list[idx], func_name, cl);
-        core_list_push(cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_PUSH, "");
+
+        cgh->node = node->sub_list[idx + 1];
+        _generate_term_code(cgh);
+
+        cgh->node = node->sub_list[idx];
+        _generate_add_op_code(cgh);
+
+        code_list_push(cgh->cl, INS_POP, "");
     }
 }
 
-void _generate_rel_op_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_rel_op_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
+    // rel_op ::= '<' | '<' '=' | '>' | '>' '=' | '=' '=' | '!' '='
+    switch (cgh->node->data->token_type) {
+        case TOKEN_LESS:
+            code_list_push(cgh->cl, INS_LT, "");
+        case TOKEN_LESS_EQUAL:
+            code_list_push(cgh->cl, INS_LE, "");
+        case TOKEN_GREATER:
+            code_list_push(cgh->cl, INS_GT, "");
+        case TOKEN_GREATER_EQUAL:
+            code_list_push(cgh->cl, INS_GE, "");
+        case TOKEN_EQUAL:
+            code_list_push(cgh->cl, INS_EQ, "");
+        case TOKEN_NOT_EQUAL:
+            code_list_push(cgh->cl, INS_NE, "");
+        default:
+            invalid_token(cgh->node->data);
+    }
 }
 
-void _generate_simple_expr_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_simple_expr_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    syntax_tree *node = cgh->node;
 
     // simple_expr ::= add_expr [ rel_op add_expr ]
     if (!node->sub_list[1] && !node->sub_list[2]) {
-        _generate_add_expr_code(node->sub_list[0], func_name, cl);
+        cgh->node = node->sub_list[0];
+        _generate_add_expr_code(cgh);
     } else {
-        _generate_add_expr_code(node->sub_list[0], func_name, cl);
-        code_list_push(cl, INS_PUSH, "");
-        _generate_add_expr_code(node->sub_list[2], func_name, cl);
-        _generate_rel_op_code(node->sub_list[1], func_name, cl);
-        code_list_push(cl, INS_POP, "");
-    }
+        cgh->node = node->sub_list[0];
+        _generate_add_expr_code(cgh);
+    
+        code_list_push(cgh->cl, INS_PUSH, "");
 
+        cgh->node = node->sub_list[2];
+        _generate_add_expr_code(cgh);
+
+        cgh->node = node->sub_list[1];
+        _generate_rel_op_code(cgh);
+
+        code_list_push(cgh->cl, INS_POP, "");
+    }
 }
 
-void _generate_assign_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_assign_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    // // var ::= id [ '[' expr ']' ]
+    // code_list_push(cgh->cl, INS_PUSH, "");
 
-    // var ::= id [ '[' expr ']' ]
-    code_list_push(cl, INS_PUSH, "");
+    // // if find the var in current func_name symbol space
+    // if (is_local_var(NULL, func_name, node->sub_list[0]->data->token_str)) {
+        
+    //     snprintf(size, VAR_SIZE_MAX, "%d", get_symbol_idx(symbol));
+    //     code_list_push(cgh->cl, INS_LDC, size);
+    // } else {
 
-        // Local variable
-    if (__symbolTable.at(curFuncName).count(root->__subList[0]->__tokenStr)) {
-        codeList.emplace_back(__Instruction::__LDC, to_string(__symbolTable.at(curFuncName).at(root->__subList[0]->__tokenStr).first));
+    // }
 
-        // Scalar
-        if (!root->__subList[1]) {
-            codeList.emplace_back(__Instruction::__ST, "");
-        }
-        // Array
-        else {
-            auto exprCodeList = __generateExprCode(root->__subList[1], curFuncName);
-
-            // Get the (start) pointer (is already an absolute address)
-            codeList.emplace_back(__Instruction::__LD, "");
-            codeList.emplace_back(__Instruction::__PUSH, "");
-
-            codeList.insert(codeList.end(), exprCodeList.begin(), exprCodeList.end());
-
-            // Pointer[Index] (Pointer + Index)
-            codeList.emplace_back(__Instruction::__ADD, "");
-            codeList.emplace_back(__Instruction::__POP, "");
-
-            // Save by absolute address
-            codeList.emplace_back(__Instruction::__AST, "");
-        }
-    }
-    // Global variable
-    else {
-        codeList.emplace_back(__Instruction::__LDC, to_string(__symbolTable.at("__GLOBAL__").at(root->__subList[0]->__tokenStr).first));
-
-        // Scalar
-        if (!root->__subList[1]) {
-            codeList.emplace_back(__Instruction::__AST, "");
-        }
-        // Array
-        else {
-            auto exprCodeList = __generateExprCode(root->__subList[1], curFuncName);
-
-            // Absolute get the (start) pointer (is already an absolute address)
-            codeList.emplace_back(__Instruction::__ALD, "");
-            codeList.emplace_back(__Instruction::__PUSH, "");
-
-            codeList.insert(codeList.end(), exprCodeList.begin(), exprCodeList.end());
-
-            // Pointer[Index] (Pointer + Index)
-            codeList.emplace_back(__Instruction::__ADD, "");
-            codeList.emplace_back(__Instruction::__POP, "");
-
-            // Save by absolute address
-            codeList.emplace_back(__Instruction::__AST, "");
-        }
-    }
-
-    codeList.emplace_back(__Instruction::__POP, "");
+    // code_list_push(cgh->cl, INS_POP, "");
 }
 
-void _generate_expr_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_expr_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    syntax_tree *node = cgh->node;
 
     /* expr_stmt ::= [ expr ] ';'
      * expr ::= var '=' expr | simple_expr
@@ -190,118 +181,163 @@ void _generate_expr_code(const syntax_tree *node, char *func_name, code_list *cl
      * => expr_stmt ::= [ var '=' expr ] ';' | [ simple_expr ] ';'
      */
     if (!node->sub_list[1]) {
-        _generate_simple_expr_code(node->sub_list[1], func_name, cl);
+        cgh->node = node->sub_list[1];
+        _generate_simple_expr_code(cgh);
     } else {
-        _generate_expr_code(node->sub_list[1], func_name, cl);
-        _generate_assign_code(node->sub_list[0], func_name, cl);
+        cgh->node = node->sub_list[1];
+        _generate_expr_code(cgh);
+
+        cgh->node = node->sub_list[0];
+        _generate_assign_code(cgh);
     }
 }
 
-void _generate_if_stmt_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_if_stmt_code(code_generator_handler *cgh)
 { 
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    syntax_tree *node = cgh->node;
 
+    // if_stmt :: = if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
+
+    cgh->node = node->sub_list[0];
+    _generate_expr_code(cgh);
+
+    if (!node->sub_list[2]) {
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx);
+        code_list_push(cgh->cl, INS_JZ, cgh->size);
+
+        cgh->node = node->sub_list[1];
+        _generate_stmt_list_code(cgh);
+    } else {
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx);
+        code_list_push(cgh->cl, INS_JZ, cgh->size);
+
+        cgh->node = node->sub_list[1];
+        _generate_stmt_list_code(cgh);
+
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[2]->sub_idx);
+        code_list_push(cgh->cl, INS_JMP, cgh->size);
+
+        cgh->node = node->sub_list[2];
+        _generate_stmt_list_code(cgh);
+    }
 }
 
-void _generate_while_stmt_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_while_stmt_code(code_generator_handler *cgh)
 { 
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    syntax_tree *node = cgh->node;
 
+    // while_stmt ::= while '(' expr ')' stmt_list
+    cgh->node = node->sub_list[0];
+    _generate_expr_code(cgh);
+
+    snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx + 1);
+    code_list_push(cgh->cl, INS_JZ, cgh->size);
+
+    cgh->node = node->sub_list[1];
+    _generate_stmt_list_code(cgh);
+
+    snprintf(cgh->size, VAR_SIZE_MAX, "-%d", node->sub_list[0]->sub_idx - 1);
+    code_list_push(cgh->cl, INS_JMP, cgh->size);
 }
 
-void _generate_return_stmt_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_return_stmt_code(code_generator_handler *cgh)
 { 
-    assert(node != NULL && func_name != NULL && cl != NULL);
+    syntax_tree *node = cgh->node;
 
+    // return_stmt ::= return [ expr ] ';'
+    if (node->sub_list[0]) {
+        cgh->node = node->sub_list[0];
+        _generate_expr_code(cgh);
+    }
 }
 
-void _generate_stmt_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_stmt_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     // stmt ::= expr_stmt | if_stmt | while_stmt | return_stmt
-    switch (node->data->token_type) {
+    switch (cgh->node->data->token_type) {
         case TOKEN_EXPR:
-            _generate_expr_code(node, func_name, cl);
+            _generate_expr_code(cgh);
         case TOKEN_IF_STMT:
-            _generate_if_stmt_code(node, func_name, cl);
+            _generate_if_stmt_code(cgh);
         case TOKEN_WHILE_STMT:
-            _generate_while_stmt_code(node, func_name, cl);
+            _generate_while_stmt_code(cgh);
         case TOKEN_RETURN_STMT:
-            _generate_return_stmt_code(node, func_name, cl);
+            _generate_return_stmt_code(cgh);
         default:
-            invalid_token(node->data);
+            invalid_token(cgh->node->data);
     }
 }
 
-void _generate_stmt_list_code(const syntax_tree *node, char *func_name, code_list *cl)
+void _generate_stmt_list_code(code_generator_handler *cgh)
 {
-    assert(node != NULL && func_name != NULL && cl != NULL);
-
     int idx;
+    syntax_tree *node;
 
     // stmt_list ::= { stmt }
-    for (idx = 0; idx < node->sub_idx; ++idx) { 
-        _generate_stmt_code(node->sub_list[idx], func_name, cl);
+    for (idx = 0, node = cgh->node; idx < node->sub_idx; ++idx) {
+        cgh->node = node->sub_list[idx];
+        _generate_stmt_code(cgh);
     }
 }
 
-int _create_unordered_code_map(const syntax_tree *ast, const symbol_table *table, unordered_code_map **ucm)
+void _set_global_code_map(code_generator_handler *cgh)
 {
-    assert(ast != NULL && table != NULL);
 
+}
+
+int _create_code_map(code_generator_handler *cgh)
+{
     int idx;
-    code_map *map = NULL;
-    const char* cur_func_name;
-    const syntax_tree *node;
-    code_list *cl = create_code_list();
-    unordered_code_map *u = create_unordered_code_map();
+    syntax_tree *node;
+
+    _set_global_code_map(cgh);
 
     // declared_list ::= declared { declared }
-    for (idx = 0; idx < ast->sub_idx; ++idx) {
-        node = ast->sub_list[idx];
+    for (idx = 0; idx < cgh->tree->sub_idx; ++idx) {
+        node = cgh->tree->sub_list[idx];
 
         // declared ::= local_declared | func_declared
-        if (node->data->token_type == TOKEN_FUNC_DECL) {
+        if (TOKEN_TYPE_MATCH(node, TOKEN_FUNC_DECL)) {
             
             // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
-            cur_func_name = node->sub_list[1]->data->token_str;
+            cgh->cur_space = node->sub_list[1]->data->token_str;
+            cgh->node = node->sub_list[4];
+            _generate_stmt_list_code(cgh);
 
-            _generate_stmt_list_code(node->sub_list[4], cur_func_name, cl);
-
-            if (strcmp("main", cur_func_name) != 0) {
-                cl_push_back(cl, INS_RET, "");
+            if (strcmp("main", cgh->cur_space) != 0) {
+                code_list_push(cgh->cl, INS_RET, "");
             }
 
-            set_code_map(u, cur_func_name, cl);
+            set_code_map(cgh->c_map, cgh->cur_space, cgh->cl);
         }
     }
 
-    *ucm = u;
     return CMM_SUCCESS;
 }
 
-int _merge_code_map(unordered_code_map **ucm)
+int _merge_code_map(code_map *c_map)
 {
     return CMM_SUCCESS;
 }
 
-int _translate_call(unordered_code_map **ucm)
+int _translate_call(code_map *c_map)
 {
     return CMM_SUCCESS;
 }
 
-int generate_code(const syntax_tree *ast, const symbol_table *table, unordered_code_map **ucm)
+int generate_code(syntax_tree *ast, symbol_table *table)
 {  
-    if (_create_unordered_code_map(ast, table, ucm)) {
+    code_generator_handler *cgh = get_code_generator_handler(ast, table);
+
+    if (_create_code_map(cgh)) {
         invalid_call("create code map");
     }
 
-    if (_merge_code_map(ucm)) {
+    if (_merge_code_map(cgh->c_map)) {
         invalid_call("merge code map");
     }
 
-    if (_translate_call(ucm)) {
+    if (_translate_call(cgh->c_map)) {
         invalid_call("translate call");
     }
 

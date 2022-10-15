@@ -42,13 +42,21 @@ symbol_space *get_global_space(const symbol_table *table);
 symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
 symbol *create_symbol(const char *var_name, int var_idx, int var_size);
 void symbol_table_print(const symbol_table *table);
+int is_local_var(const symbol_table *table, const char *space_name, const char *var_name);
 
 ////////////////////////////////////////////////////////////////////////////////
 // code_list
 ////////////////////////////////////////////////////////////////////////////////
-// code_list *create_code_list();
+code_list *create_code_list();
+void code_list_push(code_list *cl, instruction ins, const char *str);
+
+////////////////////////////////////////////////////////////////////////////////
+// map_list
+////////////////////////////////////////////////////////////////////////////////
+map_list *create_map_list(const char *name);
 
 ////////////////////////////////////////////////////////////////////////////////
 // code_map
 ////////////////////////////////////////////////////////////////////////////////
-unordered_code_map *create_unordered_code_map();
+code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table);
+void set_code_map(code_map *c_map, const char *cur_space, code_list *cl);

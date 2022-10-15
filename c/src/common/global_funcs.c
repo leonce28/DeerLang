@@ -290,27 +290,59 @@ void symbol_table_print(const symbol_table *table)
     }
 }
 
-code_map *create_code_map(const char *map_name)
+map_list *create_map_list(const char *name)
 {
-    assert(map_name != NULL);
+    assert(name != NULL);
 
-    code_map *maps = (code_map *)malloc(sizeof(code_map));
-    memset(maps, 0, sizeof(code_map));
+    map_list *maps = (map_list *)malloc(sizeof(map_list));
+    memset(maps, 0, sizeof(map_list));
 
-    strncpy(maps->map_name, map_name, MIN(MAP_NAME_MAX, strlen(map_name)));
-    maps->c_idx = 0;
-    maps->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
-
+    strncpy(maps->name, name, MIN(MAP_NAME_MAX, strlen(name)));
     return maps;
 }
 
-unordered_code_map *create_unordered_code_map()
+code_list *create_code_list()
 {
-    unordered_code_map *ucm = (unordered_code_map *)malloc(sizeof(unordered_code_map));
-    memset(ucm, 0, sizeof(unordered_code_map));
-    ucm->m_idx = 0;
-    ucm->maps = (code_map **)malloc(CODE_MAPS_MAX * sizeof(code_map *));
+    code_list *cl = (code_list *)malloc(sizeof(code_list));
+    memset(cl, 0, sizeof(code_list));
 
-    ucm->maps[ucm->m_idx++] = create_code_map(NAMESPACE_GLOBAL);
-    return ucm;
+    cl->c_idx = 0;
+    cl->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
+
+    return cl;
+}
+
+void code_list_push(code_list *cl, instruction ins, const char *str)
+{
+    // undo clear str
+}
+
+code_map *create_code_map()
+{
+    code_map *cm = (code_map *)malloc(sizeof(code_map));
+    memset(cm, 0, sizeof(code_map));
+    cm->m_idx = 0;
+    cm->maps = (map_list **)malloc(MAP_LIST_MAX * sizeof(map_list *));
+
+    return cm;
+}
+
+void set_code_map(code_map *c_map, const char *cur_space, code_list *cl)
+{
+    
+}
+
+code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table)
+{
+    code_generator_handler *cgh = (code_generator_handler *)malloc(sizeof(code_generator_handler));
+    memset(cgh, 0, sizeof(code_generator_handler));
+
+    cgh->node = NULL;
+    cgh->tree = tree;
+    cgh->table = table;
+    cgh->c_map = create_code_map();
+    cgh->cl = create_code_list();
+    cgh->g_cl = create_code_list();
+
+    return cgh;
 }

@@ -61,7 +61,7 @@ int semantic_analysis(const syntax_tree *ast, symbol_table **table)
         // declared ::= var_declared | func_declared
         declared = ast->sub_list[ast_idx];
 
-        if (declared->data->token_type == TOKEN_FUNC_DECL) {
+        if (TOKEN_TYPE_MATCH(declared, TOKEN_FUNC_DECL)) {
             _analysis_func_declared(declared, table);
         } else {
             global_space = get_global_space(*table);

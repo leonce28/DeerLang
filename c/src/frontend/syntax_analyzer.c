@@ -216,8 +216,7 @@ void _mul_op(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            mul_op ::= *
-                    | /
+            mul_op ::= '*' | '/'
     */
     syntax_tree *node = NULL;
 
