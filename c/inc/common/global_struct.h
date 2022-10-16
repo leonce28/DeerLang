@@ -40,7 +40,7 @@ typedef struct _symbol {
 } symbol;
 
 typedef struct symbol_space {
-    char space_name[FUNC_NAME_MAX];
+    char space_name[SPACE_NAME_MAX];
     int s_idx;
     symbol **s;
 } symbol_space;
@@ -50,11 +50,11 @@ typedef struct _symbol_table {
     symbol_space **ss;
 } symbol_table;
 
-// struct code = { int instruction, string func_name }
+// struct code = { instruction ins, string offset }
 //          => pair<__Instruction, string>
 typedef struct _code {
-    int instruction;
-    char func_name[FUNC_NAME_MAX];
+    instruction ins; 
+    char offset[VAR_OFFSET_MAX];
 } code;
 
 // struct code_list = { int c_idx, code c[] }

@@ -3,8 +3,9 @@
 #define VAR_SIZE_MAX                  32
 #define VAR_NAME_MAX                  32
 #define TOKEN_STR_MAX                 32
-#define MAP_NAME_MAX                  64
-#define FUNC_NAME_MAX                 64
+#define MAP_NAME_MAX                  64 
+#define SPACE_NAME_MAX                64
+#define VAR_OFFSET_MAX                64
 #define TOKEN_SIZE_DEF               256
 #define FILE_PATH_MAX                512
 #define TOKEN_LIST_MAX               512
@@ -15,6 +16,7 @@
 #define TABLE_SYMBOL_MAX            1024
 #define TABLE_SPACE_MAX             1024
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
+#define NAMESPACE_ENTRY             "main"
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])

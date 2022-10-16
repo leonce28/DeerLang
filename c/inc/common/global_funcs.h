@@ -40,15 +40,16 @@ symbol_table *create_symbol_table();
 symbol_space *create_symbol_space(const char *space_name);
 symbol_space *get_global_space(const symbol_table *table);
 symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
+symbol_space *find_symbol_space(const symbol_table *table, const char *space_name);
 symbol *create_symbol(const char *var_name, int var_idx, int var_size);
+symbol *find_symbol(const symbol_table *table, const char *space_name, const char *var_name);
 void symbol_table_print(const symbol_table *table);
-int is_local_var(const symbol_table *table, const char *space_name, const char *var_name);
 
 ////////////////////////////////////////////////////////////////////////////////
 // code_list
 ////////////////////////////////////////////////////////////////////////////////
 code_list *create_code_list();
-void code_list_push(code_list *cl, instruction ins, const char *str);
+void code_list_push(code_list *cl, instruction ins, char *str);
 
 ////////////////////////////////////////////////////////////////////////////////
 // map_list

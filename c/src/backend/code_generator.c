@@ -1,6 +1,7 @@
 #include <string.h>
 #include "backend/code_generator.h"
 #include "common/global_funcs.h"
+
 void _generate_expr_code(code_generator_handler *cgh);
 void _generate_stmt_list_code(code_generator_handler *cgh);
 
@@ -30,7 +31,34 @@ void _generate_call_code(code_generator_handler *cgh)
 
 void _generate_var_code(code_generator_handler *cgh)
 {
+    // var ::= id [ '[' expr ']' ]
+    symbol *sb = NULL;
+    syntax_tree *node = cgh->node;
 
+    // is local var in current function ?
+    sb = find_symbol(cgh->table, cgh->cur_space, node->sub_list[0]->data->token_str);
+
+    // maybe global var ?
+    if (sb) {
+        code_list_push(cgh->cl, INS_LDC, "");
+        code_list_push(cgh->cl, INS_LD, "");
+    } else {
+        sb = find_symbol(cgh->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
+        code_list_push(cgh->cl, INS_LDC, "");
+        code_list_push(cgh->cl, INS_ALD, "");
+    }
+
+    // array
+    if (node->sub_list[1]) {
+        code_list_push(cgh->cl, INS_PUSH, "");
+        
+        cgh->node = node->sub_list[1];
+        _generate_expr_code(cgh);
+
+        code_list_push(cgh->cl, INS_ADD, "");
+        code_list_push(cgh->cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_ALD, "");
+    }
 }
 
 void _generate_factor_code(code_generator_handler *cgh)
@@ -84,7 +112,12 @@ void _generate_term_code(code_generator_handler *cgh)
 
 void _generate_add_op_code(code_generator_handler *cgh)
 {
-
+    // add_op ::= '+' | '-'
+    if (TOKEN_TYPE_MATCH(cgh->node, TOKEN_PLUS)) {
+        code_list_push(cgh->cl, INS_ADD, "");
+    } else {
+        code_list_push(cgh->cl, INS_SUB, "");
+    }
 }
 
 void _generate_add_expr_code(code_generator_handler *cgh)
@@ -156,19 +189,43 @@ void _generate_simple_expr_code(code_generator_handler *cgh)
 
 void _generate_assign_code(code_generator_handler *cgh)
 {
-    // // var ::= id [ '[' expr ']' ]
-    // code_list_push(cgh->cl, INS_PUSH, "");
+    symbol *sb = NULL;
+    syntax_tree *node = cgh->node;
 
-    // // if find the var in current func_name symbol space
-    // if (is_local_var(NULL, func_name, node->sub_list[0]->data->token_str)) {
-        
-    //     snprintf(size, VAR_SIZE_MAX, "%d", get_symbol_idx(symbol));
-    //     code_list_push(cgh->cl, INS_LDC, size);
-    // } else {
+    // var ::= id [ '[' expr ']' ]
+    code_list_push(cgh->cl, INS_PUSH, "");
 
-    // }
+    // is local var in current function ?
+    sb = find_symbol(cgh->table, cgh->cur_space, node->sub_list[0]->data->token_str);
+    
+    // maybe global var ?
+    if (!sb) {
+        sb = find_symbol(cgh->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
+    }
+    
+    snprintf(cgh->size, VAR_SIZE_MAX, "%d", sb->var_idx);
+    code_list_push(cgh->cl, INS_LDC, cgh->size);
 
-    // code_list_push(cgh->cl, INS_POP, "");
+    // scalar or array
+    if (!node->sub_list[0]) {
+        code_list_push(cgh->cl, INS_ST, "");
+    } else {
+        // Get the (start) pointer (is already an absolute address)
+        code_list_push(cgh->cl, INS_LD, "");
+        code_list_push(cgh->cl, INS_PUSH, "");
+
+        cgh->node = node->sub_list[0];
+        _generate_expr_code(cgh);
+
+        // Pointer[Index] (Pointer + Index)
+        code_list_push(cgh->cl, INS_ADD, "");
+        code_list_push(cgh->cl, INS_POP, "");
+
+        // Save by absolute address
+        code_list_push(cgh->cl, INS_AST, "");
+    }
+
+    code_list_push(cgh->cl, INS_POP, "");
 }
 
 void _generate_expr_code(code_generator_handler *cgh)
@@ -280,9 +337,58 @@ void _generate_stmt_list_code(code_generator_handler *cgh)
     }
 }
 
+void _generate_global_var_code(code_generator_handler *cgh)
+{
+    int s_idx, idx;
+    symbol *sb;
+    symbol_space *space = find_symbol_space(cgh->table, NAMESPACE_GLOBAL);
+
+    for (s_idx = 0; s_idx < space->s_idx; ++s_idx) {
+        sb = space->s[s_idx];
+
+        // Array
+        if (sb->var_size) {
+            // Calc the array start address (variable number + 1)
+            snprintf(cgh->size, VAR_SIZE_MAX, "%d", sb->var_idx + 1);
+            code_list_push(cgh->g_cl, INS_LDC, cgh->size);
+        }
+
+        // Push the array start address
+        // (Or only a meaningless int for global scalar memeory)
+        code_list_push(cgh->g_cl, INS_PUSH, "");
+
+        // Push array content (by array size times)
+        for (idx = 0; idx < sb->var_size; ++idx) {
+            code_list_push(cgh->g_cl, INS_PUSH, "");
+        }
+    }
+}
+
+void _generate_main_prepare_code(code_generator_handler *cgh)
+{
+    int s_idx, idx;
+    symbol_space *main = find_symbol_space(cgh->table, NAMESPACE_ENTRY);
+
+    for (s_idx = 0; s_idx < main->s_idx; ++s_idx) {
+        if (main->s[s_idx]->var_size) {
+            for (idx = 0; idx < main->s[s_idx]->var_size; ++idx) {
+                code_list_push(cgh->g_cl, INS_PUSH, "");
+            }
+            snprintf(cgh->size, VAR_SIZE_MAX, "%d", main->s[s_idx]->var_size);
+            code_list_push(cgh->g_cl, INS_ADDR, cgh->size);
+            code_list_push(cgh->g_cl, INS_PUSH, "");
+        } else {
+            code_list_push(cgh->g_cl, INS_PUSH, "");
+        }
+    }
+}
+
 void _set_global_code_map(code_generator_handler *cgh)
 {
+    _generate_global_var_code(cgh);
+    _generate_main_prepare_code(cgh);
 
+    set_code_map(cgh->c_map, NAMESPACE_GLOBAL, cgh->g_cl);
 }
 
 int _create_code_map(code_generator_handler *cgh)
@@ -326,7 +432,7 @@ int _translate_call(code_map *c_map)
 }
 
 int generate_code(syntax_tree *ast, symbol_table *table)
-{  
+{
     code_generator_handler *cgh = get_code_generator_handler(ast, table);
 
     if (_create_code_map(cgh)) {

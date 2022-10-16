@@ -228,13 +228,32 @@ symbol *create_symbol(const char *var_name, int var_idx, int var_size)
     return s;
 }
 
+symbol *find_symbol(const symbol_table *table, const char *space_name, const char *var_name)
+{
+    assert(table != NULL && space_name != NULL && var_name != NULL);
+
+    int idx;
+    symbol_space *space = find_symbol_space(table, space_name);
+    if (space == NULL) {
+        return NULL;
+    }
+
+    for (idx = 0; idx < space->s_idx; ++idx) {
+        if (strcmp(var_name, space->s[idx]->var_name) == 0) {
+            return space->s[idx];
+        }
+    }
+
+    return NULL;
+}
+
 symbol_space *create_symbol_space(const char* space_name)
 {
     assert(space_name != NULL);
 
     symbol_space *space = (symbol_space *)malloc(sizeof(symbol_space));
     memset(space, 0, sizeof(symbol_space));
-    strncpy(space->space_name, space_name, MIN(FUNC_NAME_MAX, strlen(space_name)));
+    strncpy(space->space_name, space_name, MIN(SPACE_NAME_MAX, strlen(space_name)));
     space->s_idx = 0;
     space->s = (symbol **)malloc(TABLE_SYMBOL_MAX * sizeof(symbol *));
 
@@ -247,15 +266,26 @@ symbol_space *get_global_space(const symbol_table *table)
     return table->ss[0];
 }
 
+symbol_space *find_symbol_space(const symbol_table *table, const char *space_name)
+{
+    int ss_idx;
+
+    for (ss_idx = 0; ss_idx < table->ss_idx; ++ss_idx) {
+        if (strcmp(space_name, table->ss[ss_idx]->space_name) == 0) {
+            return table->ss[ss_idx];
+        }
+    }
+
+    return NULL;
+}
+
 symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
 {
     assert(table != NULL && (*table) != NULL && space_name != NULL);
-    int ss_idx;
     
-    for (ss_idx = 0; ss_idx < (*table)->ss_idx; ++ss_idx) {
-        if (strcmp(space_name, (*table)->ss[ss_idx]->space_name) == 0) {
-            return (*table)->ss[ss_idx];
-        }
+    symbol_space *space = find_symbol_space(*table, space_name);
+    if (NULL != space) {
+        return space;
     }
 
     (*table)->ss[(*table)->ss_idx] = create_symbol_space(space_name);
@@ -312,9 +342,30 @@ code_list *create_code_list()
     return cl;
 }
 
-void code_list_push(code_list *cl, instruction ins, const char *str)
+code *create_code()
+{
+    code *c = (code *)malloc(sizeof(code));
+    memset(c, 0, sizeof(code));
+
+    return c;
+}
+
+code *create_code2(instruction ins, char *offset)
+{
+    code *c = create_code();
+
+    c->ins = ins;
+    strncpy(c->offset, offset, VAR_OFFSET_MAX);
+
+    return c;
+}
+
+void code_list_push(code_list *cl, instruction ins, char *offset)
 {
     // undo clear str
+    assert(cl != NULL && offset != NULL);
+
+    cl->c[cl->c_idx++] = create_code2(ins, offset);
 }
 
 code_map *create_code_map()
@@ -329,7 +380,8 @@ code_map *create_code_map()
 
 void set_code_map(code_map *c_map, const char *cur_space, code_list *cl)
 {
-    
+    c_map->maps[c_map->m_idx++] = create_map_list(cur_space);
+    c_map->maps[c_map->m_idx]->cl = cl;
 }
 
 code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table)
