@@ -331,6 +331,19 @@ map_list *create_map_list(const char *name)
     return maps;
 }
 
+map_list *find_map_list(code_map *c_map, const char *space)
+{
+    int m_idx;
+
+    for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
+        if (strcmp(space, c_map->maps[m_idx]->name) == 0) {
+            return c_map->maps[m_idx];
+        }
+    }
+
+    return NULL;
+}
+
 code_list *create_code_list()
 {
     code_list *cl = (code_list *)malloc(sizeof(code_list));
@@ -340,6 +353,25 @@ code_list *create_code_list()
     cl->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
 
     return cl;
+}
+
+func_jump_map *create_jump_map()
+{
+    func_jump_map *jumps = (func_jump_map *)malloc(sizeof(func_jump_map));
+    memset(jumps, 0, sizeof(func_jump_map));
+
+    jumps->f_idx = 0;
+    jumps->fj = (func_jump **)malloc(MASP_CODE_MAX * sizeof(func_jump *));;
+
+    return jumps;
+}
+
+void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num)
+{
+    // fixed: need consider func_name conflict.
+    jumps->fj[jumps->f_idx]->name = func_name;
+    jumps->fj[jumps->f_idx]->jump_num = jump_num;
+    ++jumps->f_idx;
 }
 
 code *create_code()
@@ -366,6 +398,26 @@ void code_list_push(code_list *cl, instruction ins, char *offset)
     assert(cl != NULL && offset != NULL);
 
     cl->c[cl->c_idx++] = create_code2(ins, offset);
+}
+
+void code_list_push2(code_list *cl, code* c)
+{
+    // undo clear str
+    assert(cl != NULL && c != NULL);
+
+    cl->c[cl->c_idx++] = c;
+}
+
+void code_list_append(code_list *codes, code_list *extras)
+{
+    assert(codes != NULL && extras != NULL);
+
+    int idx;
+
+    for (idx = 0; idx < extras->c_idx; ++idx) {
+        codes->c[codes->c_idx++] = extras->c[idx];
+        // need free ?
+    }
 }
 
 code_map *create_code_map()
@@ -396,6 +448,8 @@ code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_tab
     cgh->c_map = create_code_map();
     cgh->cl = create_code_list();
     cgh->g_cl = create_code_list();
+    cgh->codes = create_code_list();
+    cgh->jumps = create_jump_map();
 
     return cgh;
 }

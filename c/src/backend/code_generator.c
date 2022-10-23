@@ -437,8 +437,44 @@ int _create_code_map(code_generator_handler *cgh)
     return CMM_SUCCESS;
 }
 
-int _merge_code_map(code_map *c_map)
+int _merge_code_map(code_generator_handler *cgh)
 {
+    int idx, jump_num;
+    char *func_name = NULL;
+    map_list *maps = NULL;
+    code_list *codes = NULL;
+
+    // global code
+    maps = find_map_list(cgh->c_map, NAMESPACE_GLOBAL);
+    if (!maps || !maps->cl) {
+        invalid_call("find_map_list global failed in merge_code_map.");
+    }
+    jump_num = maps->cl->c_idx;
+    code_list_append(cgh->codes, maps->cl);
+
+    // other functions
+    for (idx = 0; idx < cgh->c_map->m_idx; ++idx) {
+        codes = cgh->c_map->maps[idx]->cl;
+        func_name = cgh->c_map->maps[idx]->name;
+        if (strcmp(func_name, NAMESPACE_GLOBAL) == 0 || 
+            strcmp(func_name, NAMESPACE_ENTRY) == 0) {
+            continue;
+        }
+        code_list_append(cgh->codes, codes);
+        set_func_jump_map(cgh->jumps, func_name, jump_num);
+        jump_num += codes->c_idx;
+
+    }
+
+    // the "main" function must be the last function
+    maps = find_map_list(cgh->c_map, NAMESPACE_ENTRY);
+    if (!maps || !maps->cl) {
+        invalid_call("find_map_list main failed in merge_code_map.");
+    }
+    jump_num = maps->cl->c_idx;
+    code_list_append(cgh->codes, maps->cl);
+    set_func_jump_map(cgh->jumps, NAMESPACE_ENTRY, jump_num);
+
     return CMM_SUCCESS;
 }
 
@@ -455,7 +491,7 @@ int generate_code(syntax_tree *ast, symbol_table *table)
         invalid_call("create code map");
     }
 
-    if (_merge_code_map(cgh->c_map)) {
+    if (_merge_code_map(cgh)) {
         invalid_call("merge code map");
     }
 

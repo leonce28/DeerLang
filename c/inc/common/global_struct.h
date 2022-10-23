@@ -78,6 +78,18 @@ typedef struct _code_map {
     map_list **maps;
 } code_map;
 
+// Function name => Function start IP
+typedef struct _func_jump {
+    char *name;
+    int jump_num;
+} func_jump;
+
+// unordered_map func_jump
+typedef struct _func_jump_map {
+    int f_idx;
+    func_jump **fj;
+} func_jump_map;
+
 typedef struct _code_generator_handler {
     char size[VAR_SIZE_MAX];
     char *cur_space;
@@ -87,5 +99,7 @@ typedef struct _code_generator_handler {
     code_map *c_map;
     code_list *cl;
     code_list *g_cl;
+    code_list *codes;
+    func_jump_map *jumps;
 } code_generator_handler;
 
