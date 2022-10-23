@@ -67,12 +67,16 @@ void _generate_factor_code(code_generator_handler *cgh)
     switch (cgh->node->data->token_type) {
         case TOKEN_EXPR:
             _generate_expr_code(cgh);
+            break;
         case TOKEN_NUMBER:
             _generate_number_code(cgh);
+            break;
         case TOKEN_CALL:
             _generate_call_code(cgh);
+            break;
         case TOKEN_VAR:
             _generate_var_code(cgh);
+            break;
         default:
             invalid_token(cgh->node->data);
     }
@@ -148,16 +152,22 @@ void _generate_rel_op_code(code_generator_handler *cgh)
     switch (cgh->node->data->token_type) {
         case TOKEN_LESS:
             code_list_push(cgh->cl, INS_LT, "");
+            break;
         case TOKEN_LESS_EQUAL:
             code_list_push(cgh->cl, INS_LE, "");
+            break;
         case TOKEN_GREATER:
             code_list_push(cgh->cl, INS_GT, "");
+            break;
         case TOKEN_GREATER_EQUAL:
             code_list_push(cgh->cl, INS_GE, "");
+            break;
         case TOKEN_EQUAL:
             code_list_push(cgh->cl, INS_EQ, "");
+            break;
         case TOKEN_NOT_EQUAL:
             code_list_push(cgh->cl, INS_NE, "");
+            break;
         default:
             invalid_token(cgh->node->data);
     }
@@ -238,8 +248,10 @@ void _generate_expr_code(code_generator_handler *cgh)
      * => expr_stmt ::= [ var '=' expr ] ';' | [ simple_expr ] ';'
      */
     if (!node->sub_list[1]) {
-        cgh->node = node->sub_list[1];
-        _generate_simple_expr_code(cgh);
+        cgh->node = node->sub_list[0];
+        if (cgh->node) {
+            _generate_simple_expr_code(cgh);
+        }
     } else {
         cgh->node = node->sub_list[1];
         _generate_expr_code(cgh);
@@ -314,12 +326,16 @@ void _generate_stmt_code(code_generator_handler *cgh)
     switch (cgh->node->data->token_type) {
         case TOKEN_EXPR:
             _generate_expr_code(cgh);
+            break;
         case TOKEN_IF_STMT:
             _generate_if_stmt_code(cgh);
+            break;
         case TOKEN_WHILE_STMT:
             _generate_while_stmt_code(cgh);
+            break;
         case TOKEN_RETURN_STMT:
             _generate_return_stmt_code(cgh);
+            break;
         default:
             invalid_token(cgh->node->data);
     }

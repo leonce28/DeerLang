@@ -380,8 +380,9 @@ code_map *create_code_map()
 
 void set_code_map(code_map *c_map, const char *cur_space, code_list *cl)
 {
-    c_map->maps[c_map->m_idx++] = create_map_list(cur_space);
+    c_map->maps[c_map->m_idx] = create_map_list(cur_space);
     c_map->maps[c_map->m_idx]->cl = cl;
+    ++c_map->m_idx;
 }
 
 code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table)
