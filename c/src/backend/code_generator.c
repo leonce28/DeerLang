@@ -493,7 +493,7 @@ int _translate_call(code_generator_handler *cgh)
     return CMM_SUCCESS;
 }
 
-int generate_code(syntax_tree *ast, symbol_table *table)
+int generate_code(syntax_tree *ast, symbol_table *table, code_list **cl)
 {
     code_generator_handler *cgh = get_code_generator_handler(ast, table);
 
@@ -509,7 +509,7 @@ int generate_code(syntax_tree *ast, symbol_table *table)
         invalid_call("translate call");
     }
 
-    // code_list_print(cgh->codes);
+    *cl = cgh->codes;
 
     return CMM_SUCCESS;
 }
