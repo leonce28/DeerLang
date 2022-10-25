@@ -69,5 +69,6 @@ void set_code_map(code_map *c_map, const char *cur_space, code_list *cl);
 // func_jump_map
 ////////////////////////////////////////////////////////////////////////////////
 func_jump_map *create_jump_map();
+int get_func_jump_num(func_jump_map *jumps, char *name);
 func_jump *create_func_jump(char *func_name, int jump_num);
 void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num);

@@ -383,6 +383,19 @@ void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num)
     jumps->fj[jumps->f_idx++] = create_func_jump(func_name, jump_num);
 }
 
+int get_func_jump_num(func_jump_map *jumps, char *name)
+{
+    int idx;
+    for (idx = 0; idx < jumps->f_idx; ++idx) {
+        if (strncmp(jumps->fj[idx]->name, name, 
+            MIN(strlen(jumps->fj[idx]->name), strlen(name))) == 0) {
+            return jumps->fj[idx]->jump_num;
+        }
+    }
+
+    return 0;
+}
+
 code *create_code()
 {
     code *c = (code *)malloc(sizeof(code));

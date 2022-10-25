@@ -478,8 +478,18 @@ int _merge_code_map(code_generator_handler *cgh)
     return CMM_SUCCESS;
 }
 
-int _translate_call(code_map *c_map)
+int _translate_call(code_generator_handler *cgh)
 {
+    int IP, offset;
+
+    // A virtual "IP"
+    for (IP = 0; IP < cgh->codes->c_idx; ++IP) {
+        if (cgh->codes->c[IP]->ins == INS_CALL) {
+            offset = get_func_jump_num(cgh->jumps, cgh->codes->c[IP]->offset) - IP;
+            snprintf(cgh->codes->c[IP]->offset, VAR_OFFSET_MAX, "%d", offset);
+        }
+    }
+
     return CMM_SUCCESS;
 }
 
@@ -495,7 +505,7 @@ int generate_code(syntax_tree *ast, symbol_table *table)
         invalid_call("merge code map");
     }
 
-    if (_translate_call(cgh->c_map)) {
+    if (_translate_call(cgh)) {
         invalid_call("translate call");
     }
 
