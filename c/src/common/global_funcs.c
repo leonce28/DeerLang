@@ -442,6 +442,14 @@ void code_list_append(code_list *codes, code_list *extras)
     }
 }
 
+void code_list_print(code_list *cl)
+{
+    int idx;
+    for (idx = 0; idx < cl->c_idx; ++idx) {
+        printf("%d %s\n", cl->c[idx]->ins, cl->c[idx]->offset);
+    }
+}
+
 code_map *create_code_map()
 {
     code_map *cm = (code_map *)malloc(sizeof(code_map));

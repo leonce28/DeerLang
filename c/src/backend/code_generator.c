@@ -509,5 +509,7 @@ int generate_code(syntax_tree *ast, symbol_table *table)
         invalid_call("translate call");
     }
 
+    // code_list_print(cgh->codes);
+
     return CMM_SUCCESS;
 }

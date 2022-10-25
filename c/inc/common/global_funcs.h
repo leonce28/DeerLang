@@ -52,6 +52,7 @@ code_list *create_code_list();
 void code_list_push(code_list *cl, instruction ins, char *str);
 void code_list_push2(code_list *cl, code *c);
 void code_list_append(code_list *codes, code_list *extras);
+void code_list_print(code_list *cl);
 
 ////////////////////////////////////////////////////////////////////////////////
 // map_list
