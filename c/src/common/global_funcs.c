@@ -355,13 +355,24 @@ code_list *create_code_list()
     return cl;
 }
 
+func_jump *create_func_jump(char *func_name, int jump_num)
+{
+    func_jump *jump = (func_jump *)malloc(sizeof(func_jump));
+    memset(jump, 0, sizeof(func_jump));
+
+    jump->name = func_name;
+    jump->jump_num = jump_num;
+
+    return jump;
+}
+
 func_jump_map *create_jump_map()
 {
     func_jump_map *jumps = (func_jump_map *)malloc(sizeof(func_jump_map));
     memset(jumps, 0, sizeof(func_jump_map));
 
     jumps->f_idx = 0;
-    jumps->fj = (func_jump **)malloc(MASP_CODE_MAX * sizeof(func_jump *));;
+    jumps->fj = (func_jump **)malloc(MASP_CODE_MAX * sizeof(func_jump *));
 
     return jumps;
 }
@@ -369,9 +380,7 @@ func_jump_map *create_jump_map()
 void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num)
 {
     // fixed: need consider func_name conflict.
-    jumps->fj[jumps->f_idx]->name = func_name;
-    jumps->fj[jumps->f_idx]->jump_num = jump_num;
-    ++jumps->f_idx;
+    jumps->fj[jumps->f_idx++] = create_func_jump(func_name, jump_num);
 }
 
 code *create_code()
