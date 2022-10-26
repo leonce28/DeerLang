@@ -12,7 +12,7 @@ static void _analysis_local_declared(const syntax_tree *local_declared, int *var
     // local_decl ::= { var_decl }
     for (idx = 0; idx < local_declared->sub_idx; ++idx) {
 
-        // var_decl ::= type id [ '[' number ']' ] ';'
+        // var_decl ::= type id [ '[' numbswitcher ']' ] ';'
         node = local_declared->sub_list[idx];
         var_size = node->sub_list[2] != NULL ? atoi(node->sub_list[2]->data->token_str) : 0;
 
