@@ -40,24 +40,24 @@ void _generate_var_code(code_generator_handler *cgh)
 
     // maybe global var ?
     if (sb) {
-        code_list_push(cgh->cl, INS_LDC, "");
-        code_list_push(cgh->cl, INS_LD, "");
+        code_list_push(cgh->cl, INS_LDC, NULL_STRING);
+        code_list_push(cgh->cl, INS_LD, NULL_STRING);
     } else {
         sb = find_symbol(cgh->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
-        code_list_push(cgh->cl, INS_LDC, "");
-        code_list_push(cgh->cl, INS_ALD, "");
+        code_list_push(cgh->cl, INS_LDC, NULL_STRING);
+        code_list_push(cgh->cl, INS_ALD, NULL_STRING);
     }
 
     // array
     if (node->sub_list[1]) {
-        code_list_push(cgh->cl, INS_PUSH, "");
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
         
         cgh->node = node->sub_list[1];
         _generate_expr_code(cgh);
 
-        code_list_push(cgh->cl, INS_ADD, "");
-        code_list_push(cgh->cl, INS_POP, "");
-        code_list_push(cgh->cl, INS_ALD, "");
+        code_list_push(cgh->cl, INS_ADD, NULL_STRING);
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
+        code_list_push(cgh->cl, INS_ALD, NULL_STRING);
     }
 }
 
@@ -86,9 +86,9 @@ void _generate_mul_op_code(code_generator_handler *cgh)
 {
     // mul_op ::= '*' | '/')
     if (TOKEN_TYPE_MATCH(cgh->node, TOKEN_MULTIPLY)) {
-        code_list_push(cgh->cl, INS_MUL, "");
+        code_list_push(cgh->cl, INS_MUL, NULL_STRING);
     } else {
-        code_list_push(cgh->cl, INS_DIV, "");
+        code_list_push(cgh->cl, INS_DIV, NULL_STRING);
     }
 }
 
@@ -102,7 +102,7 @@ void _generate_term_code(code_generator_handler *cgh)
     _generate_factor_code(cgh);
 
     for (idx = 1; idx < node->sub_idx; idx += 2) {
-        code_list_push(cgh->cl, INS_PUSH, "");
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         cgh->node = node->sub_list[idx + 1];
         _generate_factor_code(cgh);
@@ -110,7 +110,7 @@ void _generate_term_code(code_generator_handler *cgh)
         cgh->node = node->sub_list[idx];
         _generate_mul_op_code(cgh);
 
-        code_list_push(cgh->cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
     }
 }
 
@@ -118,9 +118,9 @@ void _generate_add_op_code(code_generator_handler *cgh)
 {
     // add_op ::= '+' | '-'
     if (TOKEN_TYPE_MATCH(cgh->node, TOKEN_PLUS)) {
-        code_list_push(cgh->cl, INS_ADD, "");
+        code_list_push(cgh->cl, INS_ADD, NULL_STRING);
     } else {
-        code_list_push(cgh->cl, INS_SUB, "");
+        code_list_push(cgh->cl, INS_SUB, NULL_STRING);
     }
 }
 
@@ -134,7 +134,7 @@ void _generate_add_expr_code(code_generator_handler *cgh)
     _generate_term_code(cgh);
 
     for (idx = 1; idx < node->sub_idx; idx += 2) {
-        code_list_push(cgh->cl, INS_PUSH, "");
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         cgh->node = node->sub_list[idx + 1];
         _generate_term_code(cgh);
@@ -142,7 +142,7 @@ void _generate_add_expr_code(code_generator_handler *cgh)
         cgh->node = node->sub_list[idx];
         _generate_add_op_code(cgh);
 
-        code_list_push(cgh->cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
     }
 }
 
@@ -151,22 +151,22 @@ void _generate_rel_op_code(code_generator_handler *cgh)
     // rel_op ::= '<' | '<' '=' | '>' | '>' '=' | '=' '=' | '!' '='
     switch (cgh->node->data->token_type) {
         case TOKEN_LESS:
-            code_list_push(cgh->cl, INS_LT, "");
+            code_list_push(cgh->cl, INS_LT, NULL_STRING);
             break;
         case TOKEN_LESS_EQUAL:
-            code_list_push(cgh->cl, INS_LE, "");
+            code_list_push(cgh->cl, INS_LE, NULL_STRING);
             break;
         case TOKEN_GREATER:
-            code_list_push(cgh->cl, INS_GT, "");
+            code_list_push(cgh->cl, INS_GT, NULL_STRING);
             break;
         case TOKEN_GREATER_EQUAL:
-            code_list_push(cgh->cl, INS_GE, "");
+            code_list_push(cgh->cl, INS_GE, NULL_STRING);
             break;
         case TOKEN_EQUAL:
-            code_list_push(cgh->cl, INS_EQ, "");
+            code_list_push(cgh->cl, INS_EQ, NULL_STRING);
             break;
         case TOKEN_NOT_EQUAL:
-            code_list_push(cgh->cl, INS_NE, "");
+            code_list_push(cgh->cl, INS_NE, NULL_STRING);
             break;
         default:
             invalid_token(cgh->node->data);
@@ -185,7 +185,7 @@ void _generate_simple_expr_code(code_generator_handler *cgh)
         cgh->node = node->sub_list[0];
         _generate_add_expr_code(cgh);
     
-        code_list_push(cgh->cl, INS_PUSH, "");
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         cgh->node = node->sub_list[2];
         _generate_add_expr_code(cgh);
@@ -193,7 +193,7 @@ void _generate_simple_expr_code(code_generator_handler *cgh)
         cgh->node = node->sub_list[1];
         _generate_rel_op_code(cgh);
 
-        code_list_push(cgh->cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
     }
 }
 
@@ -203,7 +203,7 @@ void _generate_assign_code(code_generator_handler *cgh)
     syntax_tree *node = cgh->node;
 
     // var ::= id [ '[' expr ']' ]
-    code_list_push(cgh->cl, INS_PUSH, "");
+    code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
     // is local var in current function ?
     sb = find_symbol(cgh->table, cgh->cur_space, node->sub_list[0]->data->token_str);
@@ -218,24 +218,24 @@ void _generate_assign_code(code_generator_handler *cgh)
 
     // scalar or array
     if (!node->sub_list[0]) {
-        code_list_push(cgh->cl, INS_ST, "");
+        code_list_push(cgh->cl, INS_ST, NULL_STRING);
     } else {
         // Get the (start) pointer (is already an absolute address)
-        code_list_push(cgh->cl, INS_LD, "");
-        code_list_push(cgh->cl, INS_PUSH, "");
+        code_list_push(cgh->cl, INS_LD, NULL_STRING);
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         cgh->node = node->sub_list[0];
         _generate_expr_code(cgh);
 
         // Pointer[Index] (Pointer + Index)
-        code_list_push(cgh->cl, INS_ADD, "");
-        code_list_push(cgh->cl, INS_POP, "");
+        code_list_push(cgh->cl, INS_ADD, NULL_STRING);
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
 
         // Save by absolute address
-        code_list_push(cgh->cl, INS_AST, "");
+        code_list_push(cgh->cl, INS_AST, NULL_STRING);
     }
 
-    code_list_push(cgh->cl, INS_POP, "");
+    code_list_push(cgh->cl, INS_POP, NULL_STRING);
 }
 
 void _generate_expr_code(code_generator_handler *cgh)
@@ -371,11 +371,11 @@ void _generate_global_var_code(code_generator_handler *cgh)
 
         // Push the array start address
         // (Or only a meaningless int for global scalar memeory)
-        code_list_push(cgh->g_cl, INS_PUSH, "");
+        code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
 
         // Push array content (by array size times)
         for (idx = 0; idx < sb->var_size; ++idx) {
-            code_list_push(cgh->g_cl, INS_PUSH, "");
+            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
         }
     }
 }
@@ -388,15 +388,18 @@ void _generate_main_prepare_code(code_generator_handler *cgh)
     for (s_idx = 0; s_idx < main->s_idx; ++s_idx) {
         if (main->s[s_idx]->var_size) {
             for (idx = 0; idx < main->s[s_idx]->var_size; ++idx) {
-                code_list_push(cgh->g_cl, INS_PUSH, "");
+                code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
             }
             snprintf(cgh->size, VAR_SIZE_MAX, "%d", main->s[s_idx]->var_size);
             code_list_push(cgh->g_cl, INS_ADDR, cgh->size);
-            code_list_push(cgh->g_cl, INS_PUSH, "");
+            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
         } else {
-            code_list_push(cgh->g_cl, INS_PUSH, "");
+            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
         }
     }
+
+    // Call the "main" function automatically
+    code_list_push(cgh->g_cl, INS_CALL, NAMESPACE_ENTRY);
 }
 
 void _set_global_code_map(code_generator_handler *cgh)
@@ -420,14 +423,14 @@ int _create_code_map(code_generator_handler *cgh)
 
         // declared ::= local_declared | func_declared
         if (TOKEN_TYPE_MATCH(node, TOKEN_FUNC_DECL)) {
-            
+
             // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
             cgh->cur_space = node->sub_list[1]->data->token_str;
             cgh->node = node->sub_list[4];
             _generate_stmt_list_code(cgh);
 
-            if (strcmp("main", cgh->cur_space) != 0) {
-                code_list_push(cgh->cl, INS_RET, "");
+            if (strcmp(NAMESPACE_ENTRY, cgh->cur_space) != 0) {
+                code_list_push(cgh->cl, INS_RET, NULL_STRING);
             }
 
             set_code_map(cgh->c_map, cgh->cur_space, cgh->cl);
@@ -500,6 +503,7 @@ int generate_code(syntax_tree *ast, symbol_table *table, code_list **cl)
     if (_create_code_map(cgh)) {
         invalid_call("create code map");
     }
+    code_map_print(cgh->c_map);
 
     if (_merge_code_map(cgh)) {
         invalid_call("merge code map");

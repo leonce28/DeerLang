@@ -42,7 +42,11 @@ static void _token_print(token *t)
 
 int arguments_init(int argc, char **argv, parse_handler *handler)
 {
+    assert(argv != NULL && handler != NULL);
+
     int option;
+
+    memset(handler, 0, sizeof(parse_handler));
     while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
         switch (option) {
             case 'o':
@@ -60,8 +64,6 @@ int arguments_init(int argc, char **argv, parse_handler *handler)
                 break;
         }
     }
-
-    memset(handler, 0, sizeof(parse_handler));
 
     if (strlen(handler->cmm_file) == 0) {
         strcpy(handler->cmm_file, "a.cmm");
@@ -312,10 +314,10 @@ void symbol_table_print(const symbol_table *table)
         printf("space_name: %s, size: %d\n", table->ss[table_idx]->space_name, table->ss[table_idx]->s_idx);
         
         for (space_idx = 0; space_idx < table->ss[table_idx]->s_idx; ++space_idx) {
-            printf("\tvar_idx: %d, var_size: %d, var_name: %s\n", 
+            printf("\tvar_name: %s, var_idx: %d, var_size: %d\n",
+                table->ss[table_idx]->s[space_idx]->var_name,
                 table->ss[table_idx]->s[space_idx]->var_idx,
-                table->ss[table_idx]->s[space_idx]->var_size,
-                table->ss[table_idx]->s[space_idx]->var_name);
+                table->ss[table_idx]->s[space_idx]->var_size);
         }
     }
 }
@@ -433,7 +435,6 @@ void code_list_push2(code_list *cl, code* c)
 void code_list_append(code_list *codes, code_list *extras)
 {
     assert(codes != NULL && extras != NULL);
-
     int idx;
 
     for (idx = 0; idx < extras->c_idx; ++idx) {
@@ -465,6 +466,17 @@ void set_code_map(code_map *c_map, const char *cur_space, code_list *cl)
     c_map->maps[c_map->m_idx] = create_map_list(cur_space);
     c_map->maps[c_map->m_idx]->cl = cl;
     ++c_map->m_idx;
+}
+
+void code_map_print(const code_map *c_map)
+{
+    assert(c_map != NULL);
+
+    int m_idx;
+    for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
+        printf("name: %s, code list:\n", c_map->maps[m_idx]->name);
+        code_list_print(c_map->maps[m_idx]->cl);
+    }
 }
 
 code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table)

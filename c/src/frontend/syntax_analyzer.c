@@ -373,6 +373,8 @@ void _simple_expr(token_list *tokens, int *token_idx, syntax_tree **ast)
         _rel_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
         _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
     }
+
+    *ast = node;
 }
 
 void _expr(token_list *tokens, int *token_idx, syntax_tree **ast)

@@ -65,6 +65,7 @@ map_list *find_map_list(code_map *c_map, const char *space);
 ////////////////////////////////////////////////////////////////////////////////
 code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table);
 void set_code_map(code_map *c_map, const char *cur_space, code_list *cl);
+void code_map_print(const code_map *c_map);
 
 ////////////////////////////////////////////////////////////////////////////////
 // func_jump_map

@@ -25,7 +25,7 @@ enum class __Instruction
     __AST,
 
     // Push, Pop
-    __PUSH,
+    __PUSH,     // 5
     __POP,
 
     // Jump
@@ -34,7 +34,7 @@ enum class __Instruction
 
     // Arithmetic
     __ADD,
-    __SUB,
+    __SUB,      // 10
     __MUL,
     __DIV,
 
@@ -47,14 +47,14 @@ enum class __Instruction
     __NE,
 
     // I/O
-    __IN,
-    __OUT,
+    __IN,       // 19
+    __OUT,      // 20
 
     // Address
     __ADDR,
 
     // Functional
-    __CALL,
+    __CALL,     // 22
     __RET,
 };
 

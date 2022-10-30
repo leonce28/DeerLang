@@ -3,7 +3,7 @@
 #define VAR_SIZE_MAX                  32
 #define VAR_NAME_MAX                  32
 #define TOKEN_STR_MAX                 32
-#define MAP_NAME_MAX                  64 
+#define MAP_NAME_MAX                  64
 #define SPACE_NAME_MAX                64
 #define VAR_OFFSET_MAX                64
 #define TOKEN_SIZE_DEF               256
@@ -17,6 +17,7 @@
 #define TABLE_SPACE_MAX             1024
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
 #define NAMESPACE_ENTRY             "main"
+#define NULL_STRING                 ""
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
@@ -36,7 +37,7 @@ enum {
 
 enum _token_type{
     // Word
-    TOKEN_ID = 100,             // Id
+    TOKEN_ID,                   // Id
     TOKEN_NUMBER,               // Number
 
     // Keyword
@@ -50,7 +51,7 @@ enum _token_type{
     // Operator
     TOKEN_PLUS,                 // +
     TOKEN_MINUS,                // -
-    TOKEN_MULTIPLY = 110,       // *
+    TOKEN_MULTIPLY,             // *
     TOKEN_DIVIDE,               // /
     TOKEN_LESS,                 // <
     TOKEN_LESS_EQUAL,           // <=
@@ -60,7 +61,7 @@ enum _token_type{
     TOKEN_NOT_EQUAL,            // !=
     TOKEN_ASSIGN,               // =
     TOKEN_SEMICOLON,            // ;
-    TOKEN_COMMA = 120,          // ,
+    TOKEN_COMMA,                // ,
     TOKEN_LEFT_ROUND_BRACKET,   // (
     TOKEN_RIGHT_ROUND_BRACKET,  // )
     TOKEN_LEFT_SQUARE_BRACKET,  // [
@@ -74,7 +75,7 @@ enum _token_type{
     // Ast
     TOKEN_DECL_LIST,            // AST: DeclList
     TOKEN_VAR_DECL,             // AST: VarDecl
-    TOKEN_FUNC_DECL = 130,      // AST: FuncDecl
+    TOKEN_FUNC_DECL,            // AST: FuncDecl
     TOKEN_PARAM_LIST,           // AST: ParamList
     TOKEN_PARAM,                // AST: Param
     TOKEN_COMPOUND_STMT,        // AST: CompoundStmt
@@ -84,7 +85,7 @@ enum _token_type{
     TOKEN_WHILE_STMT,           // AST: WhileStmt
     TOKEN_RETURN_STMT,          // AST: ReturnStmt
     TOKEN_EXPR,                 // AST: Expr
-    TOKEN_VAR = 140,            // AST: Var
+    TOKEN_VAR,                  // AST: Var
     TOKEN_SIMPLE_EXPR,          // AST: SimpleExpr
     TOKEN_ADD_EXPR,             // AST: AddExpr
     TOKEN_TERM,                 // AST: Term
@@ -93,7 +94,7 @@ enum _token_type{
 };
 
 typedef enum _lexer_stage {
-    STAGE_START = 200,
+    STAGE_START,
     STAGE_IN_ID,
     STAGE_IN_NUMBER,
     STAGE_IN_DIVIDE,
@@ -103,12 +104,12 @@ typedef enum _lexer_stage {
     STAGE_IN_ASSIGN,
     STAGE_IN_NOT,
     STAGE_END_COMMENT,
-    STAGE_DONE = 210,
+    STAGE_DONE,
 } lexer_stage; 
 
 typedef enum _instruction {
     // Load
-    INS_LDC = 300,
+    INS_LDC,
     INS_LD,
     INS_ALD,
 
@@ -126,7 +127,7 @@ typedef enum _instruction {
 
     // Arithmetic
     INS_ADD,
-    INS_SUB = 310,
+    INS_SUB,
     INS_MUL,
     INS_DIV,
 
@@ -140,7 +141,7 @@ typedef enum _instruction {
 
     // I/O
     INS_IN,
-    INS_OUT = 320,
+    INS_OUT,
 
     // Address
     INS_ADDR,
