@@ -17,10 +17,9 @@ void _generate_arg_list_code(code_generator_handler *cgh)
     int idx;
     syntax_tree *node = cgh->node;
 
-    for (idx = 0; idx < node->sub_idx; ++idx) {
+    for (idx = node->sub_idx - 1; idx >= 0; --idx) {
         cgh->node = node->sub_list[idx];
         _generate_expr_code(cgh);
-
         code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
     }
 }
@@ -37,6 +36,7 @@ void _generate_call_code(code_generator_handler *cgh)
     // xxx = input();
     if (strcmp(func_name, "input") == 0) {
         code_list_push(cgh->cl, INS_IN, node->data->token_str);
+        return;
     }
     // output(xxx);
     else if (strcmp(func_name, "output") == 0) {
@@ -44,6 +44,7 @@ void _generate_call_code(code_generator_handler *cgh)
         _generate_expr_code(cgh);
 
         code_list_push(cgh->cl, INS_OUT, node->data->token_str);
+        return;
     }
 
     // user define function.

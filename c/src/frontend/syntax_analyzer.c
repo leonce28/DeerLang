@@ -183,7 +183,7 @@ void _call(token_list *tokens, int *token_idx, syntax_tree **ast)
     }
 
     _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
-    
+
     *ast = node;
 }
 
@@ -290,7 +290,7 @@ void _term(token_list *tokens, int *token_idx, syntax_tree **ast)
     */
     syntax_tree *node = NEW_AST_NODE("Term", TOKEN_TERM);
 
-    _factor(tokens, token_idx, &node->sub_list[0]);
+    _factor(tokens, token_idx, &node->sub_list[node->sub_idx++]);
 
     while (ANALY_TOKEN_TYPE() == TOKEN_MULTIPLY ||
            ANALY_TOKEN_TYPE() == TOKEN_DIVIDE) {

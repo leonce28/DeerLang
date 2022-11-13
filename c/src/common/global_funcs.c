@@ -192,7 +192,7 @@ static void _ast_print_node(const syntax_tree *node, int deep)
     while (tab_size-- > 0) {
         printf("   ");
     }
-    printf("deep: %d, sub_size: %d, token: ", deep, node->sub_idx);
+    printf("D%d[%d]: ", deep, node->sub_idx);
     printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
         node->data->line_no, node->data->token_str,
         node->data->token_len, node->data->token_type);
