@@ -43,7 +43,7 @@ int output_asm_file(code_list *codes, const char *asm_file)
 {
     FILE *fp;
     int idx, line_len, data_len;
-    char line[VAR_OFFSET_MAX];
+    char line[VAR_OFFSET_MAX * 2];
     char *data = NULL;
 
     if (codes == NULL || asm_file == NULL) {

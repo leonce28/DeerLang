@@ -332,7 +332,7 @@ void _rel_op(token_list *tokens, int *token_idx, syntax_tree **ast)
                     | !=
     */
 
-   syntax_tree *node;
+   syntax_tree *node = NULL;
 
    switch (ANALY_TOKEN_TYPE()) {
        case TOKEN_LESS:
@@ -344,7 +344,6 @@ void _rel_op(token_list *tokens, int *token_idx, syntax_tree **ast)
             node = NEW_AST_NODE3();
             _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
             break;
-   
        default:
             invalid_token(ANALY_TOKEN_PTR());
             break;
