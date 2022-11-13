@@ -33,46 +33,45 @@ typedef struct _syntax_tree {
     struct _syntax_tree **sub_list;
 } syntax_tree;
 
+// pair<string, <int, int>>
 typedef struct _symbol {
     char var_name[VAR_NAME_MAX];
     int var_idx;
     int var_size;
 } symbol;
 
+// pair<string, pair<string, <int, int>>>
 typedef struct symbol_space {
     char space_name[SPACE_NAME_MAX];
     int s_idx;
     symbol **s;
 } symbol_space;
 
+// vector<pair<string, pair<string, <int, int>>>>
 typedef struct _symbol_table {
     int ss_idx;
     symbol_space **ss;
 } symbol_table;
 
-// struct code = { instruction ins, string offset }
-//          => pair<__Instruction, string>
+// pair<int, string>
 typedef struct _code {
     instruction ins; 
     char offset[VAR_OFFSET_MAX];
 } code;
 
-// struct code_list = { int c_idx, code c[] }
-//          => vector<pair<__Instruction, string>
+// vector<pair<int, string>
 typedef struct _code_list {
     int c_idx;
     code **c;
 } code_list;
 
-// struct map_list = { char name[], code_list cl }
-//          => <string, vector<pair<__Instruction, string>>
+// <string, vector<pair<int, string>>
 typedef struct _map_list {
     char name[MAP_NAME_MAX];
     code_list *cl;
 } map_list;
 
-// struct code_map = { int m_idx, map_list maps[] }
-//          => unordered_map<string, vector<pair<__Instruction, string>>>
+// unordered_map<string, vector<pair<int, string>>>
 typedef struct _code_map {
     int m_idx;
     map_list **maps;

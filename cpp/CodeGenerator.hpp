@@ -1045,7 +1045,6 @@ vector<pair<__Instruction, string>> __CodeGenerator::__generateCode() const
 {
     auto codeMap = __createCodeMap();
 
-
     for (auto it = codeMap.begin(); it != codeMap.end(); ++it) {
         std::cout << it->first << std::endl;
 

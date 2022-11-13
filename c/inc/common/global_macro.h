@@ -30,12 +30,12 @@
 #define NEW_AST_NODE3()             create_ast_node(ANALY_TOKEN_PTR())
 #define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->token_type == _t)
 
-enum {
+typedef enum _result {
     CMM_FAILED = -1,            // failed
     CMM_SUCCESS = 0,            // success
-};
+} result;
 
-enum _token_type{
+typedef enum _token_type {
     // Word
     TOKEN_ID,                   // Id
     TOKEN_NUMBER,               // Number
@@ -91,7 +91,7 @@ enum _token_type{
     TOKEN_TERM,                 // AST: Term
     TOKEN_CALL,                 // AST: Call
     TOKEN_ARG_LIST,             // AST: ArgList
-};
+} token_type;
 
 typedef enum _lexer_stage {
     STAGE_START,

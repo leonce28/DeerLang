@@ -262,6 +262,15 @@ symbol_space *create_symbol_space(const char* space_name)
     return space;
 }
 
+void init_space_symbol(symbol_space *space, const int size)
+{
+    assert(space != NULL);
+
+    for (space->s_idx = 0; space->s_idx < size; ++space->s_idx) {
+        space->s[space->s_idx] = create_symbol("", 0, 0);
+    }
+}
+
 symbol_space *get_global_space(const symbol_table *table)
 {
     assert(table != NULL && (table->ss_idx > 0));
@@ -416,17 +425,25 @@ code *create_code2(instruction ins, char *offset)
     return c;
 }
 
-void code_list_push(code_list *cl, instruction ins, char *offset)
+int code_list_push(code_list *cl, instruction ins, char *offset)
 {
-    // undo clear str
+    // undo clear offset
     assert(cl != NULL && offset != NULL);
 
     cl->c[cl->c_idx++] = create_code2(ins, offset);
+    
+    return cl->c_idx - 1;
+}
+
+void code_list_set(code_list *cl, const int idx, char *offset)
+{
+    assert(cl != NULL && offset != NULL && cl->c_idx >= idx);
+
+    strncpy(cl->c[idx]->offset, offset, VAR_OFFSET_MAX);
 }
 
 void code_list_push2(code_list *cl, code* c)
 {
-    // undo clear str
     assert(cl != NULL && c != NULL);
 
     cl->c[cl->c_idx++] = c;

@@ -63,7 +63,7 @@ void _param_list(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            params_list ::= param { ',' param }
+            param_list ::= param { ',' param }
     */
 
     syntax_tree *node = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);

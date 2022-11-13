@@ -1,4 +1,5 @@
 #include <string.h>
+#include <assert.h>
 #include "backend/code_generator.h"
 #include "common/global_funcs.h"
 
@@ -10,22 +11,90 @@ void _generate_number_code(code_generator_handler *cgh)
     code_list_push(cgh->cl, INS_LDC, cgh->node->data->token_str);
 }
 
+void _generate_arg_list_code(code_generator_handler *cgh)
+{
+    // arg_list ::= expr { ',' expr }
+    int idx;
+    syntax_tree *node = cgh->node;
+
+    for (idx = 0; idx < node->sub_idx; ++idx) {
+        cgh->node = node->sub_list[idx];
+        _generate_expr_code(cgh);
+
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
+    }
+}
+
 void _generate_call_code(code_generator_handler *cgh)
 {
     // call ::= id '(' [ arg_list ] ')'
+    int idx, p_idx, top_idx, arr_idx;
+    symbol_space *space = NULL;
+    symbol_space *pairs = NULL;
     syntax_tree *node = cgh->node;
+    char *func_name = node->sub_list[0]->data->token_str;
 
     // xxx = input();
-    if (strcmp(node->sub_list[0]->data->token_str, "input") == 0) {
+    if (strcmp(func_name, "input") == 0) {
         code_list_push(cgh->cl, INS_IN, node->data->token_str);
     }
-
     // output(xxx);
-    else if (strcmp(node->sub_list[0]->data->token_str, "output") == 0) {
+    else if (strcmp(func_name, "output") == 0) {
         cgh->node = node->sub_list[1]->sub_list[0];
         _generate_expr_code(cgh);
 
         code_list_push(cgh->cl, INS_OUT, node->data->token_str);
+    }
+
+    // user define function.
+    space = find_symbol_space(cgh->table, func_name);
+    pairs = create_symbol_space(func_name);
+    init_space_symbol(pairs, space->s_idx);
+
+    // ..., Local5, Local4, Local3, Param2, Param1, Param0
+    for (idx = 0; idx < space->s_idx; ++idx) {
+        p_idx = pairs->s_idx - space->s[idx]->var_idx - 1;
+        strncpy(pairs->s[p_idx]->var_name, space->s[idx]->var_name, MIN(VAR_NAME_MAX, strlen(space->s[idx]->var_name)));
+        pairs->s[p_idx]->var_idx = space->s[idx]->var_idx;
+        pairs->s[p_idx]->var_size = space->s[idx]->var_size;
+    }
+
+    // We only need local variable here
+    top_idx = pairs->s_idx - (node->sub_list[1] ? node->sub_list[1]->sub_idx : 0);
+
+    // Push local variable
+    for (idx = 0; idx < top_idx; ++idx) {
+        if (pairs->s[idx]->var_size) {
+            // Array, Push array content (by array size times)
+            for (arr_idx = 0; arr_idx < pairs->s[idx]->var_size; ++arr_idx) {
+                code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
+            }
+            snprintf(cgh->size, VAR_SIZE_MAX, "%d", pairs->s[idx]->var_size);
+            code_list_push(cgh->cl, INS_ADDR, cgh->size);
+            code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
+        } else {
+            // Scalar
+            code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
+        }
+    }
+
+    // Push parameter
+    if (node->sub_list[1]) {
+        cgh->node = node->sub_list[1];
+        _generate_arg_list_code(cgh);
+    }
+
+    code_list_push(cgh->cl, INS_CALL, func_name);
+
+    // After call, we need several "POP" to pop all variables.
+    for (idx = 0; idx < space->s_idx; ++idx) {
+        // Any variable needs a "POP"
+        code_list_push(cgh->cl, INS_POP, NULL_STRING);
+
+        // Pop array content (by array size times)
+        for (arr_idx = 0; arr_idx < space->s[idx]->var_size; ++arr_idx) {
+            code_list_push(cgh->cl, INS_POP, NULL_STRING);
+        }
     }
 }
 
@@ -38,13 +107,18 @@ void _generate_var_code(code_generator_handler *cgh)
     // is local var in current function ?
     sb = find_symbol(cgh->table, cgh->cur_space, node->sub_list[0]->data->token_str);
 
-    // maybe global var ?
     if (sb) {
-        code_list_push(cgh->cl, INS_LDC, NULL_STRING);
+        // local var
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", sb->var_idx);
+        code_list_push(cgh->cl, INS_LDC, cgh->size);
         code_list_push(cgh->cl, INS_LD, NULL_STRING);
     } else {
+        // global var
         sb = find_symbol(cgh->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
-        code_list_push(cgh->cl, INS_LDC, NULL_STRING);
+        assert(sb != NULL);
+
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", sb->var_idx);
+        code_list_push(cgh->cl, INS_LDC, cgh->size);
         code_list_push(cgh->cl, INS_ALD, NULL_STRING);
     }
 
@@ -175,9 +249,14 @@ void _generate_rel_op_code(code_generator_handler *cgh)
 
 void _generate_simple_expr_code(code_generator_handler *cgh)
 {
+    // simple_expr ::= add_expr [ rel_op add_expr ]
+
     syntax_tree *node = cgh->node;
 
-    // simple_expr ::= add_expr [ rel_op add_expr ]
+    if (node == NULL) {
+        return;
+    }
+
     if (!node->sub_list[1] && !node->sub_list[2]) {
         cgh->node = node->sub_list[0];
         _generate_add_expr_code(cgh);
@@ -249,9 +328,7 @@ void _generate_expr_code(code_generator_handler *cgh)
      */
     if (!node->sub_list[1]) {
         cgh->node = node->sub_list[0];
-        if (cgh->node) {
-            _generate_simple_expr_code(cgh);
-        }
+        _generate_simple_expr_code(cgh);
     } else {
         cgh->node = node->sub_list[1];
         _generate_expr_code(cgh);
@@ -263,6 +340,7 @@ void _generate_expr_code(code_generator_handler *cgh)
 
 void _generate_if_stmt_code(code_generator_handler *cgh)
 { 
+    int cl_idx, if_size, else_size;
     syntax_tree *node = cgh->node;
 
     // if_stmt :: = if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
@@ -271,23 +349,40 @@ void _generate_if_stmt_code(code_generator_handler *cgh)
     _generate_expr_code(cgh);
 
     if (!node->sub_list[2]) {
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx);
-        code_list_push(cgh->cl, INS_JZ, cgh->size);
-
+        if_size = cgh->cl->c_idx;
+        cl_idx = code_list_push(cgh->cl, INS_JZ, NULL_STRING);
         cgh->node = node->sub_list[1];
+
         _generate_stmt_list_code(cgh);
+        if_size = cgh->cl->c_idx - if_size;
+        
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size + 1);
+        code_list_set(cgh->cl, cl_idx, cgh->size);
     } else {
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx);
-        code_list_push(cgh->cl, INS_JZ, cgh->size);
 
+        /* if begin */
+        if_size = cgh->cl->c_idx;
+        cl_idx = code_list_push(cgh->cl, INS_JZ, NULL_STRING);
         cgh->node = node->sub_list[1];
+
         _generate_stmt_list_code(cgh);
+        if_size = cgh->cl->c_idx - if_size;
 
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", node->sub_list[2]->sub_idx);
-        code_list_push(cgh->cl, INS_JMP, cgh->size);
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size + 1);
+        code_list_set(cgh->cl, cl_idx, cgh->size);
+        /* if end */
 
+        /* else begin */
+        else_size = cgh->cl->c_idx;
+        cl_idx = code_list_push(cgh->cl, INS_JMP, NULL_STRING);
         cgh->node = node->sub_list[2];
+
         _generate_stmt_list_code(cgh);
+        else_size = cgh->cl->c_idx - else_size;
+
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", else_size + 1);
+        code_list_set(cgh->cl, cl_idx, cgh->size);
+        /* else end */
     }
 }
 
@@ -323,6 +418,11 @@ void _generate_return_stmt_code(code_generator_handler *cgh)
 void _generate_stmt_code(code_generator_handler *cgh)
 {
     // stmt ::= expr_stmt | if_stmt | while_stmt | return_stmt
+    
+    if (NULL == cgh->node) {
+        return;
+    }
+
     switch (cgh->node->data->token_type) {
         case TOKEN_EXPR:
             _generate_expr_code(cgh);

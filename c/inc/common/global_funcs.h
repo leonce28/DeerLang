@@ -43,16 +43,18 @@ symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
 symbol_space *find_symbol_space(const symbol_table *table, const char *space_name);
 symbol *create_symbol(const char *var_name, int var_idx, int var_size);
 symbol *find_symbol(const symbol_table *table, const char *space_name, const char *var_name);
+void init_space_symbol(symbol_space *space, const int size);
 void symbol_table_print(const symbol_table *table);
 
 ////////////////////////////////////////////////////////////////////////////////
 // code_list
 ////////////////////////////////////////////////////////////////////////////////
 code_list *create_code_list();
-void code_list_push(code_list *cl, instruction ins, char *str);
+int code_list_push(code_list *cl, instruction ins, char *str);
 void code_list_push2(code_list *cl, code *c);
 void code_list_append(code_list *codes, code_list *extras);
 void code_list_print(code_list *cl);
+void code_list_set(code_list *cl, const int idx, char *offset);
 
 ////////////////////////////////////////////////////////////////////////////////
 // map_list
