@@ -55,6 +55,7 @@ void code_list_push2(code_list *cl, code *c);
 void code_list_append(code_list *codes, code_list *extras);
 void code_list_print(code_list *cl);
 void code_list_set(code_list *cl, const int idx, char *offset);
+void code_list_clean(code_list *cl);
 
 ////////////////////////////////////////////////////////////////////////////////
 // map_list
@@ -66,7 +67,7 @@ map_list *find_map_list(code_map *c_map, const char *space);
 // code_map
 ////////////////////////////////////////////////////////////////////////////////
 code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table);
-void set_code_map(code_map *c_map, const char *cur_space, code_list *cl);
+void set_code_map(code_map *c_map, const char *cur_space, const code_list *cl);
 void code_map_print(const code_map *c_map);
 
 ////////////////////////////////////////////////////////////////////////////////

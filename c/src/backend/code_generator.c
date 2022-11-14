@@ -35,7 +35,7 @@ void _generate_call_code(code_generator_handler *cgh)
 
     // xxx = input();
     if (strcmp(func_name, "input") == 0) {
-        code_list_push(cgh->cl, INS_IN, node->data->token_str);
+        code_list_push(cgh->cl, INS_IN, NULL_STRING);
         return;
     }
     // output(xxx);
@@ -43,7 +43,7 @@ void _generate_call_code(code_generator_handler *cgh)
         cgh->node = node->sub_list[1]->sub_list[0];
         _generate_expr_code(cgh);
 
-        code_list_push(cgh->cl, INS_OUT, node->data->token_str);
+        code_list_push(cgh->cl, INS_OUT, NULL_STRING);
         return;
     }
 
@@ -357,7 +357,7 @@ void _generate_if_stmt_code(code_generator_handler *cgh)
         _generate_stmt_list_code(cgh);
         if_size = cgh->cl->c_idx - if_size;
         
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size + 1);
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size);
         code_list_set(cgh->cl, cl_idx, cgh->size);
     } else {
 
@@ -369,7 +369,7 @@ void _generate_if_stmt_code(code_generator_handler *cgh)
         _generate_stmt_list_code(cgh);
         if_size = cgh->cl->c_idx - if_size;
 
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size + 1);
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", if_size + 1); // else JMP INSTRUCTION
         code_list_set(cgh->cl, cl_idx, cgh->size);
         /* if end */
 
@@ -381,7 +381,7 @@ void _generate_if_stmt_code(code_generator_handler *cgh)
         _generate_stmt_list_code(cgh);
         else_size = cgh->cl->c_idx - else_size;
 
-        snprintf(cgh->size, VAR_SIZE_MAX, "%d", else_size + 1);
+        snprintf(cgh->size, VAR_SIZE_MAX, "%d", else_size);
         code_list_set(cgh->cl, cl_idx, cgh->size);
         /* else end */
     }
@@ -509,6 +509,7 @@ void _set_global_code_map(code_generator_handler *cgh)
     _generate_main_prepare_code(cgh);
 
     set_code_map(cgh->c_map, NAMESPACE_GLOBAL, cgh->g_cl);
+    code_list_clean(cgh->g_cl);
 }
 
 int _create_code_map(code_generator_handler *cgh)
@@ -536,6 +537,8 @@ int _create_code_map(code_generator_handler *cgh)
 
             set_code_map(cgh->c_map, cgh->cur_space, cgh->cl);
         }
+
+        code_list_clean(cgh->cl);
     }
 
     return CMM_SUCCESS;

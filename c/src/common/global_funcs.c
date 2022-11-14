@@ -478,20 +478,33 @@ code_map *create_code_map()
     return cm;
 } 
 
-void set_code_map(code_map *c_map, const char *cur_space, code_list *cl)
+void set_code_map(code_map *c_map, const char *cur_space, const code_list *input_cl)
 {
     int idx;
     code *c;
     c_map->maps[c_map->m_idx] = create_map_list(cur_space);
     c_map->maps[c_map->m_idx]->cl = create_code_list();
 
-    for (idx = 0; idx < cl->c_idx; ++idx) {
-        c = create_code2(cl->c[idx]->ins, cl->c[idx]->offset);
+    for (idx = 0; idx < input_cl->c_idx; ++idx) {
+        c = create_code2(input_cl->c[idx]->ins, input_cl->c[idx]->offset);
         c_map->maps[c_map->m_idx]->cl->c[c_map->maps[c_map->m_idx]->cl->c_idx] = c;
         ++c_map->maps[c_map->m_idx]->cl->c_idx;
     }
 
     ++c_map->m_idx;
+}
+
+void code_list_clean(code_list *cl)
+{
+    int idx;
+
+    for (idx = 0; idx < cl->c_idx; ++idx) {
+        if (cl->c[idx]) {
+            free(cl->c[idx]);
+            cl->c[idx] = NULL;
+        }
+    }
+    cl->c_idx = 0;
 }
 
 void code_map_print(const code_map *c_map)
