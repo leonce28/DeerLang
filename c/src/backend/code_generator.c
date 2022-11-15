@@ -279,6 +279,7 @@ void _generate_simple_expr_code(code_generator_handler *cgh)
 
 void _generate_assign_code(code_generator_handler *cgh)
 {
+    int is_global = 0;
     symbol *sb = NULL;
     syntax_tree *node = cgh->node;
 
@@ -290,6 +291,7 @@ void _generate_assign_code(code_generator_handler *cgh)
     
     // maybe global var ?
     if (!sb) {
+        is_global = 1;
         sb = find_symbol(cgh->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
     }
     
@@ -297,11 +299,11 @@ void _generate_assign_code(code_generator_handler *cgh)
     code_list_push(cgh->cl, INS_LDC, cgh->size);
 
     // scalar or array
-    if (!node->sub_list[0]) {
-        code_list_push(cgh->cl, INS_ST, NULL_STRING);
+    if (!node->sub_list[1]) {
+        code_list_push(cgh->cl, is_global ? INS_AST : INS_ST, NULL_STRING);
     } else {
         // Get the (start) pointer (is already an absolute address)
-        code_list_push(cgh->cl, INS_LD, NULL_STRING);
+        code_list_push(cgh->cl, is_global ? INS_ALD : INS_LD, NULL_STRING);
         code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         cgh->node = node->sub_list[0];
@@ -607,7 +609,7 @@ int generate_code(syntax_tree *ast, symbol_table *table, code_list **cl)
     if (_create_code_map(cgh)) {
         invalid_call("create code map");
     }
-    code_map_print(cgh->c_map);
+    // code_map_print(cgh->c_map);
 
     if (_merge_code_map(cgh)) {
         invalid_call("merge code map");
