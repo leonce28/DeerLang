@@ -193,7 +193,7 @@ int generate_asm(const char *cmm_file, char *asm_file)
     if (syntax_analysis(tokens, &ast)) {
         invalid_call("syntax analysis");
     }
-    syntax_tree_print(ast); 
+    // syntax_tree_print(ast);
 
     if (semantic_analysis(ast, &table)) {
         invalid_call("semantic analysis");

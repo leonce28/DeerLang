@@ -469,16 +469,16 @@ void _generate_global_var_code(code_generator_handler *cgh)
         if (sb->var_size) {
             // Calc the array start address (variable number + 1)
             snprintf(cgh->size, VAR_SIZE_MAX, "%d", sb->var_idx + 1);
-            code_list_push(cgh->g_cl, INS_LDC, cgh->size);
+            code_list_push(cgh->cl, INS_LDC, cgh->size);
         }
 
         // Push the array start address
         // (Or only a meaningless int for global scalar memeory)
-        code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
+        code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
 
         // Push array content (by array size times)
         for (idx = 0; idx < sb->var_size; ++idx) {
-            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
+            code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
         }
     }
 }
@@ -491,18 +491,18 @@ void _generate_main_prepare_code(code_generator_handler *cgh)
     for (s_idx = 0; s_idx < main->s_idx; ++s_idx) {
         if (main->s[s_idx]->var_size) {
             for (idx = 0; idx < main->s[s_idx]->var_size; ++idx) {
-                code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
+                code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
             }
             snprintf(cgh->size, VAR_SIZE_MAX, "%d", main->s[s_idx]->var_size);
-            code_list_push(cgh->g_cl, INS_ADDR, cgh->size);
-            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
+            code_list_push(cgh->cl, INS_ADDR, cgh->size);
+            code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
         } else {
-            code_list_push(cgh->g_cl, INS_PUSH, NULL_STRING);
+            code_list_push(cgh->cl, INS_PUSH, NULL_STRING);
         }
     }
 
     // Call the "main" function automatically
-    code_list_push(cgh->g_cl, INS_CALL, NAMESPACE_ENTRY);
+    code_list_push(cgh->cl, INS_CALL, NAMESPACE_ENTRY);
 }
 
 void _set_global_code_map(code_generator_handler *cgh)
@@ -510,8 +510,8 @@ void _set_global_code_map(code_generator_handler *cgh)
     _generate_global_var_code(cgh);
     _generate_main_prepare_code(cgh);
 
-    set_code_map(cgh->c_map, NAMESPACE_GLOBAL, cgh->g_cl);
-    code_list_clean(cgh->g_cl);
+    set_code_map(cgh->c_map, NAMESPACE_GLOBAL, cgh->cl);
+    code_list_clean(cgh->cl);
 }
 
 int _create_code_map(code_generator_handler *cgh)
@@ -614,6 +614,13 @@ int generate_code(syntax_tree *ast, symbol_table *table, code_list **cl)
     if (_merge_code_map(cgh)) {
         invalid_call("merge code map");
     }
+    // code_list_print(cgh->codes);
+    /*
+     * 期望值：
+     * CalcGreatestCommonDivisor 3
+     * main 38
+     */
+    func_jump_map_print(cgh->jumps);
 
     if (_translate_call(cgh)) {
         invalid_call("translate call");

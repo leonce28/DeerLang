@@ -468,6 +468,14 @@ void code_list_print(code_list *cl)
     }
 }
 
+void func_jump_map_print(const func_jump_map *jumps)
+{
+    int idx;
+    for (idx = 0; idx < jumps->f_idx; ++idx) {
+        printf("%s %d\n", jumps->fj[idx]->name, jumps->fj[idx]->jump_num);
+    }
+}
+
 code_map *create_code_map()
 {
     code_map *cm = (code_map *)malloc(sizeof(code_map));
@@ -528,7 +536,6 @@ code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_tab
     cgh->table = table;
     cgh->c_map = create_code_map();
     cgh->cl = create_code_list();
-    cgh->g_cl = create_code_list();
     cgh->codes = create_code_list();
     cgh->jumps = create_jump_map();
 

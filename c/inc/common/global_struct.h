@@ -97,7 +97,6 @@ typedef struct _code_generator_handler {
     const symbol_table *table;
     code_map *c_map;
     code_list *cl;
-    code_list *g_cl;
     code_list *codes;
     func_jump_map *jumps;
 } code_generator_handler;
