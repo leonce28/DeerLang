@@ -20,6 +20,13 @@ void invalid_token(const token *t)
     exit(0);
 }
 
+void invalid_instuction(const int line)
+{
+    printf("invalid instuction in line %d\n", line);
+    exit(0);
+}
+
+
 void _arguments_usage()
 {
     printf("usage: compiler [option]\n");
@@ -513,6 +520,43 @@ void code_list_clean(code_list *cl)
         }
     }
     cl->c_idx = 0;
+}
+
+ins_list *create_ins_list()
+{
+    ins_list *il = (ins_list *)malloc(sizeof(ins_list));
+    memset(il, 0, sizeof(ins_list));
+
+    il->i_idx = 0;
+    il->i = (ins **)malloc(MASP_CODE_MAX * sizeof(ins *));
+
+    return il;
+}
+
+ins *create_ins()
+{
+    ins *i = (ins *)malloc(sizeof(ins));
+    memset(i, 0, sizeof(ins));
+
+    return i;
+}
+
+ins *create_ins2(instruction instruct, int offset)
+{
+    ins *i = create_ins();
+
+    i->ins = instruct;
+    i->offset = offset;
+
+    return i;
+}
+
+int ins_list_push(ins_list *il, instruction ins, int offset)
+{
+    assert(il != NULL);
+
+    il->i[il->i_idx++] = create_ins2(ins, offset);
+    return il->i_idx - 1;
 }
 
 void code_map_print(const code_map *c_map)

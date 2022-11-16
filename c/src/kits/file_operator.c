@@ -8,14 +8,14 @@
 #include "backend/semantic_analyzer.h"
 #include "backend/code_generator.h"
 
-int read_code_string(const char *cmm_path, char **str)
+int read_file_content(const char *file_path, char **str)
 {
     FILE *fp;
     size_t file_length, count = 1;
 
-    fp = fopen(cmm_path, "r");
+    fp = fopen(file_path, "r");
     if (fp == NULL) {
-        printf("fopen file failed, file path: %s.\n", cmm_path);
+        printf("fopen file failed, file path: %s.\n", file_path);
         return CMM_FAILED;
     }
 
@@ -30,7 +30,7 @@ int read_code_string(const char *cmm_path, char **str)
     }
 
     if (count != fread((*str), file_length, count, fp)) {
-        printf("fread cmm file failed, file path: %s.\n", cmm_path);
+        printf("fread file content failed, file path: %s.\n", file_path);
         return CMM_FAILED;
     }
 
@@ -173,6 +173,71 @@ int output_asm_file(code_list *codes, const char *asm_file)
     return CMM_SUCCESS;
 }
 
+int code_list_load(const char *asm_str, code_list **codes)
+{
+    int line = 1; 
+    ins_list *il = create_ins_list();
+
+    while (asm_str) {
+        if (strncmp(asm_str, "LDC ", 4) == 0) {
+            ins_list_push(il, INS_LDC, atoi(asm_str + 4));
+        } else if (strncmp(asm_str, "LD", 2) == 0) {
+            ins_list_push(il, INS_LD, 0);
+        } else if (strncmp(asm_str, "ALD", 3) == 0) {
+            ins_list_push(il, INS_ALD, 0);
+        } else if (strncmp(asm_str, "ST", 2) == 0) {
+            ins_list_push(il, INS_ST, 0);
+        } else if (strncmp(asm_str, "__AST", 5) == 0) {
+            ins_list_push(il, INS_AST, 0);
+        } else if (strncmp(asm_str, "PUSH", 4) == 0) {
+            ins_list_push(il, INS_PUSH, 0);
+        } else if (strncmp(asm_str, "POP", 3) == 0) {
+            ins_list_push(il, INS_POP, 0);
+        } else if (strncmp(asm_str, "JMP ", 4) == 0) {
+            ins_list_push(il, INS_JMP, atoi(asm_str + 4));
+        } else if (strncmp(asm_str, "JZ ", 3) == 0) {
+            ins_list_push(il, INS_JZ, atoi(asm_str + 3));
+        } else if (strncmp(asm_str, "ADD", 3) == 0) {
+            ins_list_push(il, INS_ADD, 3);
+        } else if (strncmp(asm_str, "SUB", 3) == 0) {
+            ins_list_push(il, INS_SUB, 0);
+        } else if (strncmp(asm_str, "MUL", 3) == 0) {
+            ins_list_push(il, INS_MUL, 0);
+        } else if (strncmp(asm_str, "DIV", 3) == 0) {
+            ins_list_push(il, INS_DIV, 0);
+        } else if (strncmp(asm_str, "LT", 2) == 0) {
+            ins_list_push(il, INS_LT, 0);
+        } else if (strncmp(asm_str, "LE", 2) == 0) {
+            ins_list_push(il, INS_LE, 0);
+        } else if (strncmp(asm_str, "GT", 2) == 0) {
+            ins_list_push(il, INS_GT, 0);
+        } else if (strncmp(asm_str, "GE", 2) == 0) {
+            ins_list_push(il, INS_GE, 0);
+        } else if (strncmp(asm_str, "EQ", 2) == 0) {
+            ins_list_push(il, INS_EQ, 0);
+        } else if (strncmp(asm_str, "NE", 2) == 0) {
+            ins_list_push(il, INS_NE, 0);
+        } else if (strncmp(asm_str, "IN", 2) == 0) {
+            ins_list_push(il, INS_IN, 0);
+        } else if (strncmp(asm_str, "OUT", 3) == 0) {
+            ins_list_push(il, INS_OUT, 0);
+        } else if (strncmp(asm_str, "ADDR ", 5) == 0) {
+            ins_list_push(il, INS_ADDR, atoi(asm_str + 5));
+        } else if (strncmp(asm_str, "CALL ", 5) == 0) {
+            ins_list_push(il, INS_CALL, atoi(asm_str + 5));
+        } else if (strncmp(asm_str, "RET", 0) == 0) {
+            ins_list_push(il, INS_RET, 0);
+        } else {
+            invalid_instuction(line);
+        }
+
+        MOVE_NEXT_LINE(asm_str);
+        line++;
+    }
+
+    return CMM_SUCCESS;
+}
+
 int generate_asm(const char *cmm_file, char *asm_file)
 {
     char *cmm_str;
@@ -181,8 +246,8 @@ int generate_asm(const char *cmm_file, char *asm_file)
     symbol_table *table;
     code_list *codes;
 
-    if (read_code_string(cmm_file, &cmm_str)) {
-        invalid_call("read code string");
+    if (read_file_content(cmm_file, &cmm_str)) {
+        invalid_call("read file content");
     }
 
     if (lexical_analysis(cmm_str, &tokens)) {
@@ -214,5 +279,16 @@ int generate_asm(const char *cmm_file, char *asm_file)
 
 int execute_code(const char *asm_file)
 {
+    char *asm_str;
+    code_list *codes = NULL;
+
+    if (read_file_content(asm_file, &asm_str)) {
+        invalid_call("read file content");
+    }
+
+    if (code_list_load(asm_str, &codes)) {
+        invalid_call("code list code");
+    }
+
     return CMM_SUCCESS;
 }

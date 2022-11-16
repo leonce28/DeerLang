@@ -89,6 +89,18 @@ typedef struct _func_jump_map {
     func_jump **fj;
 } func_jump_map;
 
+// pair<int, int>
+typedef struct _ins {
+    instruction ins;
+    int offset;
+} ins;
+
+// vector<pair<int, int>
+typedef struct _ins_list {
+    int i_idx;
+    ins **i;
+} ins_list;
+
 typedef struct _code_generator_handler {
     char size[VAR_SIZE_MAX];
     char *cur_space;
