@@ -101,6 +101,19 @@ typedef struct _ins_list {
     ins **i;
 } ins_list;
 
+typedef struct _vm_stack {
+    int idx;
+    int **frames;
+} vm_stack;
+
+typedef struct _virtual_machine {
+    int ip;
+    int ax;
+    int bp;
+    vm_stack *ss;
+    ins_list *il;
+} virtual_machine;
+
 typedef struct _code_generator_handler {
     char size[VAR_SIZE_MAX];
     char *cur_space;

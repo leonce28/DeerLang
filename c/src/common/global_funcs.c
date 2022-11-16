@@ -72,13 +72,6 @@ int arguments_init(int argc, char **argv, parse_handler *handler)
         }
     }
 
-    if (strlen(handler->cmm_file) == 0) {
-        strcpy(handler->cmm_file, "a.cmm");
-    }
-    if (strlen(handler->asm_file) == 0) {
-        strcpy(handler->asm_file, "a.out");
-    }
-
     return CMM_SUCCESS;
 }
 
@@ -584,4 +577,17 @@ code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_tab
     cgh->jumps = create_jump_map();
 
     return cgh;
+}
+
+
+vm_stack *create_vm_stack()
+{
+    vm_stack *ss = (vm_stack *)malloc(sizeof(vm_stack));
+
+    memset(ss, 0, sizeof(vm_stack));
+
+    ss->idx = 0;
+    ss->frames = (int **)malloc(MASP_CODE_MAX * sizeof(int *));
+
+    return ss;
 }

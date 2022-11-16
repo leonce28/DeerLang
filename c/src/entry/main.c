@@ -6,17 +6,11 @@ int main(int argc, char **argv)
 {
     parse_handler handler;
 
-    if (arguments_init(argc, argv, &handler)) {
-        invalid_call("init arguments");
-    }
+    arguments_init(argc, argv, &handler);
 
-    if (generate_asm(handler.cmm_file, handler.asm_file)) {
-        invalid_call("generate code");
-    }
+    generate_asm(handler.cmm_file, handler.asm_file);
 
-    if (execute_code(handler.asm_file)) {
-        invalid_call("execute code");
-    }
+    execute_code(handler.asm_file);
 
     printf("finished.\n");
     return 0;

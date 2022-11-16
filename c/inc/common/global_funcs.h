@@ -85,3 +85,8 @@ int get_func_jump_num(func_jump_map *jumps, char *name);
 func_jump *create_func_jump(char *func_name, int jump_num);
 void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num);
 void func_jump_map_print(const func_jump_map *jumps);
+
+////////////////////////////////////////////////////////////////////////////////
+// virtual machine
+////////////////////////////////////////////////////////////////////////////////
+vm_stack *create_vm_stack();

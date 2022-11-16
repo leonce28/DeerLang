@@ -173,66 +173,198 @@ int output_asm_file(code_list *codes, const char *asm_file)
     return CMM_SUCCESS;
 }
 
-int code_list_load(const char *asm_str, code_list **codes)
+int code_list_load(char *data, ins_list **ins_p)
 {
-    int line = 1; 
+    assert(data != NULL);
+
+    int line = 0;
+    char *end = NULL;
     ins_list *il = create_ins_list();
 
-    while (asm_str) {
-        if (strncmp(asm_str, "LDC ", 4) == 0) {
-            ins_list_push(il, INS_LDC, atoi(asm_str + 4));
-        } else if (strncmp(asm_str, "LD", 2) == 0) {
+    for (end = data + strlen(data); data > end; ++line) {
+        if (strncmp(data, "LDC ", 4) == 0) {
+            ins_list_push(il, INS_LDC, atoi(data + 4));
+        } else if (strncmp(data, "LD", 2) == 0) {
             ins_list_push(il, INS_LD, 0);
-        } else if (strncmp(asm_str, "ALD", 3) == 0) {
+        } else if (strncmp(data, "ALD", 3) == 0) {
             ins_list_push(il, INS_ALD, 0);
-        } else if (strncmp(asm_str, "ST", 2) == 0) {
+        } else if (strncmp(data, "ST", 2) == 0) {
             ins_list_push(il, INS_ST, 0);
-        } else if (strncmp(asm_str, "__AST", 5) == 0) {
+        } else if (strncmp(data, "__AST", 5) == 0) {
             ins_list_push(il, INS_AST, 0);
-        } else if (strncmp(asm_str, "PUSH", 4) == 0) {
+        } else if (strncmp(data, "PUSH", 4) == 0) {
             ins_list_push(il, INS_PUSH, 0);
-        } else if (strncmp(asm_str, "POP", 3) == 0) {
+        } else if (strncmp(data, "POP", 3) == 0) {
             ins_list_push(il, INS_POP, 0);
-        } else if (strncmp(asm_str, "JMP ", 4) == 0) {
-            ins_list_push(il, INS_JMP, atoi(asm_str + 4));
-        } else if (strncmp(asm_str, "JZ ", 3) == 0) {
-            ins_list_push(il, INS_JZ, atoi(asm_str + 3));
-        } else if (strncmp(asm_str, "ADD", 3) == 0) {
+        } else if (strncmp(data, "JMP ", 4) == 0) {
+            ins_list_push(il, INS_JMP, atoi(data + 4));
+        } else if (strncmp(data, "JZ ", 3) == 0) {
+            ins_list_push(il, INS_JZ, atoi(data + 3));
+        } else if (strncmp(data, "ADD", 3) == 0) {
             ins_list_push(il, INS_ADD, 3);
-        } else if (strncmp(asm_str, "SUB", 3) == 0) {
+        } else if (strncmp(data, "SUB", 3) == 0) {
             ins_list_push(il, INS_SUB, 0);
-        } else if (strncmp(asm_str, "MUL", 3) == 0) {
+        } else if (strncmp(data, "MUL", 3) == 0) {
             ins_list_push(il, INS_MUL, 0);
-        } else if (strncmp(asm_str, "DIV", 3) == 0) {
+        } else if (strncmp(data, "DIV", 3) == 0) {
             ins_list_push(il, INS_DIV, 0);
-        } else if (strncmp(asm_str, "LT", 2) == 0) {
+        } else if (strncmp(data, "LT", 2) == 0) {
             ins_list_push(il, INS_LT, 0);
-        } else if (strncmp(asm_str, "LE", 2) == 0) {
+        } else if (strncmp(data, "LE", 2) == 0) {
             ins_list_push(il, INS_LE, 0);
-        } else if (strncmp(asm_str, "GT", 2) == 0) {
+        } else if (strncmp(data, "GT", 2) == 0) {
             ins_list_push(il, INS_GT, 0);
-        } else if (strncmp(asm_str, "GE", 2) == 0) {
+        } else if (strncmp(data, "GE", 2) == 0) {
             ins_list_push(il, INS_GE, 0);
-        } else if (strncmp(asm_str, "EQ", 2) == 0) {
+        } else if (strncmp(data, "EQ", 2) == 0) {
             ins_list_push(il, INS_EQ, 0);
-        } else if (strncmp(asm_str, "NE", 2) == 0) {
+        } else if (strncmp(data, "NE", 2) == 0) {
             ins_list_push(il, INS_NE, 0);
-        } else if (strncmp(asm_str, "IN", 2) == 0) {
+        } else if (strncmp(data, "IN", 2) == 0) {
             ins_list_push(il, INS_IN, 0);
-        } else if (strncmp(asm_str, "OUT", 3) == 0) {
+        } else if (strncmp(data, "OUT", 3) == 0) {
             ins_list_push(il, INS_OUT, 0);
-        } else if (strncmp(asm_str, "ADDR ", 5) == 0) {
-            ins_list_push(il, INS_ADDR, atoi(asm_str + 5));
-        } else if (strncmp(asm_str, "CALL ", 5) == 0) {
-            ins_list_push(il, INS_CALL, atoi(asm_str + 5));
-        } else if (strncmp(asm_str, "RET", 0) == 0) {
+        } else if (strncmp(data, "ADDR ", 5) == 0) {
+            ins_list_push(il, INS_ADDR, atoi(data + 5));
+        } else if (strncmp(data, "CALL ", 5) == 0) {
+            ins_list_push(il, INS_CALL, atoi(data + 5));
+        } else if (strncmp(data, "RET", 5) == 0) {
             ins_list_push(il, INS_RET, 0);
         } else {
             invalid_instuction(line);
         }
 
-        MOVE_NEXT_LINE(asm_str);
-        line++;
+        MOVE_NEXT_LINE(data);
+    }
+
+    *ins_p = il;
+    return CMM_SUCCESS;
+}
+
+int exec_instruction(virtual_machine *vm)
+{
+    assert(vm->ip < vm->il->i_idx);
+
+    ins *pair = vm->il->i[vm->ip];
+    switch (pair->ins) {
+        case INS_LDC:
+            vm->ax = pair->offset;
+            break;
+
+        case INS_LD:
+            vm->ax = *vm->ss->frames[vm->bp - vm->ax];
+            break;
+
+        case INS_ALD:
+            vm->ax = *vm->ss->frames[vm->ax];
+            break;
+
+        case INS_ST:
+            vm->ss->frames[vm->bp - vm->ax] = vm->ss->frames[vm->ss->idx - 1];
+            break;
+
+        case INS_AST:
+            vm->ss->frames[vm->ax] = vm->ss->frames[vm->ss->idx - 1];
+            break;
+
+        case INS_PUSH:
+            vm->ss.push_back(vm->ax);
+            vm->ss->frames[vm->ss->idx]
+            break;
+
+        case INS_POP:
+            vm->ss.pop_back();
+            break;
+
+        case INS_JMP:
+            vm->ip += pair->offset - 1;
+            break;
+
+        case INS_JZ:
+            if (!vm->ax) {
+                vm->ip += pair->offset - 1;
+            }
+            break;
+
+        case INS_ADD:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] + vm->ax;
+            break;
+
+        case INS_SUB:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] - vm->ax;
+            break;
+
+        case INS_MUL:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] * vm->ax;
+            break;
+
+        case INS_DIV:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] / vm->ax;
+            break;
+
+        case INS_LT:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] < vm->ax;
+            break;
+
+        case INS_LE:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] <= vm->ax;
+            break;
+
+        case INS_GT:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] > vm->ax;
+            break;
+
+        case INS_GE:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] >= vm->ax;
+            break;
+
+        case INS_EQ:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] == vm->ax;
+            break;
+
+        case INS_NE:
+            vm->ax = vm->ss->frames[vm->ss->idx - 1] != vm->ax;
+            break;
+
+        case INS_IN:
+            scanf("%d", &vm->ax);
+            break;
+
+        case INS_OUT:
+            printf("%d\n", vm->ax);
+            break;
+
+        case INS_ADDR:
+            vm->ax = vm->ss->idx - pair->offset;
+            break;
+
+        case INS_CALL:
+            vm->ss.push_back(vm->bp);
+            vm->bp = (int)vm->ss.size() - 2;
+            vm->ss.push_back(vm->ip);
+            vm->ip += instructionPair.second - 1;
+            break;
+
+        case INS_RET:
+            vm->ip = vm->ss->frames[vm->ss->idx - 1];
+            vm->ss.pop_back();
+            vm->bp = vm->ss->frames[vm->ss->idx - 1];
+            vm->ss.pop_back();
+            break;
+
+        default:
+            invalid_call("exec_instruction");
+    }
+}
+
+int vm_execute(const ins_list *il)
+{
+    virtual_machine vm;
+
+    vm.il = il;
+    vm.ss = create_vm_stack();
+    for (vm.ip = 0; vm.ip < il->i_idx; ++vm.ip) {
+        exec_instruction(vm);
     }
 
     return CMM_SUCCESS;
@@ -245,6 +377,10 @@ int generate_asm(const char *cmm_file, char *asm_file)
     syntax_tree *ast;
     symbol_table *table;
     code_list *codes;
+
+    if (strlen(cmm_file) == 0) {
+        return CMM_SUCCESS;
+    }
 
     if (read_file_content(cmm_file, &cmm_str)) {
         invalid_call("read file content");
@@ -280,14 +416,22 @@ int generate_asm(const char *cmm_file, char *asm_file)
 int execute_code(const char *asm_file)
 {
     char *asm_str;
-    code_list *codes = NULL;
+    ins_list *il = NULL;
+
+    if (strlen(asm_file) == 0) {
+        return CMM_SUCCESS;
+    }
 
     if (read_file_content(asm_file, &asm_str)) {
         invalid_call("read file content");
     }
 
-    if (code_list_load(asm_str, &codes)) {
+    if (code_list_load(asm_str, &il)) {
         invalid_call("code list code");
+    }
+
+    if (vm_execute(il)) {
+        invalid_call("virtual machine execute");
     }
 
     return CMM_SUCCESS;
