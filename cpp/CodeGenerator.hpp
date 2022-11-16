@@ -1047,10 +1047,6 @@ vector<pair<__Instruction, string>> __CodeGenerator::__generateCode() const
 
     auto [codeList, funcJmpMap] = __mergeCodeMap(codeMap);
 
-    for (auto it = funcJmpMap.begin(); it != funcJmpMap.end(); ++it) {
-        std::cout << "  " << it->first << " " << it->second << std::endl;
-    }
-
     __translateCall(codeList, funcJmpMap);
 
     return codeList;
