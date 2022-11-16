@@ -580,7 +580,6 @@ int _merge_code_map(code_generator_handler *cgh)
     if (!maps || !maps->cl) {
         invalid_call("find_map_list main failed in merge_code_map.");
     }
-    jump_num = maps->cl->c_idx;
     code_list_append(cgh->codes, maps->cl);
     set_func_jump_map(cgh->jumps, NAMESPACE_ENTRY, jump_num);
 
@@ -615,12 +614,7 @@ int generate_code(syntax_tree *ast, symbol_table *table, code_list **cl)
         invalid_call("merge code map");
     }
     // code_list_print(cgh->codes);
-    /*
-     * 期望值：
-     * CalcGreatestCommonDivisor 3
-     * main 38
-     */
-    func_jump_map_print(cgh->jumps);
+    // func_jump_map_print(cgh->jumps);
 
     if (_translate_call(cgh)) {
         invalid_call("translate call");
