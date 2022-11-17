@@ -181,7 +181,7 @@ int load_code_segment(char *data, code_segment **cs_p)
     char *end = NULL;
     code_segment *cs = create_code_segment();
 
-    for (end = data + strlen(data); data > end; ++line) {
+    for (end = data + strlen(data); data < end; ++line) {
         if (strncmp(data, "LDC ", 4) == 0) {
             code_segment_push(cs, INS_LDC, atoi(data + 4));
         } else if (strncmp(data, "LD", 2) == 0) {
@@ -228,7 +228,7 @@ int load_code_segment(char *data, code_segment **cs_p)
             code_segment_push(cs, INS_ADDR, atoi(data + 5));
         } else if (strncmp(data, "CALL ", 5) == 0) {
             code_segment_push(cs, INS_CALL, atoi(data + 5));
-        } else if (strncmp(data, "RET", 5) == 0) {
+        } else if (strncmp(data, "RET", 3) == 0) {
             code_segment_push(cs, INS_RET, 0);
         } else {
             invalid_instuction(line);

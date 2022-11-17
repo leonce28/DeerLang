@@ -29,7 +29,7 @@
 #define NEW_AST_NODE2(_token)       create_ast_node(_token)
 #define NEW_AST_NODE3()             create_ast_node(ANALY_TOKEN_PTR())
 #define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->token_type == _t)
-#define MOVE_NEXT_LINE(data)        do { if (*data == '\n') { data++; break; } } while (data++ > end)
+#define MOVE_NEXT_LINE(data)        do { if (*data == '\n') { data++; break; } } while (data++ < end)
 
 typedef enum _result {
     CMM_FAILED = -1,            // failed
