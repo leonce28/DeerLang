@@ -515,41 +515,45 @@ void code_list_clean(code_list *cl)
     cl->c_idx = 0;
 }
 
-ins_list *create_ins_list()
+code_segment *create_code_segment()
 {
-    ins_list *il = (ins_list *)malloc(sizeof(ins_list));
-    memset(il, 0, sizeof(ins_list));
+    code_segment *cs = (code_segment *)malloc(sizeof(code_segment));
+    memset(cs, 0, sizeof(code_segment));
 
-    il->i_idx = 0;
-    il->i = (ins **)malloc(MASP_CODE_MAX * sizeof(ins *));
+    cs->capacity = MASP_CODE_MAX;
+    cs->size = 0;
+    cs->data = (segment **)malloc(cs->capacity * sizeof(segment *));
 
-    return il;
+    return cs;
 }
 
-ins *create_ins()
+segment *create_segment()
 {
-    ins *i = (ins *)malloc(sizeof(ins));
-    memset(i, 0, sizeof(ins));
+    segment *seg = (segment *)malloc(sizeof(segment));
+    memset(seg, 0, sizeof(segment));
 
-    return i;
+    return seg;
 }
 
-ins *create_ins2(instruction instruct, int offset)
+segment *create_segment2(instruction ins, int offset)
 {
-    ins *i = create_ins();
+    segment *seg = create_segment();
 
-    i->ins = instruct;
-    i->offset = offset;
+    seg->ins = ins;
+    seg->offset = offset;
 
-    return i;
+    return seg;
 }
 
-int ins_list_push(ins_list *il, instruction ins, int offset)
+void code_segment_push(code_segment *cs, instruction ins, int offset)
 {
-    assert(il != NULL);
+    assert(cs != NULL);
 
-    il->i[il->i_idx++] = create_ins2(ins, offset);
-    return il->i_idx - 1;
+    if (cs->size >= cs->capacity) {
+        return;
+    }
+
+    cs->data[cs->size++] = create_segment2(ins, offset);
 }
 
 void code_map_print(const code_map *c_map)
@@ -579,15 +583,69 @@ code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_tab
     return cgh;
 }
 
+virtual_machine *create_virtual_machine()
+{
+    virtual_machine *vm = (virtual_machine *)malloc(sizeof(virtual_machine));
+
+    memset(vm, 0, sizeof(virtual_machine));
+
+    vm->ax = 0;
+    vm->bp = 0;
+    vm->ip = 0;
+    vm->ss = create_vm_stack();
+
+    return vm;
+}
 
 vm_stack *create_vm_stack()
 {
     vm_stack *ss = (vm_stack *)malloc(sizeof(vm_stack));
-
     memset(ss, 0, sizeof(vm_stack));
 
-    ss->idx = 0;
-    ss->frames = (int **)malloc(MASP_CODE_MAX * sizeof(int *));
+    ss->capacity = MASP_CODE_MAX;
+    ss->size = 0;
 
     return ss;
+}
+
+int vm_stack_pop(vm_stack *vm)
+{
+    assert(vm != NULL && vm->size >= 0);
+
+    return vm->data[vm->size-- - 1];
+}
+
+int vm_stack_back(const vm_stack *vm)
+{
+    assert(vm != NULL && vm->size < vm->capacity);
+
+    return vm->data[vm->size - 1];
+}
+
+int vm_stack_size(const vm_stack *vm)
+{
+    assert(vm != NULL);
+
+    return vm->size;
+}
+
+int vm_stack_get(const vm_stack *vm, const int index)
+{
+    assert(vm != NULL && index < vm->size);
+
+    return vm->data[index];
+}
+
+void vm_stack_push(vm_stack *vm, const int value)
+{
+    assert(vm != NULL && vm->size < vm->capacity);
+
+    vm->data[vm->size++] = value;
+}
+
+void vm_stack_set(vm_stack *vm, const int index, const int value)
+{
+    assert(vm != NULL && index < vm->size);
+
+    vm->data[index] = value;
 }

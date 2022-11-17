@@ -173,63 +173,63 @@ int output_asm_file(code_list *codes, const char *asm_file)
     return CMM_SUCCESS;
 }
 
-int code_list_load(char *data, ins_list **ins_p)
+int load_code_segment(char *data, code_segment **cs_p)
 {
     assert(data != NULL);
 
     int line = 0;
     char *end = NULL;
-    ins_list *il = create_ins_list();
+    code_segment *cs = create_code_segment();
 
     for (end = data + strlen(data); data > end; ++line) {
         if (strncmp(data, "LDC ", 4) == 0) {
-            ins_list_push(il, INS_LDC, atoi(data + 4));
+            code_segment_push(cs, INS_LDC, atoi(data + 4));
         } else if (strncmp(data, "LD", 2) == 0) {
-            ins_list_push(il, INS_LD, 0);
+            code_segment_push(cs, INS_LD, 0);
         } else if (strncmp(data, "ALD", 3) == 0) {
-            ins_list_push(il, INS_ALD, 0);
+            code_segment_push(cs, INS_ALD, 0);
         } else if (strncmp(data, "ST", 2) == 0) {
-            ins_list_push(il, INS_ST, 0);
+            code_segment_push(cs, INS_ST, 0);
         } else if (strncmp(data, "__AST", 5) == 0) {
-            ins_list_push(il, INS_AST, 0);
+            code_segment_push(cs, INS_AST, 0);
         } else if (strncmp(data, "PUSH", 4) == 0) {
-            ins_list_push(il, INS_PUSH, 0);
+            code_segment_push(cs, INS_PUSH, 0);
         } else if (strncmp(data, "POP", 3) == 0) {
-            ins_list_push(il, INS_POP, 0);
+            code_segment_push(cs, INS_POP, 0);
         } else if (strncmp(data, "JMP ", 4) == 0) {
-            ins_list_push(il, INS_JMP, atoi(data + 4));
+            code_segment_push(cs, INS_JMP, atoi(data + 4));
         } else if (strncmp(data, "JZ ", 3) == 0) {
-            ins_list_push(il, INS_JZ, atoi(data + 3));
+            code_segment_push(cs, INS_JZ, atoi(data + 3));
         } else if (strncmp(data, "ADD", 3) == 0) {
-            ins_list_push(il, INS_ADD, 3);
+            code_segment_push(cs, INS_ADD, 3);
         } else if (strncmp(data, "SUB", 3) == 0) {
-            ins_list_push(il, INS_SUB, 0);
+            code_segment_push(cs, INS_SUB, 0);
         } else if (strncmp(data, "MUL", 3) == 0) {
-            ins_list_push(il, INS_MUL, 0);
+            code_segment_push(cs, INS_MUL, 0);
         } else if (strncmp(data, "DIV", 3) == 0) {
-            ins_list_push(il, INS_DIV, 0);
+            code_segment_push(cs, INS_DIV, 0);
         } else if (strncmp(data, "LT", 2) == 0) {
-            ins_list_push(il, INS_LT, 0);
+            code_segment_push(cs, INS_LT, 0);
         } else if (strncmp(data, "LE", 2) == 0) {
-            ins_list_push(il, INS_LE, 0);
+            code_segment_push(cs, INS_LE, 0);
         } else if (strncmp(data, "GT", 2) == 0) {
-            ins_list_push(il, INS_GT, 0);
+            code_segment_push(cs, INS_GT, 0);
         } else if (strncmp(data, "GE", 2) == 0) {
-            ins_list_push(il, INS_GE, 0);
+            code_segment_push(cs, INS_GE, 0);
         } else if (strncmp(data, "EQ", 2) == 0) {
-            ins_list_push(il, INS_EQ, 0);
+            code_segment_push(cs, INS_EQ, 0);
         } else if (strncmp(data, "NE", 2) == 0) {
-            ins_list_push(il, INS_NE, 0);
+            code_segment_push(cs, INS_NE, 0);
         } else if (strncmp(data, "IN", 2) == 0) {
-            ins_list_push(il, INS_IN, 0);
+            code_segment_push(cs, INS_IN, 0);
         } else if (strncmp(data, "OUT", 3) == 0) {
-            ins_list_push(il, INS_OUT, 0);
+            code_segment_push(cs, INS_OUT, 0);
         } else if (strncmp(data, "ADDR ", 5) == 0) {
-            ins_list_push(il, INS_ADDR, atoi(data + 5));
+            code_segment_push(cs, INS_ADDR, atoi(data + 5));
         } else if (strncmp(data, "CALL ", 5) == 0) {
-            ins_list_push(il, INS_CALL, atoi(data + 5));
+            code_segment_push(cs, INS_CALL, atoi(data + 5));
         } else if (strncmp(data, "RET", 5) == 0) {
-            ins_list_push(il, INS_RET, 0);
+            code_segment_push(cs, INS_RET, 0);
         } else {
             invalid_instuction(line);
         }
@@ -237,93 +237,89 @@ int code_list_load(char *data, ins_list **ins_p)
         MOVE_NEXT_LINE(data);
     }
 
-    *ins_p = il;
+    *cs_p = cs;
     return CMM_SUCCESS;
 }
 
-int exec_instruction(virtual_machine *vm)
+void exec_instruction(segment *seg, virtual_machine *vm)
 {
-    assert(vm->ip < vm->il->i_idx);
-
-    ins *pair = vm->il->i[vm->ip];
-    switch (pair->ins) {
+    switch (seg->ins) {
         case INS_LDC:
-            vm->ax = pair->offset;
+            vm->ax = seg->offset;
             break;
 
         case INS_LD:
-            vm->ax = *vm->ss->frames[vm->bp - vm->ax];
+            vm->ax = vm_stack_get(vm->ss, vm->bp - vm->ax);
             break;
 
         case INS_ALD:
-            vm->ax = *vm->ss->frames[vm->ax];
+            vm->ax = vm_stack_get(vm->ss, vm->ax);
             break;
 
         case INS_ST:
-            vm->ss->frames[vm->bp - vm->ax] = vm->ss->frames[vm->ss->idx - 1];
+            vm_stack_set(vm->ss, vm->bp - vm->ax, vm_stack_back(vm->ss));
             break;
 
         case INS_AST:
-            vm->ss->frames[vm->ax] = vm->ss->frames[vm->ss->idx - 1];
+            vm_stack_set(vm->ss, vm->ax, vm_stack_back(vm->ss));
             break;
 
         case INS_PUSH:
-            vm->ss.push_back(vm->ax);
-            vm->ss->frames[vm->ss->idx]
+            vm_stack_push(vm->ss, vm->ax);
             break;
 
         case INS_POP:
-            vm->ss.pop_back();
+            vm_stack_pop(vm->ss);
             break;
 
         case INS_JMP:
-            vm->ip += pair->offset - 1;
+            vm->ip += seg->offset - 1;
             break;
 
         case INS_JZ:
             if (!vm->ax) {
-                vm->ip += pair->offset - 1;
+                vm->ip += seg->offset - 1;
             }
             break;
 
         case INS_ADD:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] + vm->ax;
+            vm->ax = vm_stack_back(vm->ss) + vm->ax;
             break;
 
         case INS_SUB:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] - vm->ax;
+            vm->ax = vm_stack_back(vm->ss) - vm->ax;
             break;
 
         case INS_MUL:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] * vm->ax;
+            vm->ax = vm_stack_back(vm->ss) * vm->ax;
             break;
 
         case INS_DIV:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] / vm->ax;
+            vm->ax = vm_stack_back(vm->ss) / vm->ax;
             break;
 
         case INS_LT:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] < vm->ax;
+            vm->ax = vm_stack_back(vm->ss) < vm->ax;
             break;
 
         case INS_LE:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] <= vm->ax;
+            vm->ax = vm_stack_back(vm->ss) <= vm->ax;
             break;
 
         case INS_GT:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] > vm->ax;
+            vm->ax = vm_stack_back(vm->ss) > vm->ax;
             break;
 
         case INS_GE:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] >= vm->ax;
+            vm->ax = vm_stack_back(vm->ss) >= vm->ax;
             break;
 
         case INS_EQ:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] == vm->ax;
+            vm->ax = vm_stack_back(vm->ss) == vm->ax;
             break;
 
         case INS_NE:
-            vm->ax = vm->ss->frames[vm->ss->idx - 1] != vm->ax;
+            vm->ax = vm_stack_back(vm->ss) != vm->ax;
             break;
 
         case INS_IN:
@@ -335,36 +331,37 @@ int exec_instruction(virtual_machine *vm)
             break;
 
         case INS_ADDR:
-            vm->ax = vm->ss->idx - pair->offset;
+            vm->ax = vm_stack_size(vm->ss) - seg->offset;
             break;
 
         case INS_CALL:
-            vm->ss.push_back(vm->bp);
-            vm->bp = (int)vm->ss.size() - 2;
-            vm->ss.push_back(vm->ip);
-            vm->ip += instructionPair.second - 1;
+            vm_stack_push(vm->ss, vm->bp);
+            vm->bp = vm_stack_size(vm->ss) - 2;
+            vm_stack_push(vm->ss, vm->ip);
+            vm->ip += seg->offset - 1;
             break;
 
         case INS_RET:
-            vm->ip = vm->ss->frames[vm->ss->idx - 1];
-            vm->ss.pop_back();
-            vm->bp = vm->ss->frames[vm->ss->idx - 1];
-            vm->ss.pop_back();
+            vm->ip = vm_stack_back(vm->ss);
+            vm_stack_pop(vm->ss);
+            vm->bp = vm_stack_back(vm->ss);
+            vm_stack_pop(vm->ss);
             break;
 
         default:
-            invalid_call("exec_instruction");
+            printf("Invalid __Instruction value");
+            exit(0);
     }
 }
 
-int vm_execute(const ins_list *il)
+int vm_execute(const code_segment *cs)
 {
-    virtual_machine vm;
+    assert(cs != NULL);
 
-    vm.il = il;
-    vm.ss = create_vm_stack();
-    for (vm.ip = 0; vm.ip < il->i_idx; ++vm.ip) {
-        exec_instruction(vm);
+    virtual_machine *vm = create_virtual_machine();
+
+    for (vm->ip = 0; vm->ip < cs->size; ++vm->ip) {
+        exec_instruction(cs->data[vm->ip], vm);
     }
 
     return CMM_SUCCESS;
@@ -416,7 +413,7 @@ int generate_asm(const char *cmm_file, char *asm_file)
 int execute_code(const char *asm_file)
 {
     char *asm_str;
-    ins_list *il = NULL;
+    code_segment *cs = NULL;
 
     if (strlen(asm_file) == 0) {
         return CMM_SUCCESS;
@@ -426,11 +423,11 @@ int execute_code(const char *asm_file)
         invalid_call("read file content");
     }
 
-    if (code_list_load(asm_str, &il)) {
+    if (load_code_segment(asm_str, &cs)) {
         invalid_call("code list code");
     }
 
-    if (vm_execute(il)) {
+    if (vm_execute(cs)) {
         invalid_call("virtual machine execute");
     }
 

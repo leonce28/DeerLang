@@ -59,10 +59,10 @@ void code_list_set(code_list *cl, const int idx, char *offset);
 void code_list_clean(code_list *cl);
 
 ////////////////////////////////////////////////////////////////////////////////
-// ins_list
+// code_segment
 ////////////////////////////////////////////////////////////////////////////////
-ins_list *create_ins_list();
-int ins_list_push(ins_list *il, instruction ins, int offset);
+code_segment *create_code_segment();
+void code_segment_push(code_segment *cs, instruction ins, int offset);
 
 ////////////////////////////////////////////////////////////////////////////////
 // map_list
@@ -89,4 +89,11 @@ void func_jump_map_print(const func_jump_map *jumps);
 ////////////////////////////////////////////////////////////////////////////////
 // virtual machine
 ////////////////////////////////////////////////////////////////////////////////
+virtual_machine *create_virtual_machine();
 vm_stack *create_vm_stack();
+int vm_stack_pop(vm_stack *vm);
+int vm_stack_back(const vm_stack *vm);
+int vm_stack_size(const vm_stack *vm);
+int vm_stack_get(const vm_stack *vm, const int index);
+void vm_stack_push(vm_stack *vm, const int value);
+void vm_stack_set(vm_stack *vm, const int index, const int value);

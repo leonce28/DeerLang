@@ -90,20 +90,23 @@ typedef struct _func_jump_map {
 } func_jump_map;
 
 // pair<int, int>
-typedef struct _ins {
+typedef struct _segment {
     instruction ins;
     int offset;
-} ins;
+} segment;
 
-// vector<pair<int, int>
-typedef struct _ins_list {
-    int i_idx;
-    ins **i;
-} ins_list;
+// vector<pair<int, int>>
+typedef struct _code_segment {
+    int size;
+    int capacity;
+    segment **data;
+} code_segment;
 
+// vector<int>
 typedef struct _vm_stack {
-    int idx;
-    int **frames;
+    int size;
+    int capacity;
+    int data[CODE_LSIT_MAX];
 } vm_stack;
 
 typedef struct _virtual_machine {
@@ -111,7 +114,6 @@ typedef struct _virtual_machine {
     int ax;
     int bp;
     vm_stack *ss;
-    ins_list *il;
 } virtual_machine;
 
 typedef struct _code_generator_handler {
