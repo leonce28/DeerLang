@@ -18,6 +18,7 @@
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
 #define NAMESPACE_ENTRY             "main"
 #define NULL_STRING                 ""
+#define DEFAULT_ASM_PATH            "./a.out"
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])

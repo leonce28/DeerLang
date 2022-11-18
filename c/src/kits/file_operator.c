@@ -50,6 +50,10 @@ int output_asm_file(code_list *codes, const char *asm_file)
         return CMM_FAILED;
     }
 
+    if (strlen(asm_file) == 0) {
+        asm_file = DEFAULT_ASM_PATH;
+    }
+
     data = (char *)malloc(codes->c_idx * (VAR_OFFSET_MAX * 2));
     data_len = 0;
 
