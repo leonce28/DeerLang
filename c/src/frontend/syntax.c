@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "frontend/syntax_analyzer.h"
-#include "common/global_funcs.h"
+#include "frontend/syntax.h"
+#include "common/funcs.h"
 
 void _expr(token_list *tokens, int *token_idx, syntax_tree **ast);
 void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast);
@@ -649,12 +649,13 @@ void _declared_list(token_list *tokens, syntax_tree **ast)
     *ast = node;
 }
 
-int syntax_analysis(token_list *tokens, syntax_tree **ast)
+
+int syntax_analysis(compiler_handle *handle)
 {
     /*
         EBNF:
             program ::= declared_list
     */
-    _declared_list(tokens, ast);
+    _declared_list(handle->tokens, &handle->ast);
     return CMM_SUCCESS;
 }

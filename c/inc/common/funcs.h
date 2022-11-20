@@ -1,6 +1,9 @@
 #pragma once
-#include "common/global_struct.h"
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+#include "common/struct.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // public
@@ -10,9 +13,10 @@ void invalid_token(const token *t);
 void invalid_instuction(const int line);
 
 ////////////////////////////////////////////////////////////////////////////////
-// arguments
+// io
 ////////////////////////////////////////////////////////////////////////////////
-int arguments_init(int argc, char **argv, parse_handler *handler);
+int file_read_content(const char *file_path, char **str);
+int file_write_content(code_list *codes, const char *asm_file);
 
 ////////////////////////////////////////////////////////////////////////////////
 // token
@@ -73,9 +77,9 @@ map_list *find_map_list(code_map *c_map, const char *space);
 ////////////////////////////////////////////////////////////////////////////////
 // code_map
 ////////////////////////////////////////////////////////////////////////////////
-code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table);
 void set_code_map(code_map *c_map, const char *cur_space, const code_list *cl);
 void code_map_print(const code_map *c_map);
+code_map *create_code_map();
 
 ////////////////////////////////////////////////////////////////////////////////
 // func_jump_map

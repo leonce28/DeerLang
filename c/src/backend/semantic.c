@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
-#include "backend/semantic_analyzer.h"
-#include "common/global_funcs.h"
+#include "backend/semantic.h"
+
 
 static void _analysis_local_declared(const syntax_tree *local_declared, int *var_idx, symbol_space **space)
 {
@@ -49,22 +49,22 @@ static void _analysis_func_declared(const syntax_tree *func_declared, symbol_tab
     // stmt_list todo
 }
 
-int semantic_analysis(const syntax_tree *ast, symbol_table **table)
+int semantic_analysis(compiler_handle *handle)
 {
     int ast_idx, global_idx = 0;
-    symbol_space *global_space;
     const syntax_tree *declared;
-    (*table) = create_symbol_table();
+    symbol_space *global_space;
+    handle->table = create_symbol_table();
 
-    for (ast_idx = 0; ast_idx < ast->sub_idx; ++ast_idx) {
+    for (ast_idx = 0; ast_idx < handle->ast->sub_idx; ++ast_idx) {
         
         // declared ::= var_declared | func_declared
-        declared = ast->sub_list[ast_idx];
+        declared = handle->ast->sub_list[ast_idx];
 
         if (TOKEN_TYPE_MATCH(declared, TOKEN_FUNC_DECL)) {
-            _analysis_func_declared(declared, table);
+            _analysis_func_declared(declared, &handle->table);
         } else {
-            global_space = get_global_space(*table);
+            global_space = get_global_space(handle->table);
             _analysis_local_declared(declared, &global_idx, &global_space);
         }
     }

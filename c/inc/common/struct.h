@@ -1,12 +1,8 @@
 #pragma once
 
 #include <stdio.h>
-#include "global_macro.h"
+#include "macro.h"
 
-typedef struct _parse_handler {
-    char cmm_file[FILE_PATH_MAX];
-    char asm_file[FILE_PATH_MAX];
-} parse_handler;
 
 typedef struct _token {
     int token_type;
@@ -116,7 +112,7 @@ typedef struct _virtual_machine {
     vm_stack *ss;
 } virtual_machine;
 
-typedef struct _code_generator_handler {
+typedef struct _code_generator {
     char size[VAR_SIZE_MAX];
     char *cur_space;
     const syntax_tree *tree;
@@ -126,5 +122,17 @@ typedef struct _code_generator_handler {
     code_list *cl;
     code_list *codes;
     func_jump_map *jumps;
-} code_generator_handler;
+} code_generator;
 
+typedef struct _compiler_handle {
+    char cmm_file[FILE_PATH_MAX];
+    char asm_file[FILE_PATH_MAX];
+    char *file_content;
+    token_list *tokens;
+    lexical *lex;
+    syntax_tree *ast;
+    symbol_table *table;
+    code_list *codes;
+    code_segment *cs;
+    code_generator *generator;
+} compiler_handle;

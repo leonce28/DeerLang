@@ -7,7 +7,6 @@
 #define SPACE_NAME_MAX                64
 #define VAR_OFFSET_MAX                64
 #define TOKEN_SIZE_DEF               256
-#define FILE_PATH_MAX                512
 #define TOKEN_LIST_MAX               512
 #define AST_LIST_MAX                1024
 #define MAP_LIST_MAX                1024
@@ -15,6 +14,7 @@
 #define MASP_CODE_MAX               1024
 #define TABLE_SYMBOL_MAX            1024
 #define TABLE_SPACE_MAX             1024
+#define FILE_PATH_MAX               1024
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
 #define NAMESPACE_ENTRY             "main"
 #define NULL_STRING                 ""
@@ -31,6 +31,12 @@
 #define NEW_AST_NODE3()             create_ast_node(ANALY_TOKEN_PTR())
 #define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->token_type == _t)
 #define MOVE_NEXT_LINE(data)        do { if (*data == '\n') { data++; break; } } while (data++ < end)
+#define PATH_IS_EMPTY(path)         (path != NULL && (strlen(path) == 0))
+#define NEW(POINTER, TYPE)          do {                                        \
+                                        POINTER = (TYPE *)malloc(sizeof(TYPE)); \
+                                        assert(POINTER != NULL);                \
+                                        memset(POINTER, 0, sizeof(TYPE));       \
+                                    } while(0);
 
 typedef enum _result {
     CMM_FAILED = -1,            // failed

@@ -3,22 +3,19 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include "frontend/lexical_analyzer.h"
-#include "common/global_macro.h"
-#include "common/global_funcs.h"
+#include "common/macro.h"
+#include "common/funcs.h"
+#include "frontend/lexical.h"
 
-static int _get_token_list_instance(token_list **tl)
+static token_list *create_token_list()
 {
-    assert(tl != NULL);
-
     token_list *tokens = (token_list *)malloc(sizeof(token_list));
-    if (!tokens) {
-        return CMM_FAILED;
-    }
+    assert(tokens != NULL);
     memset(tokens, 0, sizeof(token_list));
-    (*tl) = tokens;
 
-    return token_list_init(tokens);
+    token_list_init(tokens);
+
+    return tokens;
 }
 
 static void _invalid_char(char ch, int line_no)
@@ -326,25 +323,24 @@ static token *_next_token(lexical *lex)
     return t;
 }
 
-int lexical_analysis(char *cmm_str, token_list **tl_ptr)
-{   
-    assert(cmm_str != NULL && tl_ptr != NULL);
+int lexical_analysis(compiler_handle *handle)
+{
+    assert(handle != NULL);
 
     token *t;
-    lexical lex = { cmm_str, 1 , STAGE_START };
 
-    if (_get_token_list_instance(tl_ptr)) {
-        invalid_call("get token list instance");
-    }
+    handle->lex->str = handle->file_content;
+    handle->lex->line_no = 1;
+    handle->lex->stage = STAGE_START;
+    handle->tokens = create_token_list();
 
-    t = _next_token(&lex);
+    t = _next_token(handle->lex);
     while (t != NULL && t->token_type != TOKEN_END) {
-        token_list_push(*tl_ptr, t);
-        lex.stage = STAGE_START;
-        t = _next_token(&lex);
+        token_list_push(handle->tokens, t);
+        handle->lex->stage = STAGE_START;
+        t = _next_token(handle->lex);
     }
 
-    free(cmm_str);
     return CMM_SUCCESS;
 }
 

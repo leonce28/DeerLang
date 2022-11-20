@@ -1,11 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include "common/global_funcs.h"
-
-extern char *optarg;
-extern int getopt();
+#include "common/funcs.h"
 
 void invalid_call(const char *state)
 {
@@ -26,53 +19,12 @@ void invalid_instuction(const int line)
     exit(0);
 }
 
-
-void _arguments_usage()
-{
-    printf("usage: compiler [option]\n");
-    printf("option: \n");
-    printf("  -i <file> \tinput cmm file path, default a.cmm.\n");
-    printf("  -o <file> \toutput asm file path, default a.out.\n");
-    printf("  -r <file> \texecute asm file, default a.out.\n");
-    printf("  -h \t\tshow this help message and exit.\n");
-
-    exit(0);
-}
-
 static void _token_print(token *t)
 {
     assert(t != NULL);
 
     printf("\t\t\tline_no: %d,\n\t\t\ttoken_str: \"%s\",\n\t\t\ttoken_len: %d,\n\t\t\ttoken_type: %d\n",
     t->line_no, t->token_str, t->token_len, t->token_type);
-}
-
-int arguments_init(int argc, char **argv, parse_handler *handler)
-{
-    assert(argv != NULL && handler != NULL);
-
-    int option;
-
-    memset(handler, 0, sizeof(parse_handler));
-    while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
-        switch (option) {
-            case 'o':
-                strncpy(handler->asm_file, optarg, FILE_PATH_MAX);
-                break;
-            case 'i':
-                strncpy(handler->cmm_file, optarg, FILE_PATH_MAX);
-                break;
-            case 'r':
-                strncpy(handler->asm_file, optarg, FILE_PATH_MAX);
-                break;
-            case 'h':
-            default:
-                _arguments_usage();
-                break;
-        }
-    }
-
-    return CMM_SUCCESS;
 }
 
 void token_print(const token_list *tokens, int token_idx)
@@ -567,22 +519,6 @@ void code_map_print(const code_map *c_map)
     }
 }
 
-code_generator_handler *get_code_generator_handler(syntax_tree *tree, symbol_table *table)
-{
-    code_generator_handler *cgh = (code_generator_handler *)malloc(sizeof(code_generator_handler));
-    memset(cgh, 0, sizeof(code_generator_handler));
-
-    cgh->node = NULL;
-    cgh->tree = tree;
-    cgh->table = table;
-    cgh->c_map = create_code_map();
-    cgh->cl = create_code_list();
-    cgh->codes = create_code_list();
-    cgh->jumps = create_jump_map();
-
-    return cgh;
-}
-
 virtual_machine *create_virtual_machine()
 {
     virtual_machine *vm = (virtual_machine *)malloc(sizeof(virtual_machine));
@@ -648,4 +584,172 @@ void vm_stack_set(vm_stack *vm, const int index, const int value)
     assert(vm != NULL && index < vm->size);
 
     vm->data[index] = value;
+}
+
+int file_read_content(const char *file_path, char **str)
+{
+    FILE *fp;
+    size_t file_length, count = 1;
+
+    fp = fopen(file_path, "r");
+    if (fp == NULL) {
+        printf("fopen file failed, file path: %s.\n", file_path);
+        return CMM_FAILED;
+    }
+
+    fseek(fp, 0, SEEK_END);
+    file_length = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    *str = (char *)malloc(file_length);
+    if ((*str) == NULL) {
+        printf("malloc code string failed.\n");
+        return CMM_FAILED;
+    }
+
+    if (count != fread((*str), file_length, count, fp)) {
+        printf("fread file content failed, file path: %s.\n", file_path);
+        return CMM_FAILED;
+    }
+
+    fclose(fp);
+    return CMM_SUCCESS;
+}
+
+int file_write_content(code_list *codes, const char *asm_file)
+{
+    FILE *fp;
+    int idx, line_len, data_len;
+    char line[VAR_OFFSET_MAX * 2];
+    char *data = NULL;
+
+    if (codes == NULL || asm_file == NULL) {
+        return CMM_FAILED;
+    }
+
+    if (strlen(asm_file) == 0) {
+        asm_file = DEFAULT_ASM_PATH;
+    }
+
+    data = (char *)malloc(codes->c_idx * (VAR_OFFSET_MAX * 2));
+    data_len = 0;
+
+    fp = fopen(asm_file, "w");
+    if (fp == NULL) {
+        printf("fopen file failed, file path: %s.\n", asm_file);
+        return CMM_FAILED;
+    }
+
+    for (idx = 0; idx < codes->c_idx; ++idx) {
+        switch (codes->c[idx]->ins) {
+            case INS_LDC:
+                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "LDC %s\n", codes->c[idx]->offset);
+                strncpy(data + data_len, line, line_len);
+                data_len += line_len;
+                break;
+            case INS_LD:
+                strcpy(data + data_len, "LD\n");
+                data_len += 3;
+                break;
+            case INS_ALD:
+                strcpy(data + data_len, "ALD\n");
+                data_len += 4;
+                break;
+            case INS_ST:
+                strcpy(data + data_len, "ST\n");
+                data_len += 3;
+                break;
+            case INS_AST:
+                strcpy(data + data_len, "__AST\n");
+                data_len += 6;
+                break;
+            case INS_PUSH:
+                strcpy(data + data_len, "PUSH\n");
+                data_len += 5;
+                break;
+            case INS_POP:
+                strcpy(data + data_len, "POP\n");
+                data_len += 4;
+                break;
+            case INS_JMP:
+                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JMP %s\n", codes->c[idx]->offset);
+                strncpy(data + data_len, line, line_len);
+                data_len += line_len;
+                break;
+            case INS_JZ:
+                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JZ %s\n", codes->c[idx]->offset);
+                strncpy(data + data_len, line, line_len);
+                data_len += line_len;
+                break;
+            case INS_ADD:
+                strcpy(data + data_len, "ADD\n");
+                data_len += 4;
+                break;
+            case INS_SUB:
+                strcpy(data + data_len, "SUB\n");
+                data_len += 4;
+                break;
+            case INS_MUL:
+                strcpy(data + data_len, "MUL\n");
+                data_len += 4;
+                break;
+            case INS_DIV:
+                strcpy(data + data_len, "DIV\n");
+                data_len += 4;
+                break;
+            case INS_LT:
+                strcpy(data + data_len, "LT\n");
+                data_len += 3;
+                break;
+            case INS_LE:
+                strcpy(data + data_len, "LE\n");
+                data_len += 3;
+                break;
+            case INS_GT:
+                strcpy(data + data_len, "GT\n");
+                data_len += 3;
+                break;
+            case INS_GE:
+                strcpy(data + data_len, "GE\n");
+                data_len += 3;
+                break;
+            case INS_EQ:
+                strcpy(data + data_len, "EQ\n");
+                data_len += 3;
+                break;
+            case INS_NE:
+                strcpy(data + data_len, "NE\n");
+                data_len += 3;
+                break;
+            case INS_IN:
+                strcpy(data + data_len, "IN\n");
+                data_len += 3;
+                break;
+            case INS_OUT:
+                strcpy(data + data_len, "OUT\n");
+                data_len += 4;
+                break;
+            case INS_ADDR:
+                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "ADDR %s\n", codes->c[idx]->offset);
+                strncpy(data + data_len, line, line_len);
+                data_len += line_len;
+                break;
+            case INS_CALL:
+                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "CALL %s\n", codes->c[idx]->offset);
+                strncpy(data + data_len, line, line_len);
+                data_len += line_len;
+                break;
+            case INS_RET:
+                strcpy(data + data_len, "RET\n");
+                data_len += 4;
+                break;
+            default:
+                invalid_call("output_asm_file");
+        }
+    }
+
+    fwrite(data, data_len, 1, fp);
+    fclose(fp);
+    free(data);
+    return CMM_SUCCESS;
 }
