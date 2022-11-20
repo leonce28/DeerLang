@@ -603,6 +603,9 @@ int _translate_call(code_generator *generator)
 
 int generate_code(compiler_handle *handle)
 {
+    handle->generator->tree = handle->ast;
+    handle->generator->table = handle->table;
+
     if (_create_code_map(handle->generator)) {
         invalid_call("create code map");
     }

@@ -9,6 +9,52 @@ extern int getopt();
 ////////////////////////////////////////////////////////////////////////////////
 // function
 ////////////////////////////////////////////////////////////////////////////////
+static void generate_asm(compiler_handle *handle)
+{
+    if (file_read_content(handle->cmm_file, &handle->file_content)) {
+        invalid_call("file read content");
+    }
+
+    if (lexical_analysis(handle)) {
+        invalid_call("lexical analysis");
+    }
+    // token_list_print(tokens);
+
+    if (syntax_analysis(handle)) {
+        invalid_call("syntax analysis");
+    }
+    // syntax_tree_print(ast);
+
+    if (semantic_analysis(handle)) {
+        invalid_call("semantic analysis");
+    }
+    // symbol_table_print(table);
+
+    if (generate_code(handle)) {
+        invalid_call("generate code");
+    }
+    // code_list_print(codes);
+
+    if (file_write_content(handle->codes, handle->asm_file)) {
+        invalid_call("output asm file");
+    }
+}
+
+static void execute_code(compiler_handle *handle)
+{
+    if (file_read_content(handle->asm_file, &handle->file_content)) {
+        invalid_call("file read content");
+    }
+
+    if (load_code_segment(handle->file_content, &handle->cs)) {
+        invalid_call("load code list");
+    }
+
+    if (vm_execute(handle->cs)) {
+        invalid_call("virtual machine execute");
+    }
+}
+
 void compiler_init(const int argc, char **argv)
 {
     int option;
@@ -45,58 +91,10 @@ void compiler_init(const int argc, char **argv)
     }
 
     handle->generator->node = NULL;
-    handle->generator->tree = handle->ast;
-    handle->generator->table = handle->table;
     handle->generator->c_map = create_code_map();
     handle->generator->cl = create_code_list();
     handle->generator->codes = create_code_list();
     handle->generator->jumps = create_jump_map();
-}
-
-void generate_asm(compiler_handle *handle)
-{
-    if (file_read_content(handle->cmm_file, &handle->file_content)) {
-        invalid_call("file read content");
-    }
-
-    if (lexical_analysis(handle)) {
-        invalid_call("lexical analysis");
-    }
-    // token_list_print(tokens);
-
-    if (syntax_analysis(handle)) {
-        invalid_call("syntax analysis");
-    }
-    // syntax_tree_print(ast);
-
-    if (semantic_analysis(handle)) {
-        invalid_call("semantic analysis");
-    }
-    // symbol_table_print(table);
-
-    if (generate_code(handle)) {
-        invalid_call("generate code");
-    }
-    // code_list_print(codes);
-
-    if (file_write_content(handle->codes, handle->asm_file)) {
-        invalid_call("output asm file");
-    }
-}
-
-void execute_code(compiler_handle *handle)
-{
-    if (file_read_content(handle->asm_file, &handle->file_content)) {
-        invalid_call("file read content");
-    }
-
-    if (load_code_segment(handle->file_content, &handle->cs)) {
-        invalid_call("load code list");
-    }
-
-    if (vm_execute(handle->cs)) {
-        invalid_call("virtual machine execute");
-    }
 }
 
 void compiler_run()
