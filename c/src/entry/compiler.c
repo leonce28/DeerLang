@@ -23,7 +23,7 @@ static void generate_asm(compiler_handle *handle)
     if (syntax_analysis(handle)) {
         invalid_call("syntax analysis");
     }
-    // syntax_tree_print(ast);
+    syntax_tree_print(handle->ast);
 
     if (semantic_analysis(handle)) {
         invalid_call("semantic analysis");

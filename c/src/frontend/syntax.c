@@ -91,11 +91,11 @@ void _params(token_list *tokens, int *token_idx, syntax_tree **ast)
     }
 }
 
-void _var_decl(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _var_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            var_decl ::= type id [ '[' number ']' ] ';'
+            var_declared ::= type id [ '[' number ']' ] ';'
     */
 
     syntax_tree *node = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
@@ -127,13 +127,13 @@ void _local_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 {
     /*
         EBNF:
-            local_declared ::= { var_decl }
+            local_declared ::= { var_declared }
     */
     syntax_tree *node = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
 
     while (ANALY_TOKEN_TYPE() == TOKEN_INT || 
            ANALY_TOKEN_TYPE() == TOKEN_VOID) {
-        _var_decl(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+        _var_declared(tokens, token_idx, &node->sub_list[node->sub_idx++]);
     }
 
     *ast = node;
@@ -625,7 +625,7 @@ void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
 
     if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_SQUARE_BRACKET ||
         ANALY_TOKEN_TYPE2(2) == TOKEN_SEMICOLON) {
-        _local_declared(tokens, token_idx, ast);
+        _var_declared(tokens, token_idx, ast);
     } else if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_ROUND_BRACKET) {
         _func_declared(tokens, token_idx, ast);
     } else {

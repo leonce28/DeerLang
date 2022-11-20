@@ -10,7 +10,7 @@ void invalid_call(const char *state)
 void invalid_token(const token *t)
 {
     printf("invalid token: %s in line %d\n", t->token_str, t->line_no);
-    exit(0);
+    // exit(0);
 }
 
 void invalid_instuction(const int line)
