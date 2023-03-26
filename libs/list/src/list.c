@@ -28,51 +28,51 @@ LinkedList *create_linked_list() {
 
 void destroy_linked_list(LinkedList *list) {
     ListNode *next = NULL;
-    ListNode *ListNode = list->head;
+    ListNode *node = list->head;
 
-    while (ListNode) {
-        next = ListNode->next;
-        free(ListNode);
-        ListNode = next;
+    while (node) {
+        next = node->next;
+        free(node);
+        node = next;
     }
 
     free(list);
 }
 
 int linked_list_push_front(LinkedList *list, void *data) {
-    ListNode *ListNode = malloc(sizeof(ListNode));
-    if (!ListNode) {
+    ListNode *node = malloc(sizeof(ListNode));
+    if (!node) {
         return 0;
     }
 
-    ListNode->data = data;
-    ListNode->next = list->head;
+    node->data = data;
+    node->next = list->head;
 
     if (!list->tail) {
-        list->tail = ListNode;
+        list->tail = node;
     }
 
-    list->head = ListNode;
+    list->head = node;
     list->size++;
     return 1;
 }
 
 int linked_list_push_back(LinkedList *list, void *data) {
-    ListNode *ListNode = malloc(sizeof(ListNode));
-    if (!ListNode) {
+    ListNode *node = malloc(sizeof(ListNode));
+    if (!node) {
         return 0;
     }
 
-    ListNode->data = data;
-    ListNode->next = NULL;
+    node->data = data;
+    node->next = NULL;
 
     if (!list->tail) {
-        list->head = ListNode;
+        list->head = node;
     } else {
-        list->tail->next = ListNode;
+        list->tail->next = node;
     }
 
-    list->tail = ListNode;
+    list->tail = node;
     list->size++;
     return 1;
 }
@@ -82,13 +82,13 @@ int linked_list_pop_front(LinkedList *list) {
         return 0;
     }
 
-    ListNode *ListNode = list->head;
-    list->head = ListNode->next;
+    ListNode *node = list->head;
+    list->head = node->next;
     if (!list->head) {
         list->tail = NULL;
     }
 
-    free(ListNode);
+    free(node);
     list->size--;
     return 1;
 }
@@ -106,15 +106,23 @@ int linked_list_pop_back(LinkedList *list) {
         return 1;
     }
 
-    ListNode *ListNode = list->head;
-    while (ListNode->next != list->tail) {
-        ListNode = ListNode->next;
+    ListNode *node = list->head;
+    while (node->next != list->tail) {
+        node = node->next;
     }
 
     free(list->tail);
-    ListNode->next = NULL;
-    list->tail = ListNode;
+    node->next = NULL;
+    list->tail = node;
     list->size--;
     return 1;
 }
 
+void linked_list_print(const LinkedList *list, LinkedListPrint print)
+{
+    ListNode *node = list->head;
+    while (node) {
+        print(node->data);
+        node = node->next;
+    }
+}

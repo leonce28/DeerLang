@@ -1,5 +1,0 @@
-/Users/ray/Code/compiler/build/CMakeFiles/edit_cache.dir
-/Users/ray/Code/compiler/build/CMakeFiles/rebuild_cache.dir
-/Users/ray/Code/compiler/build/src/CMakeFiles/lcompiler.dir
-/Users/ray/Code/compiler/build/src/CMakeFiles/edit_cache.dir
-/Users/ray/Code/compiler/build/src/CMakeFiles/rebuild_cache.dir
