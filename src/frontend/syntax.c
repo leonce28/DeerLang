@@ -2,236 +2,241 @@
 #include "frontend/syntax.h"
 #include "common/funcs.h"
 
-void _expr(token_list *tokens, int *token_idx, syntax_tree **ast);
-void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast);
-void _stmt_list(token_list *tokens, int *token_idx, syntax_tree **ast);
+void _expr(ListNode **node, syntax_tree **ast);
+void _stmt(ListNode **node, syntax_tree **ast);
+void _stmt_list(ListNode **node, syntax_tree **ast);
 
-void _match_token(int type, token_list *tokens, int *token_idx)
+void _match_token(int type, ListNode **node)
 {
-    if (ANALY_TOKEN_TYPE() == type) {
-        (*token_idx)++;
+    token *t = linked_list_node_data(*node);
+    if (t->type == type) {
+        *node = linked_list_node_next(*node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 }
 
-void _type(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _type(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             type ::= int
                 | void
     */
-    syntax_tree *node = NULL;
-    if (ANALY_TOKEN_TYPE() == TOKEN_INT ||
-        ANALY_TOKEN_TYPE() == TOKEN_VOID) {
-        node = NEW_AST_NODE2(ANALY_TOKEN_PTR());
-        _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
+    syntax_tree *int_void = NULL;
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
+        int_void = create_ast_node(t);
+        _match_token(t->type, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    *ast = node;
+    *ast = int_void;
 }
 
-void _param(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _param(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             param ::= type id [ '[' ']' ]
     */
-    syntax_tree *node = NEW_AST_NODE("Param", TOKEN_PARAM);
+    syntax_tree *param = NEW_AST_NODE("Param", TOKEN_PARAM);
 
-    _type(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _type(node, &param->sub_list[param->sub_idx++]);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID) {
+        param->sub_list[param->sub_idx++] = create_ast_node(t);
+        _match_token(TOKEN_ID, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, tokens, token_idx);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, tokens, token_idx);
+    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
+        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
     }
 
-    *ast = node;
+    *ast = param;
 }
 
-void _param_list(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _param_list(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             param_list ::= param { ',' param }
     */
 
-    syntax_tree *node = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);
+    syntax_tree *param_list = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);
 
-    _param(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _param(node, &param_list->sub_list[param_list->sub_idx++]);
 
-    while (ANALY_TOKEN_TYPE() == TOKEN_COMMA) {
-        _match_token(TOKEN_COMMA, tokens, token_idx);
-        _param(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_COMMA) {
+        _match_token(TOKEN_COMMA, node);
+        _param(node, &param_list->sub_list[param_list->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = param_list;
 }
 
-void _params(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _params(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             params ::= [ param_list ]
     */
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_INT ||
-        ANALY_TOKEN_TYPE() == TOKEN_VOID) {
-        _param_list(tokens, token_idx, ast);
+    const token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
+        _param_list(node, ast);
     }
 }
 
-void _var_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _var_declared(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             var_declared ::= type id [ '[' number ']' ] ';'
     */
 
-    syntax_tree *node = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
+    syntax_tree *var_decl = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
 
-    _type(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _type(node, &var_decl->sub_list[var_decl->sub_idx++]);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID) {
+        var_decl->sub_list[var_decl->sub_idx++] = create_ast_node(t);
+        _match_token(TOKEN_ID, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, tokens, token_idx);
+    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
 
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
+        var_decl->sub_list[var_decl->sub_idx++] = create_ast_node(t);
 
-        _match_token(TOKEN_NUMBER, tokens, token_idx);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, tokens, token_idx);
+        _match_token(TOKEN_NUMBER, node);
+        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
     }
 
-    _match_token(TOKEN_SEMICOLON, tokens, token_idx);
+    _match_token(TOKEN_SEMICOLON, node);
 
-    *ast = node;
+    *ast = var_decl;
 }
 
-void _local_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _local_declared(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             local_declared ::= { var_declared }
     */
-    syntax_tree *node = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
-
-    while (ANALY_TOKEN_TYPE() == TOKEN_INT || 
-           ANALY_TOKEN_TYPE() == TOKEN_VOID) {
-        _var_declared(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    syntax_tree *local_decl = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
+        _var_declared(node, &local_decl->sub_list[local_decl->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = local_decl;
 }
 
-void _arg_list(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _arg_list(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             arg_list ::= expr { ',' expr }
     */
 
-    syntax_tree *node = NEW_AST_NODE("ArgList", TOKEN_ARG_LIST);
+    syntax_tree *arg_list = NEW_AST_NODE("ArgList", TOKEN_ARG_LIST);
 
-    _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _expr(node, &arg_list->sub_list[arg_list->sub_idx++]);
 
-    while (ANALY_TOKEN_TYPE() == TOKEN_COMMA) {
-        _match_token(TOKEN_COMMA, tokens, token_idx);
-        _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_COMMA) {
+        _match_token(TOKEN_COMMA, node);
+        _expr(node, &arg_list->sub_list[arg_list->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = arg_list;
 }
 
-void _call(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _call(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             call ::= id '(' [ arg_list ] ')'
     */
 
-    syntax_tree *node = NEW_AST_NODE("Call", TOKEN_CALL);
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
+    syntax_tree *call = NEW_AST_NODE("Call", TOKEN_CALL);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID) {
+        call->sub_list[call->sub_idx++] = create_ast_node(t);
+        _match_token(TOKEN_ID, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID ||
-        ANALY_TOKEN_TYPE() == TOKEN_LEFT_ROUND_BRACKET ||
-        ANALY_TOKEN_TYPE() == TOKEN_NUMBER) {
-        _arg_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    if (t->type == TOKEN_ID ||
+        t->type == TOKEN_LEFT_ROUND_BRACKET ||
+        t->type == TOKEN_NUMBER) {
+        _arg_list(node, &call->sub_list[call->sub_idx++]);
     }
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
 
-    *ast = node;
+    *ast = call;
 }
 
-void _var(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _var(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             var ::= id [ '[' expr ']' ]
     */
 
-    syntax_tree *node = NEW_AST_NODE("Var", TOKEN_VAR);
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
+    syntax_tree *var = NEW_AST_NODE("Var", TOKEN_VAR);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID) {
+        var->sub_list[var->sub_idx++] = create_ast_node(t);
+        _match_token(TOKEN_ID, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, tokens, token_idx);
-        _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, tokens, token_idx);
+    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
+        _expr(node, &var->sub_list[var->sub_idx++]);
+        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
     }
 
-    *ast = node;
+    *ast = var;
 }
 
-void _mul_op(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _mul_op(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             mul_op ::= '*' | '/'
     */
-    syntax_tree *node = NULL;
+    syntax_tree *op = NULL;
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_MULTIPLY ||
-        ANALY_TOKEN_TYPE() == TOKEN_DIVIDE) {
-        node = NEW_AST_NODE3();
-        _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_MULTIPLY ||
+        t->type == TOKEN_DIVIDE) {
+        op = create_ast_node(t);
+        _match_token(t->type, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    *ast = node;
+    *ast = op;
 }
 
-void _factor(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _factor(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -240,87 +245,94 @@ void _factor(token_list *tokens, int *token_idx, syntax_tree **ast)
                      | call
                      | num
     */
-   switch (ANALY_TOKEN_TYPE()) {
+   const ListNode *next = NULL;
+   token *t = linked_list_node_data(*node);
+   switch (t->type) {
         case TOKEN_LEFT_ROUND_BRACKET:
-            _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
-            _expr(tokens, token_idx, ast);
-            _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
+            _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
+            _expr(node, ast);
+            _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
             break;
         case TOKEN_NUMBER:
-            *ast = NEW_AST_NODE3();
-            _match_token(TOKEN_NUMBER, tokens, token_idx);
+            *ast = create_ast_node(t);
+            _match_token(TOKEN_NUMBER, node);
             break;
         case TOKEN_ID:
-            if (ANALY_TOKEN_TYPE2(1) == TOKEN_LEFT_ROUND_BRACKET) {
-                _call(tokens, token_idx, ast);
+            next = linked_list_node_next(*node);
+            t = linked_list_node_data(next);
+            if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
+                _call(node, ast);
             } else {
-                _var(tokens, token_idx, ast);
+                _var(node, ast);
             }
             break;
         default:
-            invalid_token(ANALY_TOKEN_PTR());
+            invalid_token(t);
             break;
    }
 }
 
-void _add_op(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _add_op(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             add_op ::= +
                     | -
     */
-   syntax_tree *node = NULL;
-    if (ANALY_TOKEN_TYPE() == TOKEN_PLUS ||
-        ANALY_TOKEN_TYPE() == TOKEN_MINUS) {
-        node = NEW_AST_NODE3();
-        _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
+    syntax_tree *op = NULL;
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_PLUS ||
+        t->type == TOKEN_MINUS) {
+        op = create_ast_node(t);
+        _match_token(t->type, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    *ast = node;
+    *ast = op;
 }
 
-void _term(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _term(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             term ::= factor { mul_op factor }
     */
-    syntax_tree *node = NEW_AST_NODE("Term", TOKEN_TERM);
+    syntax_tree *term = NEW_AST_NODE("Term", TOKEN_TERM);
 
-    _factor(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _factor(node, &term->sub_list[term->sub_idx++]);
 
-    while (ANALY_TOKEN_TYPE() == TOKEN_MULTIPLY ||
-           ANALY_TOKEN_TYPE() == TOKEN_DIVIDE) {
-        _mul_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-        _factor(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_MULTIPLY ||
+           t->type == TOKEN_DIVIDE) {
+        _mul_op(node, &term->sub_list[term->sub_idx++]);
+        _factor(node, &term->sub_list[term->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = term;
 }
 
-void _add_expr(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _add_expr(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             add_expr ::= term { add_op term }
     */
-    syntax_tree *node = NEW_AST_NODE("AddExpr", TOKEN_ADD_EXPR);
+    syntax_tree *add_expr = NEW_AST_NODE("AddExpr", TOKEN_ADD_EXPR);
 
-    _term(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _term(node, &add_expr->sub_list[add_expr->sub_idx++]);
 
-    while (ANALY_TOKEN_TYPE() == TOKEN_PLUS || 
-           ANALY_TOKEN_TYPE() == TOKEN_MINUS) {
-        _add_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-        _term(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_PLUS || 
+           t->type == TOKEN_MINUS) {
+        _add_op(node, &add_expr->sub_list[add_expr->sub_idx++]);
+        _term(node, &add_expr->sub_list[add_expr->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = add_expr;
 }
 
-void _rel_op(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _rel_op(ListNode **node, syntax_tree **ast)
 { 
     /*
         EBNF:
@@ -331,192 +343,194 @@ void _rel_op(token_list *tokens, int *token_idx, syntax_tree **ast)
                     | ==
                     | !=
     */
+    syntax_tree *op = NULL;
+    token *t = linked_list_node_data(*node);
+    switch (t->type) {
+        case TOKEN_LESS:
+        case TOKEN_LESS_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_GREATER_EQUAL:
+        case TOKEN_EQUAL:
+        case TOKEN_NOT_EQUAL:
+                op = create_ast_node(t);
+                _match_token(t->type, node);
+                break;
+        default:
+                invalid_token(t);
+                break;
+    }
 
-   syntax_tree *node = NULL;
-
-   switch (ANALY_TOKEN_TYPE()) {
-       case TOKEN_LESS:
-       case TOKEN_LESS_EQUAL:
-       case TOKEN_GREATER:
-       case TOKEN_GREATER_EQUAL:
-       case TOKEN_EQUAL:
-       case TOKEN_NOT_EQUAL:
-            node = NEW_AST_NODE3();
-            _match_token(ANALY_TOKEN_TYPE(), tokens, token_idx);
-            break;
-       default:
-            invalid_token(ANALY_TOKEN_PTR());
-            break;
-   }
-
-    *ast = node;
+    *ast = op;
 }
 
-void _simple_expr(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _simple_expr(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             simple_expr ::= add_expr [ rel_op add_expr ]
 
     */
-    syntax_tree *node = NEW_AST_NODE("SimpleExpr", TOKEN_SIMPLE_EXPR);
+    syntax_tree *simple_expr = NEW_AST_NODE("SimpleExpr", TOKEN_SIMPLE_EXPR);
+    
+    _add_expr(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
 
-    _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_LESS || 
-        ANALY_TOKEN_TYPE() == TOKEN_LESS_EQUAL ||
-        ANALY_TOKEN_TYPE() == TOKEN_GREATER ||
-        ANALY_TOKEN_TYPE() == TOKEN_GREATER_EQUAL ||
-        ANALY_TOKEN_TYPE() == TOKEN_EQUAL ||
-        ANALY_TOKEN_TYPE() == TOKEN_NOT_EQUAL) {
-        _rel_op(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-        _add_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_LESS || t->type == TOKEN_LESS_EQUAL ||
+        t->type == TOKEN_GREATER || t->type == TOKEN_GREATER_EQUAL ||
+        t->type == TOKEN_EQUAL || t->type == TOKEN_NOT_EQUAL) {
+        _rel_op(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
+        _add_expr(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = simple_expr;
 }
 
-void _expr(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _expr(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             expr ::= var '=' expr
                    | simple_expr
     */
-    int idx, is_assign = 0;
-    syntax_tree *node = NEW_AST_NODE("Expr", TOKEN_EXPR);
+    int is_assign = 0;
+    syntax_tree *expr = NEW_AST_NODE("Expr", TOKEN_EXPR);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_LEFT_ROUND_BRACKET ||
-        ANALY_TOKEN_TYPE() == TOKEN_NUMBER) {
-        _simple_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-        *ast = node;
+    const token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_LEFT_ROUND_BRACKET ||
+        t->type == TOKEN_NUMBER) {
+        _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
+        *ast = expr;
         return;
-    } else if (ANALY_TOKEN_TYPE() != TOKEN_ID) {
-        invalid_token(ANALY_TOKEN_PTR());
+    } else if (t->type != TOKEN_ID) {
+        invalid_token(t);
     }
 
-    if (ANALY_TOKEN_TYPE2(1) == TOKEN_LEFT_ROUND_BRACKET) {
-        _simple_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    ListNode *next = linked_list_node_next(*node);
+    t = linked_list_node_data(next);
+    if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
+        _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
     } else {
-        idx = *token_idx;
-        _var(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+        ListNode *back = *node;
+        _var(node, &expr->sub_list[expr->sub_idx++]);
 
-        if (ANALY_TOKEN_TYPE() == TOKEN_ASSIGN) {
+        if (t->type == TOKEN_ASSIGN) {
             is_assign = 1;
         }
 
         // revert node
-        free(node->sub_list[0]);
-        node->sub_list[0] = NULL;
-        node->sub_idx = 0;
-        *token_idx = idx;
+        free(expr->sub_list[0]);
+        expr->sub_list[0] = NULL;
+        expr->sub_idx = 0;
+        *node = back;
 
         if (is_assign) {
-            _var(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-            _match_token(TOKEN_ASSIGN, tokens, token_idx);
-            _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+            _var(node, &expr->sub_list[expr->sub_idx++]);
+            _match_token(TOKEN_ASSIGN, node);
+            _expr(node, &expr->sub_list[expr->sub_idx++]);
         } else {
-            _simple_expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+            _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
         }
     }
 
-    *ast = node;
+    *ast = expr;
 }
 
-void _expr_stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _expr_stmt(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             expr_stmt ::= [ expr ] ';'
     */
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID ||
-        ANALY_TOKEN_TYPE() == TOKEN_LEFT_ROUND_BRACKET ||
-        ANALY_TOKEN_TYPE() == TOKEN_NUMBER) {
-        _expr(tokens, token_idx, ast);
+    const token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID || t->type == TOKEN_NUMBER ||
+        t->type == TOKEN_LEFT_ROUND_BRACKET) { 
+        _expr(node, ast);
     }
 
-    _match_token(TOKEN_SEMICOLON, tokens, token_idx);
+    _match_token(TOKEN_SEMICOLON, node);
 }
 
-void _if_stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _if_stmt(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             if_stmt ::= if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
     */
-    syntax_tree *node = NEW_AST_NODE("IfStmt", TOKEN_IF_STMT);
+    token *t = NULL;
+    syntax_tree *if_stmt = NEW_AST_NODE("IfStmt", TOKEN_IF_STMT);
+    _match_token(TOKEN_IF, node);
+    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
 
-    _match_token(TOKEN_IF, tokens, token_idx);
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
+    _expr(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
 
-    _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
 
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, tokens, token_idx);
+    _stmt_list(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
 
-    _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, tokens, token_idx);
+    t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ELSE) {
+        _match_token(TOKEN_ELSE, node);
+        _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ELSE) {
-        _match_token(TOKEN_ELSE, tokens, token_idx);
-        _match_token(TOKEN_LEFT_CURLY_BRACKET, tokens, token_idx);
+        _stmt_list(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
 
-        _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-
-        _match_token(TOKEN_RIGHT_CURLY_BRACKET, tokens, token_idx);
+        _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
     }
 
-    *ast = node;
+    *ast = if_stmt;
 }
 
-void _while_stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _while_stmt(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             while_stmt ::= while '(' expr ')' stmt_list
     */
-    syntax_tree *node = NEW_AST_NODE("WhileStmt", TOKEN_WHILE_STMT);
+    syntax_tree *while_stmt = NEW_AST_NODE("WhileStmt", TOKEN_WHILE_STMT);
 
-    _match_token(TOKEN_WHILE, tokens, token_idx);
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_WHILE, node);
+    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
 
-    _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _expr(node, &while_stmt->sub_list[while_stmt->sub_idx++]);
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
+    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
 
-    _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _stmt_list(node, &while_stmt->sub_list[while_stmt->sub_idx++]);
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
 
-    *ast = node;
+    *ast = while_stmt;
 }
 
-void _return_stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _return_stmt(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             return_stmt ::= return [ expr ] ';'
     */
-    syntax_tree *node = NEW_AST_NODE("ReturnStmt", TOKEN_RETURN_STMT);
+    syntax_tree *return_stmt = NEW_AST_NODE("ReturnStmt", TOKEN_RETURN_STMT);
 
-    _match_token(TOKEN_RETURN, tokens, token_idx);
+    _match_token(TOKEN_RETURN, node);
 
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID ||
-        ANALY_TOKEN_TYPE() == TOKEN_LEFT_ROUND_BRACKET ||
-        ANALY_TOKEN_TYPE() == TOKEN_NUMBER) {
-        _expr(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    const token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID ||
+        t->type == TOKEN_LEFT_ROUND_BRACKET ||
+        t->type == TOKEN_NUMBER) {
+        _expr(node, &return_stmt->sub_list[return_stmt->sub_idx++]);
     }
 
-    _match_token(TOKEN_SEMICOLON, tokens, token_idx);
+    _match_token(TOKEN_SEMICOLON, node);
 
-    *ast = node;
+    *ast = return_stmt;
 }
 
-void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _stmt(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -525,128 +539,127 @@ void _stmt(token_list *tokens, int *token_idx, syntax_tree **ast)
                    | while_stmt
                    | return_stmt
     */
-    switch (ANALY_TOKEN_TYPE())
-   {
+
+    const token *t = linked_list_node_data(*node);
+    switch (t->type)
+    {
         case TOKEN_SEMICOLON:
         case TOKEN_ID:
         case TOKEN_LEFT_ROUND_BRACKET:
         case TOKEN_NUMBER:
-            _expr_stmt(tokens, token_idx, ast);
+            _expr_stmt(node, ast);
             break;
         case TOKEN_IF:
-            _if_stmt(tokens, token_idx, ast);
+            _if_stmt(node, ast);
             break;
         case TOKEN_WHILE:
-            _while_stmt(tokens, token_idx, ast);
+            _while_stmt(node, ast);
             break;
         case TOKEN_RETURN:
-            _return_stmt(tokens, token_idx, ast);
+            _return_stmt(node, ast);
             break;
         default:
-            invalid_token(ANALY_TOKEN_PTR());
+            invalid_token(t);
             break;
    }
 }
 
-void _stmt_list(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _stmt_list(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             stmt_list ::= { stmt }
     */
 
-    syntax_tree *node = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
-    
-    while (ANALY_TOKEN_TYPE() == TOKEN_SEMICOLON ||
-        ANALY_TOKEN_TYPE() == TOKEN_ID ||
-        ANALY_TOKEN_TYPE() == TOKEN_LEFT_ROUND_BRACKET ||
-        ANALY_TOKEN_TYPE() == TOKEN_NUMBER ||
-        ANALY_TOKEN_TYPE() == TOKEN_IF ||
-        ANALY_TOKEN_TYPE() == TOKEN_WHILE ||
-        ANALY_TOKEN_TYPE() == TOKEN_RETURN) {
-
-        _stmt(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    syntax_tree *stmt_list = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
+    const token *t = linked_list_node_data(*node);
+    while (t->type == TOKEN_SEMICOLON || t->type== TOKEN_ID ||
+           t->type== TOKEN_LEFT_ROUND_BRACKET || t->type== TOKEN_NUMBER ||
+           t->type == TOKEN_IF || t->type== TOKEN_WHILE || t->type== TOKEN_RETURN) {
+        _stmt(node, &stmt_list->sub_list[stmt_list->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = stmt_list;
 }
 
-void _func_declared(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _func_declared(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
     */
+    syntax_tree *func_decl = NEW_AST_NODE("FuncDecl", TOKEN_FUNC_DECL);
 
-    syntax_tree *node = NEW_AST_NODE("FuncDecl", TOKEN_FUNC_DECL);
+    _type(node, &func_decl->sub_list[func_decl->sub_idx++]);
 
-    _type(tokens, token_idx, &node->sub_list[node->sub_idx++]);
-
-    if (ANALY_TOKEN_TYPE() == TOKEN_ID) {
-        node->sub_list[node->sub_idx++] = NEW_AST_NODE3();
-        _match_token(TOKEN_ID, tokens, token_idx);
+    token *t = linked_list_node_data(*node);
+    if (t->type == TOKEN_ID) {
+        func_decl->sub_list[func_decl->sub_idx++] = create_ast_node(t);
+        _match_token(TOKEN_ID, node);
     } else {
-        invalid_token(ANALY_TOKEN_PTR());
+        invalid_token(t);
     }
 
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
 
-    _params(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _params(node, &func_decl->sub_list[func_decl->sub_idx++]);
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
 
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
 
-    _local_declared(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _local_declared(node, &func_decl->sub_list[func_decl->sub_idx++]);
 
-    _stmt_list(tokens, token_idx, &node->sub_list[node->sub_idx++]);
+    _stmt_list(node, &func_decl->sub_list[func_decl->sub_idx++]);
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, tokens, token_idx);
+    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
 
-    *ast = node;
+    *ast = func_decl;
 }
 
-void _declared(token_list *tokens, int *token_idx, syntax_tree **ast)
+void _declared(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             declared ::= local_declared
                     | func_declared
     */
-
-    if (ANALY_TOKEN_TYPE() != TOKEN_INT &&
-        ANALY_TOKEN_TYPE() != TOKEN_VOID) {
-        invalid_token(ANALY_TOKEN_PTR());
+    const ListNode *next = NULL;
+    const token *t = linked_list_node_data(*node);
+    if (t->type != TOKEN_INT && t->type != TOKEN_VOID) {
+        invalid_token(t);
     }
 
-    if (ANALY_TOKEN_TYPE2(1) != TOKEN_ID) {
-        invalid_token(ANALY_TOKEN_PTR2(1));
+    next = linked_list_node_next(*node);
+    t = linked_list_node_data(next);
+    if (t->type != TOKEN_ID) {
+        invalid_token(linked_list_node_data(next));
     }
 
-    if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_SQUARE_BRACKET ||
-        ANALY_TOKEN_TYPE2(2) == TOKEN_SEMICOLON) {
-        _var_declared(tokens, token_idx, ast);
-    } else if (ANALY_TOKEN_TYPE2(2) == TOKEN_LEFT_ROUND_BRACKET) {
-        _func_declared(tokens, token_idx, ast);
+    next = linked_list_node_next(next);
+    t = linked_list_node_data(next);
+    if (t->type == TOKEN_LEFT_SQUARE_BRACKET || t->type == TOKEN_SEMICOLON) {
+        _var_declared(node, ast);
+    } else if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
+        _func_declared(node, ast);
     } else {
-        invalid_token(ANALY_TOKEN_PTR2(2));
+        invalid_token(t);
     }
 }
 
-void _declared_list(token_list *tokens, syntax_tree **ast)
+void _declared_list(ListNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             declared_list ::= declared { declared }
     */
-    int token_idx = 0;
-    syntax_tree *node = NEW_AST_NODE("DeclList", TOKEN_DECL_LIST);
+    syntax_tree *decl_list = NEW_AST_NODE("DeclList", TOKEN_DECL_LIST);
 
-    while (token_idx < tokens->size) {
-        _declared(tokens, &token_idx, &node->sub_list[node->sub_idx++]);
+    while (*node) {
+        _declared(node, &decl_list->sub_list[decl_list->sub_idx++]);
     }
 
-    *ast = node;
+    *ast = decl_list;
 }
 
 
@@ -656,6 +669,7 @@ int syntax_analysis(compiler_handle *handle)
         EBNF:
             program ::= declared_list
     */
-    _declared_list(handle->tokens, &handle->ast);
+    ListNode *node = linked_list_node_front(handle->tokens);
+    _declared_list(&node, &handle->ast);
     return CMM_SUCCESS;
 }

@@ -22,7 +22,7 @@ int file_write_content(code_list *codes, const char *asm_file);
 // token
 ////////////////////////////////////////////////////////////////////////////////
 token *create_token(const char *str, int type);
-void token_print(const token_list *tokens, int token_idx);
+void token_print(token *t);
 
 ////////////////////////////////////////////////////////////////////////////////
 // token_list

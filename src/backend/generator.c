@@ -139,7 +139,7 @@ void _generate_var_code(code_generator *generator)
 void _generate_factor_code(code_generator *generator)
 {
     // factor ::= '(' expr ')' | var | call | num
-    switch (generator->node->data->token_type) {
+    switch (generator->node->data->type) {
         case TOKEN_EXPR:
             _generate_expr_code(generator);
             break;
@@ -224,7 +224,7 @@ void _generate_add_expr_code(code_generator *generator)
 void _generate_rel_op_code(code_generator *generator)
 {
     // rel_op ::= '<' | '<' '=' | '>' | '>' '=' | '=' '=' | '!' '='
-    switch (generator->node->data->token_type) {
+    switch (generator->node->data->type) {
         case TOKEN_LESS:
             code_list_push(generator->cl, INS_LT, NULL_STRING);
             break;
@@ -426,7 +426,7 @@ void _generate_stmt_code(code_generator *generator)
         return;
     }
 
-    switch (generator->node->data->token_type) {
+    switch (generator->node->data->type) {
         case TOKEN_EXPR:
             _generate_expr_code(generator);
             break;

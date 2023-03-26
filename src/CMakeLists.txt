@@ -7,6 +7,6 @@ AUX_SOURCE_DIRECTORY(./access/. DIR_ACCESS)
 
 ADD_EXECUTABLE(lcompiler ${DIR_COMMON} ${DIR_FRONTEND} ${DIR_BACKEND} ${DIR_ACCESS})
 
-INCLUDE_DIRECTORIES(AFTER ../kits/list/inc)
+INCLUDE_DIRECTORIES(AFTER ../kits/list/inc ../kits/vector/inc)
 
 TARGET_LINK_LIBRARIES(lcompiler list vector pthread)

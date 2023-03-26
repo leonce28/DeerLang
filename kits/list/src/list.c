@@ -118,22 +118,22 @@ int linked_list_pop_back(LinkedList *list) {
     return 1;
 }
 
-ListNode *linked_list_node_front(LinkedList *list)
+ListNode *linked_list_node_front(const LinkedList *list)
 {
     return list->head;
 }
 
-ListNode *linked_list_node_back(LinkedList *list)
+ListNode *linked_list_node_back(const LinkedList *list)
 {
     return list->tail;
 }
 
-ListNode *linked_list_node_next(ListNode *node)
+ListNode *linked_list_node_next(const ListNode *node)
 {
     return node->next;
 }
 
-void *linked_list_node_data(ListNode *node)
+void *linked_list_node_data(const ListNode *node)
 {
     return node->data;
 }

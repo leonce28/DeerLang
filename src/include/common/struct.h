@@ -5,7 +5,7 @@
 #include "list.h"
 
 typedef struct _token {
-    int token_type;
+    int type;
     int line_no;
     int token_len;
     char token_str[TOKEN_STR_MAX];
@@ -128,8 +128,7 @@ typedef struct _compiler_handle {
     char cmm_file[FILE_PATH_MAX];
     char asm_file[FILE_PATH_MAX];
     char *file_content;
-    LinkedList *tokens2;
-    token_list *tokens;
+    LinkedList *tokens;
     lexical *lex;
     syntax_tree *ast;
     symbol_table *table;

@@ -19,22 +19,11 @@ void invalid_instuction(const int line)
     exit(0);
 }
 
-static void _token_print(token *t)
+void token_print(token *t)
 {
     assert(t != NULL);
-
-    printf("\t\t\tline_no: %d,\n\t\t\ttoken_str: \"%s\",\n\t\t\ttoken_len: %d,\n\t\t\ttoken_type: %d\n",
-    t->line_no, t->token_str, t->token_len, t->token_type);
-}
-
-void token_print(const token_list *tokens, int token_idx)
-{
-    assert(tokens != NULL);
-
-    token *t = tokens->data[token_idx];
-    printf("%d: { line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n", 
-        token_idx, t->line_no, t->token_str, 
-        t->token_len, t->token_type);
+    printf("line_no: %d, token_str: \"%s\", token_len: %d, type: %d\n",
+            t->line_no, t->token_str, t->token_len, t->type);
 }
 
 token *create_token(const char *str, int type)
@@ -45,7 +34,7 @@ token *create_token(const char *str, int type)
     }
 
     memset(t, 0, sizeof(token));
-    t->token_type = type;
+    t->type = type;
     t->token_len = 0;
     t->line_no = 0;
 
@@ -95,25 +84,6 @@ int token_list_push(token_list *tl, token *t)
     return CMM_SUCCESS;
 }
 
-void token_list_print(const token_list *tl)
-{
-    assert(tl != NULL);
-
-    int idx;
-    printf("token_list: [\n");
-    for (idx = 0; idx < tl->size; ++idx) {
-        printf("\t{\n\t\tidx: %d,\n\t\ttoken: {\n", idx);
-        _token_print(tl->data[idx]);
-        printf("\t\t}\n\t}");
-        if (idx != tl->size - 1) {
-            printf(",");
-        }
-        printf("\n");
-    }
-
-    printf("]\n");
-}
-
 void token_push_char(token *t, char ch)
 {
     assert(t != NULL);
@@ -147,7 +117,7 @@ static void _ast_print_node(const syntax_tree *node, int deep)
     printf("D%d[%d]: ", deep, node->sub_idx);
     printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
         node->data->line_no, node->data->token_str,
-        node->data->token_len, node->data->token_type);
+        node->data->token_len, node->data->type);
 }
 
 static void _syntax_tree_print(const syntax_tree *node, int deep)
