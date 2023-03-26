@@ -8,6 +8,11 @@
 extern char *optarg;
 extern int getopt();
 
+void token2_print(token *t)
+{
+    printf("[%d] (%d) { %d } '%s'\n", t->token_type, t->line_no, t->token_len, t->token_str);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // function
 ////////////////////////////////////////////////////////////////////////////////
@@ -20,6 +25,7 @@ static void generate_asm(compiler_handle *handle)
     if (lexical_analysis(handle)) {
         invalid_call("lexical analysis");
     }
+    
     // token_list_print(tokens);
 
     if (syntax_analysis(handle)) {

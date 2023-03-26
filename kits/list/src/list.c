@@ -13,7 +13,7 @@ struct LinkedList {
     size_t size;
 };
 
-LinkedList *create_linked_list() {
+LinkedList *linked_list_create() {
     LinkedList *list = malloc(sizeof(LinkedList));
 
     if (!list) {
@@ -26,7 +26,7 @@ LinkedList *create_linked_list() {
     return list;
 }
 
-void destroy_linked_list(LinkedList *list) {
+void linked_list_destroy(LinkedList *list) {
     ListNode *next = NULL;
     ListNode *node = list->head;
 
@@ -116,6 +116,26 @@ int linked_list_pop_back(LinkedList *list) {
     list->tail = node;
     list->size--;
     return 1;
+}
+
+ListNode *linked_list_node_front(LinkedList *list)
+{
+    return list->head;
+}
+
+ListNode *linked_list_node_back(LinkedList *list)
+{
+    return list->tail;
+}
+
+ListNode *linked_list_node_next(ListNode *node)
+{
+    return node->next;
+}
+
+void *linked_list_node_data(ListNode *node)
+{
+    return node->data;
 }
 
 void linked_list_print(const LinkedList *list, LinkedListPrint print)

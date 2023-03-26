@@ -5,7 +5,7 @@ SET(CMAKE_C_FLAGS "-std=c2x -g -O0 -Werror -fPIC -Wall")
 
 # ENABLE_TESTING()
 
-# ADD_SUBDIRECTORY(libs)
+ADD_SUBDIRECTORY(kits)
 ADD_SUBDIRECTORY(src)
 # ADD_SUBDIRECTORY(test)
 
