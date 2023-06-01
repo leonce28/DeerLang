@@ -321,11 +321,11 @@ int lexical_analysis(compiler_handle *handle)
     handle->lex->str = handle->file_content;
     handle->lex->line_no = 1;
     handle->lex->stage = STAGE_START;
-    handle->tokens = linked_list_create();
+    handle->tokens = blist_create();
 
     t = _next_token(handle->lex);
     while (t != NULL && t->type != TOKEN_END) {
-        linked_list_push_back(handle->tokens, t);
+        blist_push_back(handle->tokens, bnode_object(t));
         handle->lex->stage = STAGE_START;
         t = _next_token(handle->lex);
     }

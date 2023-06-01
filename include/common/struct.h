@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include "macro.h"
-#include "list.h"
+#include "bridge/list.h"
 
 typedef struct _token {
     int type;
@@ -122,7 +122,7 @@ typedef struct _compiler_handle {
     char cmm_file[FILE_PATH_MAX];
     char asm_file[FILE_PATH_MAX];
     char *file_content;
-    LinkedList *tokens;
+    BridgeList *tokens;
     lexical *lex;
     syntax_tree *ast;
     symbol_table *table;

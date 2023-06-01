@@ -2,11 +2,11 @@
 #include "frontend/syntax.h"
 #include "common/funcs.h"
 
-void _expr(ListNode **node, syntax_tree **ast);
-void _stmt(ListNode **node, syntax_tree **ast);
-void _stmt_list(ListNode **node, syntax_tree **ast);
+void _expr(BridgeNode **node, syntax_tree **ast);
+void _stmt(BridgeNode **node, syntax_tree **ast);
+void _stmt_list(BridgeNode **node, syntax_tree **ast);
 
-void _match_token(int type, ListNode **node)
+void _match_token(int type, BridgeNode **node)
 {
     token *t = linked_list_node_data(*node);
     if (t->type == type) {
@@ -16,7 +16,7 @@ void _match_token(int type, ListNode **node)
     }
 }
 
-void _type(ListNode **node, syntax_tree **ast)
+void _type(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -35,7 +35,7 @@ void _type(ListNode **node, syntax_tree **ast)
     *ast = int_void;
 }
 
-void _param(ListNode **node, syntax_tree **ast)
+void _param(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -61,7 +61,7 @@ void _param(ListNode **node, syntax_tree **ast)
     *ast = param;
 }
 
-void _param_list(ListNode **node, syntax_tree **ast)
+void _param_list(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -81,7 +81,7 @@ void _param_list(ListNode **node, syntax_tree **ast)
     *ast = param_list;
 }
 
-void _params(ListNode **node, syntax_tree **ast)
+void _params(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -94,7 +94,7 @@ void _params(ListNode **node, syntax_tree **ast)
     }
 }
 
-void _var_declared(ListNode **node, syntax_tree **ast)
+void _var_declared(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -127,7 +127,7 @@ void _var_declared(ListNode **node, syntax_tree **ast)
     *ast = var_decl;
 }
 
-void _local_declared(ListNode **node, syntax_tree **ast)
+void _local_declared(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -142,7 +142,7 @@ void _local_declared(ListNode **node, syntax_tree **ast)
     *ast = local_decl;
 }
 
-void _arg_list(ListNode **node, syntax_tree **ast)
+void _arg_list(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -162,7 +162,7 @@ void _arg_list(ListNode **node, syntax_tree **ast)
     *ast = arg_list;
 }
 
-void _call(ListNode **node, syntax_tree **ast)
+void _call(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -191,7 +191,7 @@ void _call(ListNode **node, syntax_tree **ast)
     *ast = call;
 }
 
-void _var(ListNode **node, syntax_tree **ast)
+void _var(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -216,7 +216,7 @@ void _var(ListNode **node, syntax_tree **ast)
     *ast = var;
 }
 
-void _mul_op(ListNode **node, syntax_tree **ast)
+void _mul_op(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -236,7 +236,7 @@ void _mul_op(ListNode **node, syntax_tree **ast)
     *ast = op;
 }
 
-void _factor(ListNode **node, syntax_tree **ast)
+void _factor(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -245,7 +245,7 @@ void _factor(ListNode **node, syntax_tree **ast)
                      | call
                      | num
     */
-   const ListNode *next = NULL;
+   const BridgeNode *next = NULL;
    token *t = linked_list_node_data(*node);
    switch (t->type) {
         case TOKEN_LEFT_ROUND_BRACKET:
@@ -272,7 +272,7 @@ void _factor(ListNode **node, syntax_tree **ast)
    }
 }
 
-void _add_op(ListNode **node, syntax_tree **ast)
+void _add_op(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -292,7 +292,7 @@ void _add_op(ListNode **node, syntax_tree **ast)
     *ast = op;
 }
 
-void _term(ListNode **node, syntax_tree **ast)
+void _term(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -312,7 +312,7 @@ void _term(ListNode **node, syntax_tree **ast)
     *ast = term;
 }
 
-void _add_expr(ListNode **node, syntax_tree **ast)
+void _add_expr(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -332,7 +332,7 @@ void _add_expr(ListNode **node, syntax_tree **ast)
     *ast = add_expr;
 }
 
-void _rel_op(ListNode **node, syntax_tree **ast)
+void _rel_op(BridgeNode **node, syntax_tree **ast)
 { 
     /*
         EBNF:
@@ -363,7 +363,7 @@ void _rel_op(ListNode **node, syntax_tree **ast)
     *ast = op;
 }
 
-void _simple_expr(ListNode **node, syntax_tree **ast)
+void _simple_expr(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -385,7 +385,7 @@ void _simple_expr(ListNode **node, syntax_tree **ast)
     *ast = simple_expr;
 }
 
-void _expr(ListNode **node, syntax_tree **ast)
+void _expr(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -405,12 +405,12 @@ void _expr(ListNode **node, syntax_tree **ast)
         invalid_token(t);
     }
 
-    ListNode *next = linked_list_node_next(*node);
+    BridgeNode *next = linked_list_node_next(*node);
     t = linked_list_node_data(next);
     if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
         _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
     } else {
-        ListNode *back = *node;
+        BridgeNode *back = *node;
         _var(node, &expr->sub_list[expr->sub_idx++]);
 
         if (t->type == TOKEN_ASSIGN) {
@@ -435,7 +435,7 @@ void _expr(ListNode **node, syntax_tree **ast)
     *ast = expr;
 }
 
-void _expr_stmt(ListNode **node, syntax_tree **ast)
+void _expr_stmt(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -451,7 +451,7 @@ void _expr_stmt(ListNode **node, syntax_tree **ast)
     _match_token(TOKEN_SEMICOLON, node);
 }
 
-void _if_stmt(ListNode **node, syntax_tree **ast)
+void _if_stmt(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -485,7 +485,7 @@ void _if_stmt(ListNode **node, syntax_tree **ast)
     *ast = if_stmt;
 }
 
-void _while_stmt(ListNode **node, syntax_tree **ast)
+void _while_stmt(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -508,7 +508,7 @@ void _while_stmt(ListNode **node, syntax_tree **ast)
     *ast = while_stmt;
 }
 
-void _return_stmt(ListNode **node, syntax_tree **ast)
+void _return_stmt(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -530,7 +530,7 @@ void _return_stmt(ListNode **node, syntax_tree **ast)
     *ast = return_stmt;
 }
 
-void _stmt(ListNode **node, syntax_tree **ast)
+void _stmt(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -564,7 +564,7 @@ void _stmt(ListNode **node, syntax_tree **ast)
    }
 }
 
-void _stmt_list(ListNode **node, syntax_tree **ast)
+void _stmt_list(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -582,7 +582,7 @@ void _stmt_list(ListNode **node, syntax_tree **ast)
     *ast = stmt_list;
 }
 
-void _func_declared(ListNode **node, syntax_tree **ast)
+void _func_declared(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -617,14 +617,14 @@ void _func_declared(ListNode **node, syntax_tree **ast)
     *ast = func_decl;
 }
 
-void _declared(ListNode **node, syntax_tree **ast)
+void _declared(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
             declared ::= local_declared
                     | func_declared
     */
-    const ListNode *next = NULL;
+    const BridgeNode *next = NULL;
     const token *t = linked_list_node_data(*node);
     if (t->type != TOKEN_INT && t->type != TOKEN_VOID) {
         invalid_token(t);
@@ -647,7 +647,7 @@ void _declared(ListNode **node, syntax_tree **ast)
     }
 }
 
-void _declared_list(ListNode **node, syntax_tree **ast)
+void _declared_list(BridgeNode **node, syntax_tree **ast)
 {
     /*
         EBNF:
@@ -669,7 +669,7 @@ int syntax_analysis(compiler_handle *handle)
         EBNF:
             program ::= declared_list
     */
-    ListNode *node = linked_list_node_front(handle->tokens);
+    BridgeNode *node = blist_pop_front(handle->tokens);
     _declared_list(&node, &handle->ast);
     return CMM_SUCCESS;
 }
