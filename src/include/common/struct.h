@@ -11,12 +11,6 @@ typedef struct _token {
     char token_str[TOKEN_STR_MAX];
 } token;
 
-typedef struct _token_list {
-    int capacity;
-    int size;
-    token **data;
-} token_list;
-
 typedef struct _lexical {
     char *str;
     int line_no;

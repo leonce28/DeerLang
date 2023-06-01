@@ -37,7 +37,7 @@ typedef enum _result {
     CMM_SUCCESS = 0,            // success
 } result;
 
-typedef enum _token_type {
+typedef enum TokenType {
     // Word
     TOKEN_ID,                   // Id
     TOKEN_NUMBER,               // Number
@@ -93,7 +93,7 @@ typedef enum _token_type {
     TOKEN_TERM,                 // AST: Term
     TOKEN_CALL,                 // AST: Call
     TOKEN_ARG_LIST,             // AST: ArgList
-} token_type;
+} TokenType;
 
 typedef enum _lexer_stage {
     STAGE_START,

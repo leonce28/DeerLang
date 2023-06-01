@@ -45,45 +45,6 @@ token *create_token(const char *str, int type)
     return t;
 }
 
-int token_list_init(token_list *tokens)
-{
-    assert(tokens != NULL);
-
-    int idx;
-    tokens->data = (token **)malloc(TOKEN_LIST_MAX * sizeof(token *));
-    if (tokens->data == NULL) {
-        printf("tokens->data is NULL.\n");
-        return CMM_FAILED;
-    }
-
-    for (idx = 0; idx < tokens->capacity; ++idx) {
-        tokens->data[idx] = (token *)malloc(sizeof(token));
-        if (tokens->data[idx] == NULL) {
-            printf("tokens->data[idx] is NULL.\n");
-            return CMM_FAILED;
-        }
-    }
-
-    tokens->capacity = TOKEN_LIST_MAX;
-    tokens->size = 0;
-
-    return CMM_SUCCESS;
-}
-
-int token_list_push(token_list *tl, token *t)
-{
-    assert(tl != NULL && t != NULL);
-
-    tl->data[tl->size++] = t;
-    if (tl->size >= tl->capacity) {
-        printf("insufficient free space, please expand.\n");
-        // todo
-        return CMM_FAILED;
-    }
-
-    return CMM_SUCCESS;
-}
-
 void token_push_char(token *t, char ch)
 {
     assert(t != NULL);
@@ -115,7 +76,7 @@ static void _ast_print_node(const syntax_tree *node, int deep)
         printf("   ");
     }
     printf("D%d[%d]: ", deep, node->sub_idx);
-    printf("{ line_no: %d, token_str: \"%s\", token_len: %d, token_type: %d }\n",
+    printf("{ line_no: %d, token_str: \"%s\", token_len: %d, TokenType: %d }\n",
         node->data->line_no, node->data->token_str,
         node->data->token_len, node->data->type);
 }
