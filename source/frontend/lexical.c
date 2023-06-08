@@ -5,30 +5,32 @@
 #include <assert.h>
 #include "common/macro.h"
 #include "common/funcs.h"
+#include "common/list.h"
+
 #include "frontend/lexical.h"
 
-static void _invalid_char(char ch, int line_no)
+static void invalid_char(char ch, int line_no)
 {
     printf("invalid char: %c in line: %d", ch, line_no);
     exit(0);
 }
 
-static void _invalid_stage(lexer_stage stage)
+static void invalid_stage(LexicalStage stage)
 {
     printf("invalid lexer stage value: %d, exit.", stage);
     exit(0);
 }
 
-static void _next_stage_start(lexical *lex, token *t)
+static void next_stage_start(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (isalpha(*lex->str)) {
         lex->stage = STAGE_IN_ID;
-        token_push_char(t, *lex->str++);
+        token_push_char(token, *lex->str++);
     } else if (isdigit(*lex->str)) {
         lex->stage = STAGE_IN_NUMBER;
-        token_push_char(t, *lex->str++);
+        token_push_char(token, *lex->str++);
     } else if (isspace(*lex->str)) {
         if (*lex->str == '\n') {
             lex->line_no++; 
@@ -38,18 +40,18 @@ static void _next_stage_start(lexical *lex, token *t)
         switch (*lex->str) {
             case '+':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_PLUS;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_PLUS;
+                token_push_char(token, *lex->str++);
                 break;
             case '-':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_MINUS;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_MINUS;
+                token_push_char(token, *lex->str++);
                 break;
             case '*':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_MULTIPLY;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_MULTIPLY;
+                token_push_char(token, *lex->str++);
                 break;
             case '/':
                 lex->stage = STAGE_IN_DIVIDE;
@@ -57,133 +59,133 @@ static void _next_stage_start(lexical *lex, token *t)
                 break;
             case '<':
                 lex->stage = STAGE_IN_LESS;
-                token_push_char(t, *lex->str++);
+                token_push_char(token, *lex->str++);
                 break;
             case '>':
                 lex->stage = STAGE_IN_GREATER;
-                token_push_char(t, *lex->str++);
+                token_push_char(token, *lex->str++);
                 break;
             case '=':
                 lex->stage = STAGE_IN_ASSIGN;
-                token_push_char(t, *lex->str++);
+                token_push_char(token, *lex->str++);
                 break;
             case '!':
                 lex->stage = STAGE_IN_NOT;
-                token_push_char(t, *lex->str++);
+                token_push_char(token, *lex->str++);
                 break;
             case ';':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_SEMICOLON;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_SEMICOLON;
+                token_push_char(token, *lex->str++);
                 break;
             case ',':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_COMMA;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_COMMA;
+                token_push_char(token, *lex->str++);
                 break;
             case '(':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_LEFT_ROUND_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_LEFT_ROUND_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case ')':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_RIGHT_ROUND_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_RIGHT_ROUND_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case '[':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_LEFT_SQUARE_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_LEFT_SQUARE_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case ']':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_RIGHT_SQUARE_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_RIGHT_SQUARE_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case '{':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_LEFT_CURLY_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_LEFT_CURLY_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case '}':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_RIGHT_CURLY_BRACKET;
-                token_push_char(t, *lex->str++);
+                token->type = TOKEN_RIGHT_CURLY_BRACKET;
+                token_push_char(token, *lex->str++);
                 break;
             case '\0':
                 lex->stage = STAGE_DONE;
-                t->type = TOKEN_END;
+                token->type = TOKEN_END;
                 break;
             default:
-                _invalid_char(*lex->str, t->line_no);
+                invalid_char(*lex->str, token->line_no);
                 break;
         }
     }
 }
 
-static void _set_token_id_type(token *t)
+static void set_token_id_type(DeerToken *token)
 {
-    assert(t != NULL);
+    assert(token);
 
-    if (strcmp(t->token_str, "void") == 0) {
-        t->type = TOKEN_VOID;
-    } else if (strcmp(t->token_str, "int") == 0) {
-        t->type = TOKEN_INT;
-    } else if (strcmp(t->token_str, "if") == 0) {
-        t->type = TOKEN_IF;
-    } else if (strcmp(t->token_str, "else") == 0) {
-        t->type = TOKEN_ELSE;
-    } else if (strcmp(t->token_str, "while") == 0) {
-        t->type = TOKEN_WHILE;
-    } else if (strcmp(t->token_str, "return") == 0) {
-        t->type = TOKEN_RETURN;
+    if (strcmp(token->token_str, "void") == 0) {
+        token->type = TOKEN_VOID;
+    } else if (strcmp(token->token_str, "int") == 0) {
+        token->type = TOKEN_INT;
+    } else if (strcmp(token->token_str, "if") == 0) {
+        token->type = TOKEN_IF;
+    } else if (strcmp(token->token_str, "else") == 0) {
+        token->type = TOKEN_ELSE;
+    } else if (strcmp(token->token_str, "while") == 0) {
+        token->type = TOKEN_WHILE;
+    } else if (strcmp(token->token_str, "return") == 0) {
+        token->type = TOKEN_RETURN;
     } else {
-        t->type = TOKEN_ID;
+        token->type = TOKEN_ID;
     }
 }
 
-static void _next_stage_in_id(lexical *lex, token *t)
+static void next_stage_in_id(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex && token);
 
     if (isalpha(*lex->str)) {
-        token_push_char(t, *lex->str++);
+        token_push_char(token, *lex->str++);
     } else {
         lex->stage = STAGE_DONE;
-        _set_token_id_type(t);
+        set_token_id_type(token);
     }
 }
 
-static void _next_stage_in_number(lexical *lex, token *t)
+static void next_stage_in_number(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (isdigit(*lex->str)) {
-        token_push_char(t, *lex->str++);
+        token_push_char(token, *lex->str++);
     } else {
         lex->stage = STAGE_DONE;
-        t->type = TOKEN_NUMBER;
+        token->type = TOKEN_NUMBER;
     }
 }
 
-static void _next_stage_in_divide(lexical *lex, token *t)
+static void next_stage_in_divide(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (*lex->str == '*') {
         lex->stage = STAGE_IN_COMMENT;
         lex->str++;
     } else {
         lex->stage = STAGE_DONE;
-        t->type = TOKEN_DIVIDE;
-        token_push_char(t, '/');
+        token->type = TOKEN_DIVIDE;
+        token_push_char(token, '/');
     }
 }
 
-static void _next_stage_in_comment(lexical *lex, token *t)
+static void next_stage_in_comment(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (*lex->str == '*') {
         lex->stage = STAGE_END_COMMENT;
@@ -194,9 +196,9 @@ static void _next_stage_in_comment(lexical *lex, token *t)
     lex->str++;
 }
 
-static void _next_stage_end_comment(lexical *lex, token *t)
+static void next_stage_end_comment(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (*lex->str == '/') {
         lex->stage = STAGE_START;
@@ -210,126 +212,129 @@ static void _next_stage_end_comment(lexical *lex, token *t)
     lex->str++;
 }
 
-static void _next_stage_in_less(lexical *lex, token *t)
+static void next_stage_in_less(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     lex->stage = STAGE_DONE;
 
     if (*lex->str == '=') {
-        t->type = TOKEN_LESS_EQUAL;
-        token_push_char(t, *lex->str++);
+        token->type = TOKEN_LESS_EQUAL;
+        token_push_char(token, *lex->str++);
     } else {
-        t->type = TOKEN_LESS;
+        token->type = TOKEN_LESS;
     }
 }
 
-static void _next_stage_in_greater(lexical *lex, token *t)
+static void next_stage_in_greater(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     lex->stage = STAGE_DONE;
 
     if (*lex->str == '=') {
-        t->type = TOKEN_GREATER_EQUAL;
-        token_push_char(t, *lex->str++);
+        token->type = TOKEN_GREATER_EQUAL;
+        token_push_char(token, *lex->str++);
     } else {
-        t->type = TOKEN_GREATER;
+        token->type = TOKEN_GREATER;
     }
 }
 
-static void _next_stage_in_assign(lexical *lex, token *t)
+static void next_stage_in_assign(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     lex->stage = STAGE_DONE;
 
     if (*lex->str == '=') {
-        t->type = TOKEN_EQUAL;
-        token_push_char(t, *lex->str++);
+        token->type = TOKEN_EQUAL;
+        token_push_char(token, *lex->str++);
     } else {
-        t->type = TOKEN_ASSIGN;
+        token->type = TOKEN_ASSIGN;
     }
 }
 
-static void _next_stage_in_not(lexical *lex, token *t)
+static void next_stage_in_not(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && t != NULL);
+    assert(lex != NULL && token != NULL);
 
     if (*lex->str == '=') {
         lex->stage = STAGE_DONE;
-        t->type = TOKEN_NOT_EQUAL;
-        token_push_char(t, *lex->str++);
+        token->type = TOKEN_NOT_EQUAL;
+        token_push_char(token, *lex->str++);
     } else {
-        _invalid_char(*lex->str, t->line_no);
+        invalid_char(*lex->str, token->line_no);
     }
 }
 
-static token *_next_token(lexical *lex)
+static DeerToken *lexical_next(DeerLexical *lex)
 {
     assert(lex != NULL);
 
-    token *t = create_token(NULL, TOKEN_END);
+    DeerToken *token = create_token(NULL, TOKEN_END);
+
     while (lex->stage != STAGE_DONE) {
         switch (lex->stage) {
             case STAGE_START:
-                _next_stage_start(lex, t);
+                next_stage_start(lex, token);
                 break;
             case STAGE_IN_ID:
-                _next_stage_in_id(lex, t);
+                next_stage_in_id(lex, token);
                 break;
             case STAGE_IN_NUMBER:
-                _next_stage_in_number(lex, t);
+                next_stage_in_number(lex, token);
                 break;
             case STAGE_IN_DIVIDE:
-                _next_stage_in_divide(lex, t);
+                next_stage_in_divide(lex, token);
                 break;
             case STAGE_IN_COMMENT:
-                _next_stage_in_comment(lex, t);
+                next_stage_in_comment(lex, token);
                 break;
             case STAGE_END_COMMENT:
-                _next_stage_end_comment(lex, t);
+                next_stage_end_comment(lex, token);
                 break;
             case STAGE_IN_LESS:
-                _next_stage_in_less(lex, t);
+                next_stage_in_less(lex, token);
                 break;
             case STAGE_IN_GREATER:
-                _next_stage_in_greater(lex, t);
+                next_stage_in_greater(lex, token);
                 break;
             case STAGE_IN_ASSIGN:
-                _next_stage_in_assign(lex, t);
+                next_stage_in_assign(lex, token);
                 break;
             case STAGE_IN_NOT:
-                _next_stage_in_not(lex, t);
+                next_stage_in_not(lex, token);
                 break;
             default:
-                _invalid_stage(lex->stage);
+                invalid_stage(lex->stage);
                 break;
         }
     }
 
-    t->line_no = lex->line_no;
-    return t;
+    token->line_no = lex->line_no;
+    return token;
 }
 
-int lexical_analysis(compiler_handle *handle)
+int lexical_analysis(DeerCompilerHandle *handle)
 {
-    assert(handle != NULL);
+    assert(handle);
 
-    token *t;
+    DeerToken *token = nullptr;
+    DeerLinkedList *token_list = nullptr;
 
-    handle->lex->str = handle->file_content;
-    handle->lex->line_no = 1;
-    handle->lex->stage = STAGE_START;
-    handle->tokens = blist_create();
+    DeerLexical lex = {
+        .str = handle->file_content,
+        .line_no = 1,       // begin at line 1.
+        .stage = STAGE_START
+    };
 
-    t = _next_token(handle->lex);
-    while (t != NULL && t->type != TOKEN_END) {
-        blist_push_back(handle->tokens, bnode_object(t));
-        handle->lex->stage = STAGE_START;
-        t = _next_token(handle->lex);
+    while ((token = lexical_next(&lex)) != NULL && 
+            token->type != TOKEN_END) {
+        token_list = dlist_push_back(token_list, token);
+        lex.stage = STAGE_START;
     }
 
+    handle->tokens = token_list;
     return CMM_SUCCESS;
 }
 

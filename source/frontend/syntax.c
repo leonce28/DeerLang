@@ -2,241 +2,241 @@
 #include "frontend/syntax.h"
 #include "common/funcs.h"
 
-void _expr(BridgeNode **node, syntax_tree **ast);
-void _stmt(BridgeNode **node, syntax_tree **ast);
-void _stmt_list(BridgeNode **node, syntax_tree **ast);
+static DeerListCell *cell = nullptr;
 
-void _match_token(int type, BridgeNode **node)
+DeerMultiTree *mount_expr();
+DeerMultiTree *mount_stmt();
+DeerMultiTree *mount_stmt_list();
+
+void match_token(int type)
 {
-    token *t = linked_list_node_data(*node);
-    if (t->type == type) {
-        *node = linked_list_node_next(*node);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == type) {
+        cell = dcell_next(cell);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 }
 
-void _type(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_type()
 {
     /*
         EBNF:
             type ::= int
                 | void
     */
-    syntax_tree *int_void = NULL;
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
-        int_void = create_ast_node(t);
-        _match_token(t->type, node);
+    DeerMultiTree *int_void = nullptr;
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
+        int_void = dtree_create(token);
+        match_token(token->type);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    *ast = int_void;
+    return int_void;
 }
 
-void _param(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_param()
 {
     /*
         EBNF:
             param ::= type id [ '[' ']' ]
     */
-    syntax_tree *param = NEW_AST_NODE("Param", TOKEN_PARAM);
+    DeerMultiTree *param = NEW_AST_NODE("Param", TOKEN_PARAM);
+    dtree_append(param, mount_type());
 
-    _type(node, &param->sub_list[param->sub_idx++]);
-
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID) {
-        param->sub_list[param->sub_idx++] = create_ast_node(t);
-        _match_token(TOKEN_ID, node);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID) {
+        dtree_append(param, dtree_create(token));
+        match_token(TOKEN_ID);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
+    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        match_token(TOKEN_LEFT_SQUARE_BRACKET);
+        match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
 
-    *ast = param;
+    return param;
 }
 
-void _param_list(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_param_list()
 {
     /*
         EBNF:
             param_list ::= param { ',' param }
     */
 
-    syntax_tree *param_list = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);
+    DeerMultiTree *param_list = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);
 
-    _param(node, &param_list->sub_list[param_list->sub_idx++]);
+    dtree_append(param_list, mount_param());
 
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_COMMA) {
-        _match_token(TOKEN_COMMA, node);
-        _param(node, &param_list->sub_list[param_list->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    while (token->type == TOKEN_COMMA) {
+        match_token(TOKEN_COMMA);
+        dtree_append(param_list, mount_param());
     }
 
-    *ast = param_list;
+    return param_list;
 }
 
-void _params(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_params()
 {
     /*
         EBNF:
             params ::= [ param_list ]
     */
 
-    const token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
-        _param_list(node, ast);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
+        return mount_param_list();
     }
+
+    return nullptr;
 }
 
-void _var_declared(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_var_declared()
 {
     /*
         EBNF:
             var_declared ::= type id [ '[' number ']' ] ';'
     */
 
-    syntax_tree *var_decl = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
+    DeerMultiTree *var_decl = NEW_AST_NODE("VarDecl", TOKEN_VAR_DECL);
 
-    _type(node, &var_decl->sub_list[var_decl->sub_idx++]);
+    dtree_append(var_decl, mount_type());
 
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID) {
-        var_decl->sub_list[var_decl->sub_idx++] = create_ast_node(t);
-        _match_token(TOKEN_ID, node);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID) {
+        dtree_append(var_decl, dtree_create(token));
+        match_token(TOKEN_ID);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
-
-        var_decl->sub_list[var_decl->sub_idx++] = create_ast_node(t);
-
-        _match_token(TOKEN_NUMBER, node);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
+    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        match_token(TOKEN_LEFT_SQUARE_BRACKET);
+        dtree_append(var_decl, dtree_create(token));
+        match_token(TOKEN_NUMBER);
+        match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
 
-    _match_token(TOKEN_SEMICOLON, node);
+    match_token(TOKEN_SEMICOLON);
 
-    *ast = var_decl;
+    return var_decl;
 }
 
-void _local_declared(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_local_declared()
 {
     /*
         EBNF:
             local_declared ::= { var_declared }
     */
-    syntax_tree *local_decl = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_INT || t->type == TOKEN_VOID) {
-        _var_declared(node, &local_decl->sub_list[local_decl->sub_idx++]);
+    DeerMultiTree *local_decl = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    while (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
+        dtree_append(local_decl, mount_var_declared());
     }
 
-    *ast = local_decl;
+    return local_decl;
 }
 
-void _arg_list(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_arg_list()
 {
     /*
         EBNF:
             arg_list ::= expr { ',' expr }
     */
 
-    syntax_tree *arg_list = NEW_AST_NODE("ArgList", TOKEN_ARG_LIST);
+    DeerMultiTree *arg_list = NEW_AST_NODE("ArgList", TOKEN_ARG_LIST);
 
-    _expr(node, &arg_list->sub_list[arg_list->sub_idx++]);
+    dtree_append(arg_list, mount_expr());
 
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_COMMA) {
-        _match_token(TOKEN_COMMA, node);
-        _expr(node, &arg_list->sub_list[arg_list->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    while (token->type == TOKEN_COMMA) {
+        match_token(TOKEN_COMMA);
+        dtree_append(arg_list, mount_expr());
     }
 
-    *ast = arg_list;
+    return arg_list;
 }
 
-void _call(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_call()
 {
     /*
         EBNF:
             call ::= id '(' [ arg_list ] ')'
     */
 
-    syntax_tree *call = NEW_AST_NODE("Call", TOKEN_CALL);
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID) {
-        call->sub_list[call->sub_idx++] = create_ast_node(t);
-        _match_token(TOKEN_ID, node);
+    DeerMultiTree *call = NEW_AST_NODE("Call", TOKEN_CALL);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID) {
+        dtree_append(call, dtree_create(token));
+        match_token(TOKEN_ID);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
+    match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    if (t->type == TOKEN_ID ||
-        t->type == TOKEN_LEFT_ROUND_BRACKET ||
-        t->type == TOKEN_NUMBER) {
-        _arg_list(node, &call->sub_list[call->sub_idx++]);
+    if (token->type == TOKEN_ID ||
+        token->type == TOKEN_LEFT_ROUND_BRACKET ||
+        token->type == TOKEN_NUMBER) {
+        dtree_append(call, mount_arg_list());
     }
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
+    match_token(TOKEN_RIGHT_ROUND_BRACKET);
 
-    *ast = call;
+    return call;
 }
 
-void _var(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_var()
 {
     /*
         EBNF:
             var ::= id [ '[' expr ']' ]
     */
 
-    syntax_tree *var = NEW_AST_NODE("Var", TOKEN_VAR);
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID) {
-        var->sub_list[var->sub_idx++] = create_ast_node(t);
-        _match_token(TOKEN_ID, node);
+    DeerMultiTree *var = NEW_AST_NODE("Var", TOKEN_VAR);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID) {
+        dtree_append(var, dtree_create(token));
+        match_token(TOKEN_ID);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    if (t->type == TOKEN_LEFT_SQUARE_BRACKET) {
-        _match_token(TOKEN_LEFT_SQUARE_BRACKET, node);
-        _expr(node, &var->sub_list[var->sub_idx++]);
-        _match_token(TOKEN_RIGHT_SQUARE_BRACKET, node);
+    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+        match_token(TOKEN_LEFT_SQUARE_BRACKET);
+        dtree_append(var, mount_expr());
+        match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
 
-    *ast = var;
+    return var;
 }
 
-void _mul_op(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_mul_op()
 {
     /*
         EBNF:
             mul_op ::= '*' | '/'
     */
-    syntax_tree *op = NULL;
-
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_MULTIPLY ||
-        t->type == TOKEN_DIVIDE) {
-        op = create_ast_node(t);
-        _match_token(t->type, node);
+    DeerMultiTree *op = nullptr;
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_MULTIPLY ||
+        token->type == TOKEN_DIVIDE) {
+        op = dtree_create(token);
+        match_token(token->type);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    *ast = op;
+    return op;
 }
 
-void _factor(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_factor()
 {
     /*
         EBNF:
@@ -245,94 +245,97 @@ void _factor(BridgeNode **node, syntax_tree **ast)
                      | call
                      | num
     */
-   const BridgeNode *next = NULL;
-   token *t = linked_list_node_data(*node);
-   switch (t->type) {
+   DeerMultiTree *factor = nullptr;
+   const DeerListCell *next = nullptr;
+   DeerToken *token = dcell_data2(DeerToken, cell);
+   switch (token->type) {
         case TOKEN_LEFT_ROUND_BRACKET:
-            _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
-            _expr(node, ast);
-            _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
+            match_token(TOKEN_LEFT_ROUND_BRACKET);
+            factor = mount_expr();
+            match_token(TOKEN_RIGHT_ROUND_BRACKET);
             break;
         case TOKEN_NUMBER:
-            *ast = create_ast_node(t);
-            _match_token(TOKEN_NUMBER, node);
+            factor = dtree_create(token);
+            match_token(TOKEN_NUMBER);
             break;
         case TOKEN_ID:
-            next = linked_list_node_next(*node);
-            t = linked_list_node_data(next);
-            if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
-                _call(node, ast);
+            next = dcell_next(cell);
+            token = dcell_data2(DeerToken, next);
+            if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+                factor = mount_call();
             } else {
-                _var(node, ast);
+                factor = mount_var();
             }
             break;
         default:
-            invalid_token(t);
+            invalid_token(token);
             break;
    }
+
+   return factor;
 }
 
-void _add_op(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_add_op()
 {
     /*
         EBNF:
             add_op ::= +
                     | -
     */
-    syntax_tree *op = NULL;
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_PLUS ||
-        t->type == TOKEN_MINUS) {
-        op = create_ast_node(t);
-        _match_token(t->type, node);
+    DeerMultiTree *op = nullptr;
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_PLUS ||
+        token->type == TOKEN_MINUS) {
+        op = dtree_create(token);
+        match_token(token->type);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    *ast = op;
+    return op;
 }
 
-void _term(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_term()
 {
     /*
         EBNF:
             term ::= factor { mul_op factor }
     */
-    syntax_tree *term = NEW_AST_NODE("Term", TOKEN_TERM);
+    DeerMultiTree *term = NEW_AST_NODE("Term", TOKEN_TERM);
 
-    _factor(node, &term->sub_list[term->sub_idx++]);
+    dtree_append(term, mount_factor());
 
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_MULTIPLY ||
-           t->type == TOKEN_DIVIDE) {
-        _mul_op(node, &term->sub_list[term->sub_idx++]);
-        _factor(node, &term->sub_list[term->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    while (token->type == TOKEN_MULTIPLY ||
+           token->type == TOKEN_DIVIDE) {
+        dtree_append(term, mount_mul_op());
+        dtree_append(term, mount_factor());
     }
 
-    *ast = term;
+    return term;
 }
 
-void _add_expr(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_add_expr()
 {
     /*
         EBNF:
             add_expr ::= term { add_op term }
     */
-    syntax_tree *add_expr = NEW_AST_NODE("AddExpr", TOKEN_ADD_EXPR);
+    DeerMultiTree *add_expr = NEW_AST_NODE("AddExpr", TOKEN_ADD_EXPR);
 
-    _term(node, &add_expr->sub_list[add_expr->sub_idx++]);
+    dtree_append(add_expr, mount_term());
 
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_PLUS || 
-           t->type == TOKEN_MINUS) {
-        _add_op(node, &add_expr->sub_list[add_expr->sub_idx++]);
-        _term(node, &add_expr->sub_list[add_expr->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    while (token->type == TOKEN_PLUS || 
+           token->type == TOKEN_MINUS) {
+        dtree_append(add_expr, mount_add_op());
+        dtree_append(add_expr, mount_term());
     }
 
-    *ast = add_expr;
+    return add_expr;
 }
 
-void _rel_op(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_rel_op()
 { 
     /*
         EBNF:
@@ -343,49 +346,49 @@ void _rel_op(BridgeNode **node, syntax_tree **ast)
                     | ==
                     | !=
     */
-    syntax_tree *op = NULL;
-    token *t = linked_list_node_data(*node);
-    switch (t->type) {
+    DeerMultiTree *op = nullptr;
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    switch (token->type) {
         case TOKEN_LESS:
         case TOKEN_LESS_EQUAL:
         case TOKEN_GREATER:
         case TOKEN_GREATER_EQUAL:
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
-                op = create_ast_node(t);
-                _match_token(t->type, node);
+                op = dtree_create(token);
+                match_token(token->type);
                 break;
         default:
-                invalid_token(t);
+                invalid_token(token);
                 break;
     }
 
-    *ast = op;
+    return op;
 }
 
-void _simple_expr(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_simple_expr()
 {
     /*
         EBNF:
             simple_expr ::= add_expr [ rel_op add_expr ]
 
     */
-    syntax_tree *simple_expr = NEW_AST_NODE("SimpleExpr", TOKEN_SIMPLE_EXPR);
+    DeerMultiTree *simple_expr = NEW_AST_NODE("SimpleExpr", TOKEN_SIMPLE_EXPR);
     
-    _add_expr(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
+    dtree_append(simple_expr, mount_add_expr());
 
-    const token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_LESS || t->type == TOKEN_LESS_EQUAL ||
-        t->type == TOKEN_GREATER || t->type == TOKEN_GREATER_EQUAL ||
-        t->type == TOKEN_EQUAL || t->type == TOKEN_NOT_EQUAL) {
-        _rel_op(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
-        _add_expr(node, &simple_expr->sub_list[simple_expr->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_LESS || token->type == TOKEN_LESS_EQUAL ||
+        token->type == TOKEN_GREATER || token->type == TOKEN_GREATER_EQUAL ||
+        token->type == TOKEN_EQUAL || token->type == TOKEN_NOT_EQUAL) {
+        dtree_append(simple_expr, mount_rel_op());
+        dtree_append(simple_expr, mount_add_expr());
     }
 
-    *ast = simple_expr;
+    return simple_expr;
 }
 
-void _expr(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_expr()
 {
     /*
         EBNF:
@@ -393,144 +396,145 @@ void _expr(BridgeNode **node, syntax_tree **ast)
                    | simple_expr
     */
     int is_assign = 0;
-    syntax_tree *expr = NEW_AST_NODE("Expr", TOKEN_EXPR);
+    DeerMultiTree *expr = NEW_AST_NODE("Expr", TOKEN_EXPR);
 
-    const token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_LEFT_ROUND_BRACKET ||
-        t->type == TOKEN_NUMBER) {
-        _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
-        *ast = expr;
-        return;
-    } else if (t->type != TOKEN_ID) {
-        invalid_token(t);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_LEFT_ROUND_BRACKET ||
+        token->type == TOKEN_NUMBER) {
+        dtree_append(expr, mount_simple_expr());
+        return expr;
+    } else if (token->type != TOKEN_ID) {
+        invalid_token(token);
     }
 
-    BridgeNode *next = linked_list_node_next(*node);
-    t = linked_list_node_data(next);
-    if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
-        _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
+    DeerListCell *next = dcell_next(cell);
+    token = dcell_data2(DeerToken, next);
+    if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+        dtree_append(expr, mount_simple_expr());
     } else {
-        BridgeNode *back = *node;
-        _var(node, &expr->sub_list[expr->sub_idx++]);
-
-        if (t->type == TOKEN_ASSIGN) {
+        DeerListCell *back = cell;
+        dtree_append(expr, mount_var());
+        if (token->type == TOKEN_ASSIGN) {
             is_assign = 1;
         }
 
-        // revert node
-        free(expr->sub_list[0]);
-        expr->sub_list[0] = NULL;
-        expr->sub_idx = 0;
-        *node = back;
+        // revert cell, clean all childs, todo
+        dtree_clean_clilds(expr);
+        expr = nullptr;
+        cell = back;
 
         if (is_assign) {
-            _var(node, &expr->sub_list[expr->sub_idx++]);
-            _match_token(TOKEN_ASSIGN, node);
-            _expr(node, &expr->sub_list[expr->sub_idx++]);
+            dtree_append(expr, mount_var());
+            
+            match_token(TOKEN_ASSIGN);
+
+            dtree_append(expr, mount_expr());
         } else {
-            _simple_expr(node, &expr->sub_list[expr->sub_idx++]);
+            dtree_append(expr, mount_simple_expr());
         }
     }
 
-    *ast = expr;
+    return expr;
 }
 
-void _expr_stmt(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_expr_stmt()
 {
     /*
         EBNF:
             expr_stmt ::= [ expr ] ';'
     */
 
-    const token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID || t->type == TOKEN_NUMBER ||
-        t->type == TOKEN_LEFT_ROUND_BRACKET) { 
-        _expr(node, ast);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+
+    if (token->type == TOKEN_ID || token->type == TOKEN_NUMBER ||
+        token->type == TOKEN_LEFT_ROUND_BRACKET) { 
+        return mount_expr();
     }
 
-    _match_token(TOKEN_SEMICOLON, node);
+    match_token(TOKEN_SEMICOLON);
+    return nullptr;
 }
 
-void _if_stmt(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_if_stmt()
 {
     /*
         EBNF:
             if_stmt ::= if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
     */
-    token *t = NULL;
-    syntax_tree *if_stmt = NEW_AST_NODE("IfStmt", TOKEN_IF_STMT);
-    _match_token(TOKEN_IF, node);
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
+    DeerToken *token = nullptr;
+    DeerMultiTree *if_stmt = NEW_AST_NODE("IfStmt", TOKEN_IF_STMT);
+    match_token(TOKEN_IF);
+    match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    _expr(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
+    dtree_append(if_stmt, mount_expr());
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
+    match_token(TOKEN_RIGHT_ROUND_BRACKET);
 
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
+    match_token(TOKEN_LEFT_CURLY_BRACKET);
 
-    _stmt_list(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
+    dtree_append(if_stmt, mount_stmt_list());
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
+    match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
-    t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ELSE) {
-        _match_token(TOKEN_ELSE, node);
-        _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
+    token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ELSE) {
+        match_token(TOKEN_ELSE);
+        match_token(TOKEN_LEFT_CURLY_BRACKET);
 
-        _stmt_list(node, &if_stmt->sub_list[if_stmt->sub_idx++]);
+        dtree_append(if_stmt, mount_stmt_list());
 
-        _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
+        match_token(TOKEN_RIGHT_CURLY_BRACKET);
     }
 
-    *ast = if_stmt;
+    return if_stmt;
 }
 
-void _while_stmt(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_while_stmt()
 {
     /*
         EBNF:
             while_stmt ::= while '(' expr ')' stmt_list
     */
-    syntax_tree *while_stmt = NEW_AST_NODE("WhileStmt", TOKEN_WHILE_STMT);
+    DeerMultiTree *while_stmt = NEW_AST_NODE("WhileStmt", TOKEN_WHILE_STMT);
 
-    _match_token(TOKEN_WHILE, node);
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
+    match_token(TOKEN_WHILE);
+    match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    _expr(node, &while_stmt->sub_list[while_stmt->sub_idx++]);
+    dtree_append(while_stmt, mount_expr());
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
+    match_token(TOKEN_RIGHT_ROUND_BRACKET);
+    match_token(TOKEN_LEFT_CURLY_BRACKET);
 
-    _stmt_list(node, &while_stmt->sub_list[while_stmt->sub_idx++]);
+    dtree_append(while_stmt, mount_stmt_list());
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
+    match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
-    *ast = while_stmt;
+    return while_stmt;
 }
 
-void _return_stmt(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_return_stmt()
 {
     /*
         EBNF:
             return_stmt ::= return [ expr ] ';'
     */
-    syntax_tree *return_stmt = NEW_AST_NODE("ReturnStmt", TOKEN_RETURN_STMT);
+    DeerMultiTree *return_stmt = NEW_AST_NODE("ReturnStmt", TOKEN_RETURN_STMT);
 
-    _match_token(TOKEN_RETURN, node);
+    match_token(TOKEN_RETURN);
 
-    const token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID ||
-        t->type == TOKEN_LEFT_ROUND_BRACKET ||
-        t->type == TOKEN_NUMBER) {
-        _expr(node, &return_stmt->sub_list[return_stmt->sub_idx++]);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID ||
+        token->type == TOKEN_LEFT_ROUND_BRACKET ||
+        token->type == TOKEN_NUMBER) {
+        dtree_append(return_stmt, mount_expr());
     }
 
-    _match_token(TOKEN_SEMICOLON, node);
+    match_token(TOKEN_SEMICOLON);
 
-    *ast = return_stmt;
+    return return_stmt;
 }
 
-void _stmt(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_stmt()
 {
     /*
         EBNF:
@@ -540,136 +544,151 @@ void _stmt(BridgeNode **node, syntax_tree **ast)
                    | return_stmt
     */
 
-    const token *t = linked_list_node_data(*node);
-    switch (t->type)
-    {
+    DeerMultiTree *stmt = nullptr;
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    switch (token->type) {
         case TOKEN_SEMICOLON:
         case TOKEN_ID:
         case TOKEN_LEFT_ROUND_BRACKET:
         case TOKEN_NUMBER:
-            _expr_stmt(node, ast);
+            stmt = mount_expr_stmt();
             break;
         case TOKEN_IF:
-            _if_stmt(node, ast);
+            stmt = mount_if_stmt();
             break;
         case TOKEN_WHILE:
-            _while_stmt(node, ast);
+            stmt = mount_while_stmt();
             break;
         case TOKEN_RETURN:
-            _return_stmt(node, ast);
+            stmt = mount_return_stmt();
             break;
         default:
-            invalid_token(t);
+            invalid_token(token);
             break;
    }
+
+   return stmt;
 }
 
-void _stmt_list(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_stmt_list()
 {
     /*
         EBNF:
             stmt_list ::= { stmt }
     */
 
-    syntax_tree *stmt_list = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
-    const token *t = linked_list_node_data(*node);
-    while (t->type == TOKEN_SEMICOLON || t->type== TOKEN_ID ||
-           t->type== TOKEN_LEFT_ROUND_BRACKET || t->type== TOKEN_NUMBER ||
-           t->type == TOKEN_IF || t->type== TOKEN_WHILE || t->type== TOKEN_RETURN) {
-        _stmt(node, &stmt_list->sub_list[stmt_list->sub_idx++]);
+    DeerMultiTree *stmt_list = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+
+    switch (token->type) {
+        case TOKEN_SEMICOLON:
+        case TOKEN_ID:
+        case TOKEN_LEFT_ROUND_BRACKET:
+        case TOKEN_NUMBER:
+        case TOKEN_IF:
+        case TOKEN_WHILE:
+        case TOKEN_RETURN:
+            dtree_append(stmt_list, mount_stmt());
+            break;
+        default:
+            break;
     }
 
-    *ast = stmt_list;
+    return stmt_list;
 }
 
-void _func_declared(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_func_declared()
 {
     /*
         EBNF:
             func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
     */
-    syntax_tree *func_decl = NEW_AST_NODE("FuncDecl", TOKEN_FUNC_DECL);
+    DeerMultiTree *func_decl = NEW_AST_NODE("FuncDecl", TOKEN_FUNC_DECL);
 
-    _type(node, &func_decl->sub_list[func_decl->sub_idx++]);
+    dtree_append(func_decl, mount_type());
 
-    token *t = linked_list_node_data(*node);
-    if (t->type == TOKEN_ID) {
-        func_decl->sub_list[func_decl->sub_idx++] = create_ast_node(t);
-        _match_token(TOKEN_ID, node);
+    DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type == TOKEN_ID) {
+        dtree_append(func_decl, dtree_create(token));
+        match_token(TOKEN_ID);
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
 
-    _match_token(TOKEN_LEFT_ROUND_BRACKET, node);
+    match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    _params(node, &func_decl->sub_list[func_decl->sub_idx++]);
+    dtree_append(func_decl, mount_params());
 
-    _match_token(TOKEN_RIGHT_ROUND_BRACKET, node);
+    match_token(TOKEN_RIGHT_ROUND_BRACKET);
 
-    _match_token(TOKEN_LEFT_CURLY_BRACKET, node);
+    match_token(TOKEN_LEFT_CURLY_BRACKET);
 
-    _local_declared(node, &func_decl->sub_list[func_decl->sub_idx++]);
+    dtree_append(func_decl, mount_local_declared());
 
-    _stmt_list(node, &func_decl->sub_list[func_decl->sub_idx++]);
+    dtree_append(func_decl, mount_stmt_list());
 
-    _match_token(TOKEN_RIGHT_CURLY_BRACKET, node);
+    match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
-    *ast = func_decl;
+    return func_decl;
 }
 
-void _declared(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_declared()
 {
     /*
         EBNF:
             declared ::= local_declared
-                    | func_declared
+                        | func_declared
     */
-    const BridgeNode *next = NULL;
-    const token *t = linked_list_node_data(*node);
-    if (t->type != TOKEN_INT && t->type != TOKEN_VOID) {
-        invalid_token(t);
+    const DeerListCell *next = nullptr;
+    const DeerToken *token = dcell_data2(DeerToken, cell);
+    if (token->type != TOKEN_INT && token->type != TOKEN_VOID) {
+        invalid_token(token);
     }
 
-    next = linked_list_node_next(*node);
-    t = linked_list_node_data(next);
-    if (t->type != TOKEN_ID) {
-        invalid_token(linked_list_node_data(next));
+    next = dcell_next(cell);
+    token = dcell_data2(DeerToken, next);
+    if (token->type != TOKEN_ID) {
+        invalid_token(dcell_data2(DeerToken, next));
     }
 
-    next = linked_list_node_next(next);
-    t = linked_list_node_data(next);
-    if (t->type == TOKEN_LEFT_SQUARE_BRACKET || t->type == TOKEN_SEMICOLON) {
-        _var_declared(node, ast);
-    } else if (t->type == TOKEN_LEFT_ROUND_BRACKET) {
-        _func_declared(node, ast);
+    next = dcell_next(next);
+    token = dcell_data2(DeerToken, next);
+    if (token->type == TOKEN_LEFT_SQUARE_BRACKET || token->type == TOKEN_SEMICOLON) {
+        return mount_var_declared();
+    } else if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+        return mount_func_declared();
     } else {
-        invalid_token(t);
+        invalid_token(token);
     }
+
+    return nullptr;
 }
 
-void _declared_list(BridgeNode **node, syntax_tree **ast)
+DeerMultiTree *mount_declared_list()
 {
     /*
         EBNF:
             declared_list ::= declared { declared }
     */
-    syntax_tree *decl_list = NEW_AST_NODE("DeclList", TOKEN_DECL_LIST);
+    DeerMultiTree *decl_list = NEW_AST_NODE("DeclList", TOKEN_DECL_LIST);
 
-    while (*node) {
-        _declared(node, &decl_list->sub_list[decl_list->sub_idx++]);
+    while (cell) {
+        dtree_append(decl_list, mount_declared());
     }
 
-    *ast = decl_list;
+    return decl_list;
 }
 
 
-int syntax_analysis(compiler_handle *handle)
+int syntax_analysis(DeerCompilerHandle *handle)
 {
     /*
         EBNF:
             program ::= declared_list
     */
-    BridgeNode *node = blist_pop_front(handle->tokens);
-    _declared_list(&node, &handle->ast);
+    cell = dlist_head(handle->tokens);
+
+    handle->ast = mount_declared_list();
+
     return CMM_SUCCESS;
 }

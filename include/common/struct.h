@@ -2,26 +2,22 @@
 
 #include <stdio.h>
 #include "macro.h"
-#include "bridge/list.h"
 
-typedef struct _token {
-    int type;
+#include "common/list.h"
+#include "common/tree.h"
+
+typedef struct DeerToken {
+    TokenType type;
     int line_no;
     int token_len;
     char token_str[TOKEN_STR_MAX];
-} token;
+} DeerToken;
 
-typedef struct _lexical {
+typedef struct DeerLexical {
     char *str;
     int line_no;
-    lexer_stage stage;
-} lexical;
-
-typedef struct _syntax_tree {
-    int sub_idx;
-    token *data;
-    struct _syntax_tree **sub_list;
-} syntax_tree;
+    LexicalStage stage;
+} DeerLexical;
 
 // pair<string, <int, int>>
 typedef struct _symbol {
@@ -106,27 +102,27 @@ typedef struct _virtual_machine {
     vm_stack *ss;
 } virtual_machine;
 
-typedef struct _code_generator {
+typedef struct CodeGenerator {
     char size[VAR_SIZE_MAX];
     char *cur_space;
-    const syntax_tree *tree;
-    syntax_tree *node;
+    const DeerMultiTree *tree;
+    DeerMultiTree *node;
     const symbol_table *table;
     code_map *c_map;
     code_list *cl;
     code_list *codes;
     func_jump_map *jumps;
-} code_generator;
+} CodeGenerator;
 
-typedef struct _compiler_handle {
+typedef struct DeerCompilerHandle {
     char cmm_file[FILE_PATH_MAX];
     char asm_file[FILE_PATH_MAX];
     char *file_content;
-    BridgeList *tokens;
-    lexical *lex;
-    syntax_tree *ast;
+    DeerLinkedList *tokens;
+    DeerMultiTree *ast;
+    DeerLexical *lex;
     symbol_table *table;
     code_list *codes;
     code_segment *cs;
-    code_generator *generator;
-} compiler_handle;
+    CodeGenerator *generator;
+} DeerCompilerHandle;

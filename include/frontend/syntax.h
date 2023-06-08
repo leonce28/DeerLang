@@ -1,4 +1,4 @@
 #pragma once
 #include "common/struct.h"
 
-int syntax_analysis(compiler_handle *handle);
+int syntax_analysis(DeerCompilerHandle *handle);

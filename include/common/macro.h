@@ -1,5 +1,7 @@
 #pragma once
 
+#define nullptr                     NULL
+
 #define VAR_SIZE_MAX                  32
 #define VAR_NAME_MAX                  32
 #define TOKEN_STR_MAX                 32
@@ -22,7 +24,7 @@
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
-#define NEW_AST_NODE(_str, _type)   create_ast_node(create_token(_str, _type))
+#define NEW_AST_NODE(_str, _type)   dtree_create(create_token(_str, _type))
 #define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->type == _t)
 #define MOVE_NEXT_LINE(data)        do { if (*data == '\n') { data++; break; } } while (data++ < end)
 #define PATH_IS_EMPTY(path)         (path != NULL && (strlen(path) == 0))
@@ -95,7 +97,7 @@ typedef enum TokenType {
     TOKEN_ARG_LIST,             // AST: ArgList
 } TokenType;
 
-typedef enum _lexer_stage {
+typedef enum LexicalStage {
     STAGE_START,
     STAGE_IN_ID,
     STAGE_IN_NUMBER,
@@ -107,7 +109,7 @@ typedef enum _lexer_stage {
     STAGE_IN_NOT,
     STAGE_END_COMMENT,
     STAGE_DONE,
-} lexer_stage; 
+} LexicalStage; 
 
 typedef enum _instruction {
     // Load

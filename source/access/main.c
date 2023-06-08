@@ -1,6 +1,19 @@
 #include <stdio.h>
 #include <string.h>
-#include "access/compiler.h"
+#include <stdlib.h>
+#include <assert.h>
+
+#include "common/struct.h"
+#include "common/funcs.h"
+
+#include "frontend/lexical.h"
+#include "frontend/syntax.h"
+
+#include "backend/semantic.h"
+#include "backend/generator.h"
+#include "backend/execute.h"
+
+static DeerCompilerHandle *handle;
 
 ////////////////////////////////////////////////////////////////////////////////
 // extern
@@ -11,17 +24,21 @@ extern int getopt();
 ////////////////////////////////////////////////////////////////////////////////
 // function
 ////////////////////////////////////////////////////////////////////////////////
-static void generate_asm(compiler_handle *handle)
+static void generate_asm(DeerCompilerHandle *handle)
 {
+
     if (file_read_content(handle->cmm_file, &handle->file_content)) {
         invalid_call("file read content");
     }
 
     if (lexical_analysis(handle)) {
-        invalid_call("lexical analysis");
+        invalid_call("DeerLexical analysis");
     }
 
-    linked_list_print(handle->tokens, (LinkedListPrint)token_print);
+    // const DeerToken *token = nullptr;
+    // foreach (DeerToken, token, handle->tokens) {
+    //     token_print(token);
+    // }
 
     if (syntax_analysis(handle)) {
         invalid_call("syntax analysis");
@@ -43,7 +60,7 @@ static void generate_asm(compiler_handle *handle)
     }
 }
 
-static void execute_code(compiler_handle *handle)
+static void execute_code(DeerCompilerHandle *handle)
 {
     if (file_read_content(handle->asm_file, &handle->file_content)) {
         invalid_call("file read content");
@@ -64,9 +81,9 @@ void compiler_init(const int argc, char **argv)
 
     assert(argv != NULL);
 
-    NEW(handle, compiler_handle);
-    NEW(handle->lex, lexical);
-    NEW(handle->generator, code_generator);
+    NEW(handle, DeerCompilerHandle);
+    NEW(handle->lex, DeerLexical);
+    NEW(handle->generator, CodeGenerator);
 
     while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
         switch (option) {

@@ -1,15 +1,18 @@
-#pragma once
+#ifndef __DEER_COMMON_FUNCS_HEADER__
+#define __DEER_COMMON_FUNCS_HEADER__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
 #include "common/struct.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // public
 ////////////////////////////////////////////////////////////////////////////////
 void invalid_call(const char *state);
-void invalid_token(const token *t);
+void invalid_token(const DeerToken *t);
 void invalid_instuction(const int line);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,17 +22,17 @@ int file_read_content(const char *file_path, char **str);
 int file_write_content(code_list *codes, const char *asm_file);
 
 ////////////////////////////////////////////////////////////////////////////////
-// token
+// DeerToken
 ////////////////////////////////////////////////////////////////////////////////
-token *create_token(const char *str, int type);
-void token_print(token *t);
-void token_push_char(token *t, char ch);
+void token_print(const DeerToken *t);
+DeerToken *create_token(const char *str, int type);
+void token_push_char(DeerToken *t, char ch);
 
 ////////////////////////////////////////////////////////////////////////////////
 // syntax_tree_list
 ////////////////////////////////////////////////////////////////////////////////
-syntax_tree *create_ast_node(token *t);
-void syntax_tree_print(const syntax_tree *ast);
+// DeerAST *create_ast_node(DeerToken *t);
+// void syntax_tree_print(const DeerAST *ast);
 
 ////////////////////////////////////////////////////////////////////////////////
 // symbol_table
@@ -94,3 +97,5 @@ int vm_stack_size(const vm_stack *vm);
 int vm_stack_get(const vm_stack *vm, const int index);
 void vm_stack_push(vm_stack *vm, const int value);
 void vm_stack_set(vm_stack *vm, const int index, const int value);
+
+#endif      // __DEER_COMMON_FUNCS_HEADER__

@@ -3,4 +3,4 @@
 #include "common/struct.h"
 #include "common/funcs.h"
 
-int semantic_analysis(compiler_handle *handle);
+int semantic_analysis(DeerCompilerHandle *handle);
