@@ -16,10 +16,7 @@ typedef struct DeerLinkedList {
 } DeerLinkedList;
 
 #define dcell_next(cell)            ((cell) ? ((cell)->next) : (NULL))
-
-#define dcell_data(cell)            ((cell) ? ((cell)->data) : (NULL))
-#define dcell_data2(_t_, _c_)       ((_t_ *) ((_c_)->data))
-
+#define dcell_data(_t_, _c_)        ((_t_ *) ((_c_)->data))
 #define dlist_head(list)            ((list) ? ((list)->head) : (NULL))
 
 #define foreach(__type__, __cell__, __list__) \

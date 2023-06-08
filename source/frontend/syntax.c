@@ -10,7 +10,7 @@ DeerMultiTree *mount_stmt_list();
 
 void match_token(int type)
 {
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == type) {
         cell = dcell_next(cell);
     } else {
@@ -26,7 +26,7 @@ DeerMultiTree *mount_type()
                 | void
     */
     DeerMultiTree *int_void = nullptr;
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
         int_void = dtree_create(token);
         match_token(token->type);
@@ -46,7 +46,7 @@ DeerMultiTree *mount_param()
     DeerMultiTree *param = NEW_AST_NODE("Param", TOKEN_PARAM);
     dtree_append(param, mount_type());
 
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID) {
         dtree_append(param, dtree_create(token));
         match_token(TOKEN_ID);
@@ -68,13 +68,11 @@ DeerMultiTree *mount_param_list()
         EBNF:
             param_list ::= param { ',' param }
     */
-
     DeerMultiTree *param_list = NEW_AST_NODE("ParamList", TOKEN_PARAM_LIST);
 
     dtree_append(param_list, mount_param());
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
-    while (token->type == TOKEN_COMMA) {
+    while (dcell_data(DeerToken, cell)->type == TOKEN_COMMA) {
         match_token(TOKEN_COMMA);
         dtree_append(param_list, mount_param());
     }
@@ -89,7 +87,7 @@ DeerMultiTree *mount_params()
             params ::= [ param_list ]
     */
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
         return mount_param_list();
     }
@@ -108,7 +106,7 @@ DeerMultiTree *mount_var_declared()
 
     dtree_append(var_decl, mount_type());
 
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID) {
         dtree_append(var_decl, dtree_create(token));
         match_token(TOKEN_ID);
@@ -135,7 +133,7 @@ DeerMultiTree *mount_local_declared()
             local_declared ::= { var_declared }
     */
     DeerMultiTree *local_decl = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     while (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
         dtree_append(local_decl, mount_var_declared());
     }
@@ -154,7 +152,7 @@ DeerMultiTree *mount_arg_list()
 
     dtree_append(arg_list, mount_expr());
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     while (token->type == TOKEN_COMMA) {
         match_token(TOKEN_COMMA);
         dtree_append(arg_list, mount_expr());
@@ -171,7 +169,7 @@ DeerMultiTree *mount_call()
     */
 
     DeerMultiTree *call = NEW_AST_NODE("Call", TOKEN_CALL);
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID) {
         dtree_append(call, dtree_create(token));
         match_token(TOKEN_ID);
@@ -200,7 +198,7 @@ DeerMultiTree *mount_var()
     */
 
     DeerMultiTree *var = NEW_AST_NODE("Var", TOKEN_VAR);
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID) {
         dtree_append(var, dtree_create(token));
         match_token(TOKEN_ID);
@@ -224,7 +222,7 @@ DeerMultiTree *mount_mul_op()
             mul_op ::= '*' | '/'
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_MULTIPLY ||
         token->type == TOKEN_DIVIDE) {
         op = dtree_create(token);
@@ -247,7 +245,7 @@ DeerMultiTree *mount_factor()
     */
    DeerMultiTree *factor = nullptr;
    const DeerListCell *next = nullptr;
-   DeerToken *token = dcell_data2(DeerToken, cell);
+   DeerToken *token = dcell_data(DeerToken, cell);
    switch (token->type) {
         case TOKEN_LEFT_ROUND_BRACKET:
             match_token(TOKEN_LEFT_ROUND_BRACKET);
@@ -260,7 +258,7 @@ DeerMultiTree *mount_factor()
             break;
         case TOKEN_ID:
             next = dcell_next(cell);
-            token = dcell_data2(DeerToken, next);
+            token = dcell_data(DeerToken, next);
             if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
                 factor = mount_call();
             } else {
@@ -283,7 +281,7 @@ DeerMultiTree *mount_add_op()
                     | -
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_PLUS ||
         token->type == TOKEN_MINUS) {
         op = dtree_create(token);
@@ -305,7 +303,7 @@ DeerMultiTree *mount_term()
 
     dtree_append(term, mount_factor());
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     while (token->type == TOKEN_MULTIPLY ||
            token->type == TOKEN_DIVIDE) {
         dtree_append(term, mount_mul_op());
@@ -325,7 +323,7 @@ DeerMultiTree *mount_add_expr()
 
     dtree_append(add_expr, mount_term());
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     while (token->type == TOKEN_PLUS || 
            token->type == TOKEN_MINUS) {
         dtree_append(add_expr, mount_add_op());
@@ -347,7 +345,7 @@ DeerMultiTree *mount_rel_op()
                     | !=
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     switch (token->type) {
         case TOKEN_LESS:
         case TOKEN_LESS_EQUAL:
@@ -377,7 +375,7 @@ DeerMultiTree *mount_simple_expr()
     
     dtree_append(simple_expr, mount_add_expr());
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_LESS || token->type == TOKEN_LESS_EQUAL ||
         token->type == TOKEN_GREATER || token->type == TOKEN_GREATER_EQUAL ||
         token->type == TOKEN_EQUAL || token->type == TOKEN_NOT_EQUAL) {
@@ -398,7 +396,7 @@ DeerMultiTree *mount_expr()
     int is_assign = 0;
     DeerMultiTree *expr = NEW_AST_NODE("Expr", TOKEN_EXPR);
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_LEFT_ROUND_BRACKET ||
         token->type == TOKEN_NUMBER) {
         dtree_append(expr, mount_simple_expr());
@@ -408,7 +406,7 @@ DeerMultiTree *mount_expr()
     }
 
     DeerListCell *next = dcell_next(cell);
-    token = dcell_data2(DeerToken, next);
+    token = dcell_data(DeerToken, next);
     if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
         dtree_append(expr, mount_simple_expr());
     } else {
@@ -444,7 +442,7 @@ DeerMultiTree *mount_expr_stmt()
             expr_stmt ::= [ expr ] ';'
     */
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
 
     if (token->type == TOKEN_ID || token->type == TOKEN_NUMBER ||
         token->type == TOKEN_LEFT_ROUND_BRACKET) { 
@@ -476,7 +474,7 @@ DeerMultiTree *mount_if_stmt()
 
     match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
-    token = dcell_data2(DeerToken, cell);
+    token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ELSE) {
         match_token(TOKEN_ELSE);
         match_token(TOKEN_LEFT_CURLY_BRACKET);
@@ -522,7 +520,7 @@ DeerMultiTree *mount_return_stmt()
 
     match_token(TOKEN_RETURN);
 
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID ||
         token->type == TOKEN_LEFT_ROUND_BRACKET ||
         token->type == TOKEN_NUMBER) {
@@ -545,7 +543,7 @@ DeerMultiTree *mount_stmt()
     */
 
     DeerMultiTree *stmt = nullptr;
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     switch (token->type) {
         case TOKEN_SEMICOLON:
         case TOKEN_ID:
@@ -578,7 +576,7 @@ DeerMultiTree *mount_stmt_list()
     */
 
     DeerMultiTree *stmt_list = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
 
     switch (token->type) {
         case TOKEN_SEMICOLON:
@@ -607,7 +605,7 @@ DeerMultiTree *mount_func_declared()
 
     dtree_append(func_decl, mount_type());
 
-    DeerToken *token = dcell_data2(DeerToken, cell);
+    DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == TOKEN_ID) {
         dtree_append(func_decl, dtree_create(token));
         match_token(TOKEN_ID);
@@ -639,29 +637,30 @@ DeerMultiTree *mount_declared()
             declared ::= local_declared
                         | func_declared
     */
+    DeerMultiTree *declared = nullptr;
     const DeerListCell *next = nullptr;
-    const DeerToken *token = dcell_data2(DeerToken, cell);
+    const DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type != TOKEN_INT && token->type != TOKEN_VOID) {
         invalid_token(token);
     }
 
     next = dcell_next(cell);
-    token = dcell_data2(DeerToken, next);
+    token = dcell_data(DeerToken, next);
     if (token->type != TOKEN_ID) {
-        invalid_token(dcell_data2(DeerToken, next));
+        invalid_token(dcell_data(DeerToken, next));
     }
 
     next = dcell_next(next);
-    token = dcell_data2(DeerToken, next);
+    token = dcell_data(DeerToken, next);
     if (token->type == TOKEN_LEFT_SQUARE_BRACKET || token->type == TOKEN_SEMICOLON) {
-        return mount_var_declared();
+        declared = mount_var_declared();
     } else if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
-        return mount_func_declared();
+        declared = mount_func_declared();
     } else {
         invalid_token(token);
     }
 
-    return nullptr;
+    return declared;
 }
 
 DeerMultiTree *mount_declared_list()

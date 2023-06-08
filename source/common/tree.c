@@ -6,7 +6,7 @@
 
 void dtree_distory(DeerMultiTree *tree)
 {
-    if (!tree) {
+    if (!tree || !tree->childs) {
         return;
     }
 
@@ -16,6 +16,7 @@ void dtree_distory(DeerMultiTree *tree)
         dtree_distory(child);
     }
 
+    dlist_distory(tree->childs);
     tree->childs = NULL;
 }
 
@@ -32,7 +33,9 @@ DeerMultiTree *dtree_create(void *data)
 
 DeerMultiTree *dtree_append(DeerMultiTree *tree, DeerMultiTree *child)
 {
-    assert(tree && child);
+    if (!tree || !child) {
+        return tree;
+    }
 
     tree->childs = dlist_push_back(tree->childs, child);
 

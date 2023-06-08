@@ -7,9 +7,9 @@ void invalid_call(const char *state)
     exit(0);
 }
 
-void invalid_token(const DeerToken *t)
+void invalid_token(const DeerToken *token)
 {
-    printf("invalid DeerToken: %s in line %d\n", t->token_str, t->line_no);
+    printf("invalid DeerToken: %s in line %d\n", token->token_str, token->line_no);
     // exit(0);
 }
 
@@ -21,73 +21,41 @@ void invalid_instuction(const int line)
 
 DeerToken *create_token(const char *str, int type)
 {
-    DeerToken *t = (DeerToken *)malloc(sizeof(DeerToken));
-    if (t == NULL) {
+    DeerToken *token = (DeerToken *)malloc(sizeof(DeerToken));
+    if (!token) {
         return NULL;
     }
 
-    memset(t, 0, sizeof(DeerToken));
-    t->type = type;
-    t->token_len = 0;
-    t->line_no = 0;
+    memset(token, 0, sizeof(DeerToken));
+    token->type = type;
+    token->token_len = 0;
+    token->line_no = 0;
 
     if (str != NULL) {
-        t->token_len = MIN(TOKEN_STR_MAX, strlen(str));
-        strncpy(t->token_str, str, t->token_len);
+        token->token_len = MIN(TOKEN_STR_MAX, strlen(str));
+        strncpy(token->token_str, str, token->token_len);
     }
-    return t;
+    return token;
 }
 
-void token_print(const DeerToken *t)
+void token_print(const DeerToken *token)
 {
-    assert(t != NULL);
+    assert(token);
     printf("line_no: %d, token_str: \"%s\", token_len: %d, type: %d\n",
-            t->line_no, t->token_str, t->token_len, t->type);
+            token->line_no, token->token_str, token->token_len, token->type);
 }
 
-void token_push_char(DeerToken *t, char ch)
+void token_push_char(DeerToken *token, char ch)
 {
-    assert(t != NULL);
+    assert(token);
 
-    if (t->token_len >= TOKEN_STR_MAX) {
+    if (token->token_len >= TOKEN_STR_MAX) {
         printf("DeerToken length is too long for token_str array, max length: %d.\n", TOKEN_STR_MAX);
         exit(0);
     }
 
-    t->token_str[t->token_len++] = ch;
+    token->token_str[token->token_len++] = ch;
 }
-
-// static void ast_print_node(const DeerAST *node, int deep)
-// {
-//     assert(node != NULL);
-//     int tab_size = deep;
-//     while (tab_size-- > 0) {
-//         printf("   ");
-//     }
-//     printf("D%d[%d]: ", deep, node->sub_idx);
-//     printf("{ line_no: %d, token_str: \"%s\", token_len: %d, TokenType: %d }\n",
-//         node->data->line_no, node->data->token_str,
-//         node->data->token_len, node->data->type);
-// }
-
-// static void syntax_tree_print2(const DeerAST *node, int deep)
-// {
-//     int si;
-//     if (node != NULL) {
-//         ast_print_node(node, deep);
-//         for (si = 0; si < node->sub_idx; ++si) {
-//             if (node->sub_list[si] != NULL) {
-//                 syntax_tree_print2(node->sub_list[si], deep + 1);
-//             }
-//         }
-//     }
-// }
-
-// void syntax_tree_print(const DeerAST *ast)
-// {
-//     int deep = 0;
-//     syntax_tree_print2(ast, deep);
-// }
 
 symbol *create_symbol(const char *var_name, int var_idx, int var_size)
 {
