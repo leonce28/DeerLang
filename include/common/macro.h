@@ -1,6 +1,9 @@
 #pragma once
 
 #define nullptr                     NULL
+#define bool                       short
+#define true                         (1)
+#define false                        (0)
 
 #define VAR_SIZE_MAX                  32
 #define VAR_NAME_MAX                  32
@@ -24,8 +27,11 @@
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])
-#define NEW_AST_NODE(_str, _type)   dtree_create(create_token(_str, _type))
-#define TOKEN_TYPE_MATCH(_n, _t)    (_n->data->type == _t)
+#define NEW_AST_NODE(_str, _type)   (dtree_create(create_token(_str, _type)))
+#define CURRENT_TOKEN()             (dcell_data(DeerToken, cell))
+#define CURRENT_TOKEN_TYPE()        (CURRENT_TOKEN()->type)
+#define TOKEN_IS_MATCH(_t)          (CURRENT_TOKEN_TYPE() == _t)
+#define TOKEN_IS_MATCH2(_n, _t)     (_n->type == _t)
 #define MOVE_NEXT_LINE(data)        do { if (*data == '\n') { data++; break; } } while (data++ < end)
 #define PATH_IS_EMPTY(path)         (path != NULL && (strlen(path) == 0))
 #define NEW(POINTER, TYPE)          do {                                        \

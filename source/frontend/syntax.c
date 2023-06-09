@@ -8,7 +8,7 @@ DeerMultiTree *mount_expr();
 DeerMultiTree *mount_stmt();
 DeerMultiTree *mount_stmt_list();
 
-void match_token(int type)
+void match_token(TokenType type)
 {
     DeerToken *token = dcell_data(DeerToken, cell);
     if (token->type == type) {
@@ -26,12 +26,11 @@ DeerMultiTree *mount_type()
                 | void
     */
     DeerMultiTree *int_void = nullptr;
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
-        int_void = dtree_create(token);
-        match_token(token->type);
+    if (TOKEN_IS_MATCH(TOKEN_INT) || TOKEN_IS_MATCH(TOKEN_VOID)) {
+        int_void = dtree_create(CURRENT_TOKEN());
+        match_token(CURRENT_TOKEN_TYPE());
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     return int_void;
@@ -46,15 +45,14 @@ DeerMultiTree *mount_param()
     DeerMultiTree *param = NEW_AST_NODE("Param", TOKEN_PARAM);
     dtree_append(param, mount_type());
 
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID) {
-        dtree_append(param, dtree_create(token));
+    if (TOKEN_IS_MATCH(TOKEN_ID)) {
+        dtree_append(param, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_ID);
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
-    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+    if (TOKEN_IS_MATCH(TOKEN_LEFT_SQUARE_BRACKET)) {
         match_token(TOKEN_LEFT_SQUARE_BRACKET);
         match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
@@ -72,7 +70,7 @@ DeerMultiTree *mount_param_list()
 
     dtree_append(param_list, mount_param());
 
-    while (dcell_data(DeerToken, cell)->type == TOKEN_COMMA) {
+    while (TOKEN_IS_MATCH(TOKEN_COMMA)) {
         match_token(TOKEN_COMMA);
         dtree_append(param_list, mount_param());
     }
@@ -87,8 +85,8 @@ DeerMultiTree *mount_params()
             params ::= [ param_list ]
     */
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
+    if (TOKEN_IS_MATCH(TOKEN_INT) || 
+        TOKEN_IS_MATCH(TOKEN_VOID)) {
         return mount_param_list();
     }
 
@@ -106,17 +104,16 @@ DeerMultiTree *mount_var_declared()
 
     dtree_append(var_decl, mount_type());
 
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID) {
-        dtree_append(var_decl, dtree_create(token));
+    if (TOKEN_IS_MATCH(TOKEN_ID)) {
+        dtree_append(var_decl, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_ID);
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
-    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+    if (TOKEN_IS_MATCH(TOKEN_LEFT_SQUARE_BRACKET)) {
         match_token(TOKEN_LEFT_SQUARE_BRACKET);
-        dtree_append(var_decl, dtree_create(token));
+        dtree_append(var_decl, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_NUMBER);
         match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
@@ -133,8 +130,9 @@ DeerMultiTree *mount_local_declared()
             local_declared ::= { var_declared }
     */
     DeerMultiTree *local_decl = NEW_AST_NODE("LocalDecl", TOKEN_LOCAL_DECL);
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    while (token->type == TOKEN_INT || token->type == TOKEN_VOID) {
+
+    while (TOKEN_IS_MATCH(TOKEN_INT) || 
+           TOKEN_IS_MATCH(TOKEN_VOID)) {
         dtree_append(local_decl, mount_var_declared());
     }
 
@@ -152,9 +150,9 @@ DeerMultiTree *mount_arg_list()
 
     dtree_append(arg_list, mount_expr());
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    while (token->type == TOKEN_COMMA) {
+    while (TOKEN_IS_MATCH(TOKEN_COMMA)) {
         match_token(TOKEN_COMMA);
+
         dtree_append(arg_list, mount_expr());
     }
 
@@ -169,19 +167,18 @@ DeerMultiTree *mount_call()
     */
 
     DeerMultiTree *call = NEW_AST_NODE("Call", TOKEN_CALL);
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID) {
-        dtree_append(call, dtree_create(token));
+
+    if (TOKEN_IS_MATCH(TOKEN_ID)) {
+        dtree_append(call, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_ID);
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    if (token->type == TOKEN_ID ||
-        token->type == TOKEN_LEFT_ROUND_BRACKET ||
-        token->type == TOKEN_NUMBER) {
+    if (TOKEN_IS_MATCH(TOKEN_ID) || TOKEN_IS_MATCH(TOKEN_NUMBER) ||
+        TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) {
         dtree_append(call, mount_arg_list());
     }
 
@@ -198,15 +195,14 @@ DeerMultiTree *mount_var()
     */
 
     DeerMultiTree *var = NEW_AST_NODE("Var", TOKEN_VAR);
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID) {
-        dtree_append(var, dtree_create(token));
+    if (TOKEN_IS_MATCH(TOKEN_ID)) {
+        dtree_append(var, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_ID);
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
-    if (token->type == TOKEN_LEFT_SQUARE_BRACKET) {
+    if (TOKEN_IS_MATCH(TOKEN_LEFT_SQUARE_BRACKET)) {
         match_token(TOKEN_LEFT_SQUARE_BRACKET);
         dtree_append(var, mount_expr());
         match_token(TOKEN_RIGHT_SQUARE_BRACKET);
@@ -219,16 +215,16 @@ DeerMultiTree *mount_mul_op()
 {
     /*
         EBNF:
-            mul_op ::= '*' | '/'
+            mul_op ::= '*' 
+                    | '/'
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_MULTIPLY ||
-        token->type == TOKEN_DIVIDE) {
-        op = dtree_create(token);
-        match_token(token->type);
+    if (TOKEN_IS_MATCH(TOKEN_MULTIPLY) ||
+        TOKEN_IS_MATCH(TOKEN_DIVIDE)) {
+        op = dtree_create(CURRENT_TOKEN());
+        match_token(CURRENT_TOKEN_TYPE());
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     return op;
@@ -245,28 +241,27 @@ DeerMultiTree *mount_factor()
     */
    DeerMultiTree *factor = nullptr;
    const DeerListCell *next = nullptr;
-   DeerToken *token = dcell_data(DeerToken, cell);
-   switch (token->type) {
+   switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LEFT_ROUND_BRACKET:
             match_token(TOKEN_LEFT_ROUND_BRACKET);
             factor = mount_expr();
             match_token(TOKEN_RIGHT_ROUND_BRACKET);
             break;
         case TOKEN_NUMBER:
-            factor = dtree_create(token);
+            factor = dtree_create(CURRENT_TOKEN());
             match_token(TOKEN_NUMBER);
             break;
         case TOKEN_ID:
             next = dcell_next(cell);
-            token = dcell_data(DeerToken, next);
-            if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+            if (next && TOKEN_IS_MATCH2(dcell_data(DeerToken, next), 
+                                        TOKEN_LEFT_ROUND_BRACKET)) {
                 factor = mount_call();
             } else {
                 factor = mount_var();
             }
             break;
         default:
-            invalid_token(token);
+            invalid_token(CURRENT_TOKEN());
             break;
    }
 
@@ -281,13 +276,12 @@ DeerMultiTree *mount_add_op()
                     | -
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_PLUS ||
-        token->type == TOKEN_MINUS) {
-        op = dtree_create(token);
-        match_token(token->type);
+    if (TOKEN_IS_MATCH(TOKEN_PLUS) ||
+        TOKEN_IS_MATCH(TOKEN_MINUS)) {
+        op = dtree_create(CURRENT_TOKEN());
+        match_token(CURRENT_TOKEN_TYPE());
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     return op;
@@ -303,9 +297,8 @@ DeerMultiTree *mount_term()
 
     dtree_append(term, mount_factor());
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    while (token->type == TOKEN_MULTIPLY ||
-           token->type == TOKEN_DIVIDE) {
+    while (TOKEN_IS_MATCH(TOKEN_MULTIPLY) || 
+           TOKEN_IS_MATCH(TOKEN_DIVIDE)) {
         dtree_append(term, mount_mul_op());
         dtree_append(term, mount_factor());
     }
@@ -323,9 +316,8 @@ DeerMultiTree *mount_add_expr()
 
     dtree_append(add_expr, mount_term());
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    while (token->type == TOKEN_PLUS || 
-           token->type == TOKEN_MINUS) {
+    while (TOKEN_IS_MATCH(TOKEN_PLUS) || 
+           TOKEN_IS_MATCH(TOKEN_MINUS)) {
         dtree_append(add_expr, mount_add_op());
         dtree_append(add_expr, mount_term());
     }
@@ -345,19 +337,18 @@ DeerMultiTree *mount_rel_op()
                     | !=
     */
     DeerMultiTree *op = nullptr;
-    DeerToken *token = dcell_data(DeerToken, cell);
-    switch (token->type) {
+    switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LESS:
         case TOKEN_LESS_EQUAL:
         case TOKEN_GREATER:
         case TOKEN_GREATER_EQUAL:
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
-                op = dtree_create(token);
-                match_token(token->type);
+                op = dtree_create(CURRENT_TOKEN());
+                match_token(CURRENT_TOKEN_TYPE());
                 break;
         default:
-                invalid_token(token);
+                invalid_token(CURRENT_TOKEN());
                 break;
     }
 
@@ -375,12 +366,18 @@ DeerMultiTree *mount_simple_expr()
     
     dtree_append(simple_expr, mount_add_expr());
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_LESS || token->type == TOKEN_LESS_EQUAL ||
-        token->type == TOKEN_GREATER || token->type == TOKEN_GREATER_EQUAL ||
-        token->type == TOKEN_EQUAL || token->type == TOKEN_NOT_EQUAL) {
-        dtree_append(simple_expr, mount_rel_op());
-        dtree_append(simple_expr, mount_add_expr());
+    switch (CURRENT_TOKEN_TYPE()) {
+        case TOKEN_LESS:
+        case TOKEN_LESS_EQUAL:
+        case TOKEN_GREATER:
+        case TOKEN_GREATER_EQUAL:
+        case TOKEN_EQUAL:
+        case TOKEN_NOT_EQUAL:
+            dtree_append(simple_expr, mount_rel_op());
+            dtree_append(simple_expr, mount_add_expr());
+            break;
+        default:
+            break;
     }
 
     return simple_expr;
@@ -393,41 +390,31 @@ DeerMultiTree *mount_expr()
             expr ::= var '=' expr
                    | simple_expr
     */
-    int is_assign = 0;
     DeerMultiTree *expr = NEW_AST_NODE("Expr", TOKEN_EXPR);
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_LEFT_ROUND_BRACKET ||
-        token->type == TOKEN_NUMBER) {
+    if (TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
+        TOKEN_IS_MATCH(TOKEN_NUMBER)) {
         dtree_append(expr, mount_simple_expr());
         return expr;
-    } else if (token->type != TOKEN_ID) {
-        invalid_token(token);
+    } else if (!TOKEN_IS_MATCH(TOKEN_ID)) {
+        invalid_token(CURRENT_TOKEN());
     }
 
     DeerListCell *next = dcell_next(cell);
-    token = dcell_data(DeerToken, next);
-    if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+    if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_ROUND_BRACKET)) {
         dtree_append(expr, mount_simple_expr());
     } else {
         DeerListCell *back = cell;
         dtree_append(expr, mount_var());
-        if (token->type == TOKEN_ASSIGN) {
-            is_assign = 1;
-        }
 
-        // revert cell, clean all childs, todo
-        dtree_clean_clilds(expr);
-        expr = nullptr;
-        cell = back;
-
-        if (is_assign) {
-            dtree_append(expr, mount_var());
-            
+        if (TOKEN_IS_MATCH(TOKEN_ASSIGN)) {
             match_token(TOKEN_ASSIGN);
-
             dtree_append(expr, mount_expr());
         } else {
+            // revert cell, clean all childs, todo
+            dtree_clean_clilds(expr);
+            expr = nullptr;
+            cell = back;
             dtree_append(expr, mount_simple_expr());
         }
     }
@@ -441,16 +428,15 @@ DeerMultiTree *mount_expr_stmt()
         EBNF:
             expr_stmt ::= [ expr ] ';'
     */
+    DeerMultiTree *expr_stmt = nullptr;
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-
-    if (token->type == TOKEN_ID || token->type == TOKEN_NUMBER ||
-        token->type == TOKEN_LEFT_ROUND_BRACKET) { 
-        return mount_expr();
+    if (TOKEN_IS_MATCH(TOKEN_ID) || TOKEN_IS_MATCH(TOKEN_NUMBER) ||
+        TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) { 
+        expr_stmt = mount_expr();
     }
 
     match_token(TOKEN_SEMICOLON);
-    return nullptr;
+    return expr_stmt;
 }
 
 DeerMultiTree *mount_if_stmt()
@@ -459,7 +445,6 @@ DeerMultiTree *mount_if_stmt()
         EBNF:
             if_stmt ::= if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
     */
-    DeerToken *token = nullptr;
     DeerMultiTree *if_stmt = NEW_AST_NODE("IfStmt", TOKEN_IF_STMT);
     match_token(TOKEN_IF);
     match_token(TOKEN_LEFT_ROUND_BRACKET);
@@ -474,8 +459,7 @@ DeerMultiTree *mount_if_stmt()
 
     match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
-    token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ELSE) {
+    if (TOKEN_IS_MATCH(TOKEN_ELSE)) {
         match_token(TOKEN_ELSE);
         match_token(TOKEN_LEFT_CURLY_BRACKET);
 
@@ -520,10 +504,9 @@ DeerMultiTree *mount_return_stmt()
 
     match_token(TOKEN_RETURN);
 
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID ||
-        token->type == TOKEN_LEFT_ROUND_BRACKET ||
-        token->type == TOKEN_NUMBER) {
+    if (TOKEN_IS_MATCH(TOKEN_ID) ||
+        TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
+        TOKEN_IS_MATCH(TOKEN_NUMBER)) {
         dtree_append(return_stmt, mount_expr());
     }
 
@@ -575,21 +558,24 @@ DeerMultiTree *mount_stmt_list()
             stmt_list ::= { stmt }
     */
 
+    
     DeerMultiTree *stmt_list = NEW_AST_NODE("StmtList", TOKEN_STMT_LIST);
-    const DeerToken *token = dcell_data(DeerToken, cell);
 
-    switch (token->type) {
-        case TOKEN_SEMICOLON:
-        case TOKEN_ID:
-        case TOKEN_LEFT_ROUND_BRACKET:
-        case TOKEN_NUMBER:
-        case TOKEN_IF:
-        case TOKEN_WHILE:
-        case TOKEN_RETURN:
-            dtree_append(stmt_list, mount_stmt());
-            break;
-        default:
-            break;
+    for (bool flag = true; flag && cell; ) {
+        switch (CURRENT_TOKEN_TYPE()) {
+            case TOKEN_SEMICOLON:
+            case TOKEN_ID:
+            case TOKEN_LEFT_ROUND_BRACKET:
+            case TOKEN_NUMBER:
+            case TOKEN_IF:
+            case TOKEN_WHILE:
+            case TOKEN_RETURN:
+                dtree_append(stmt_list, mount_stmt());
+                break;
+            default:
+                flag = false;
+                break;
+        }
     }
 
     return stmt_list;
@@ -605,12 +591,11 @@ DeerMultiTree *mount_func_declared()
 
     dtree_append(func_decl, mount_type());
 
-    DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type == TOKEN_ID) {
-        dtree_append(func_decl, dtree_create(token));
+    if (TOKEN_IS_MATCH(TOKEN_ID)) {
+        dtree_append(func_decl, dtree_create(CURRENT_TOKEN()));
         match_token(TOKEN_ID);
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     match_token(TOKEN_LEFT_ROUND_BRACKET);
@@ -639,25 +624,23 @@ DeerMultiTree *mount_declared()
     */
     DeerMultiTree *declared = nullptr;
     const DeerListCell *next = nullptr;
-    const DeerToken *token = dcell_data(DeerToken, cell);
-    if (token->type != TOKEN_INT && token->type != TOKEN_VOID) {
-        invalid_token(token);
+    if (!TOKEN_IS_MATCH(TOKEN_INT) && !TOKEN_IS_MATCH(TOKEN_VOID)) {
+        invalid_token(CURRENT_TOKEN());
     }
 
     next = dcell_next(cell);
-    token = dcell_data(DeerToken, next);
-    if (token->type != TOKEN_ID) {
+    if (!TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_ID)) {
         invalid_token(dcell_data(DeerToken, next));
     }
 
     next = dcell_next(next);
-    token = dcell_data(DeerToken, next);
-    if (token->type == TOKEN_LEFT_SQUARE_BRACKET || token->type == TOKEN_SEMICOLON) {
+    if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_SQUARE_BRACKET) || 
+        TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_SEMICOLON)) {
         declared = mount_var_declared();
-    } else if (token->type == TOKEN_LEFT_ROUND_BRACKET) {
+    } else if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_ROUND_BRACKET)) {
         declared = mount_func_declared();
     } else {
-        invalid_token(token);
+        invalid_token(CURRENT_TOKEN());
     }
 
     return declared;
