@@ -119,7 +119,7 @@ typedef struct DeerCompilerHandle {
     char asm_file[FILE_PATH_MAX];
     char *file_content;
     DeerLinkedList *tokens;
-    DeerMultiTree *ast;
+    DeerDeclList *ast;
     DeerLexical *lex;
     symbol_table *table;
     code_list *codes;

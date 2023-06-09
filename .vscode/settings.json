@@ -41,6 +41,11 @@
         "compiler.h": "c",
         "string.h": "c",
         "semantic.h": "c",
-        "tree.h": "c"
-    }
+        "tree.h": "c",
+        "macro.h": "c",
+        "locale": "c",
+        "thread": "c",
+        "typeinfo": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

@@ -4,6 +4,16 @@
 
 #include "common/tree.h"
 
+DeerNode *dtree_new_node(size_t s, TreeType t)
+{
+    DeerNode *node; 
+    assert(s >= sizeof(DeerNode));
+    node = (DeerNode *) malloc(s); 
+    memset(node, 0, s);
+    node->type = t; 
+    return node; 
+}
+
 void dtree_distory(DeerMultiTree *tree)
 {
     if (!tree || !tree->childs) {

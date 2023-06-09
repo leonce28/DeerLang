@@ -16,6 +16,18 @@
 static DeerCompilerHandle *handle;
 
 ////////////////////////////////////////////////////////////////////////////////
+// debug
+////////////////////////////////////////////////////////////////////////////////
+static void deer_token_list_print(DeerLinkedList *list) 
+{
+    const DeerToken *token = nullptr;
+    foreach (DeerToken, token, list) {
+        printf("%s ", token->token_str);
+    }
+    printf("\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // extern
 ////////////////////////////////////////////////////////////////////////////////
 extern char *optarg;
@@ -35,10 +47,7 @@ static void generate_asm(DeerCompilerHandle *handle)
         invalid_call("DeerLexical analysis");
     }
 
-    // const DeerToken *token = nullptr;
-    // foreach (DeerToken, token, handle->tokens) {
-    //     token_print(token);
-    // }
+    deer_token_list_print(handle->tokens);
 
     if (syntax_analysis(handle)) {
         invalid_call("syntax analysis");
