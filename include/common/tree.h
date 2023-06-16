@@ -22,11 +22,13 @@ typedef enum TreeType {
 } TreeType;
 
 typedef enum VarType {
+    VT_UNDEFINE,
     VT_INT,
     VT_VOID,
 } VarType;
 
 typedef enum OperateType {
+    OT_UNDEFINE,             // invalid
     OT_PLUS,                 // +
     OT_MINUS,                // -
     OT_MULTIPLY,             // *
@@ -57,6 +59,12 @@ typedef struct DeerNumber {
     int val;
 } DeerNumber;
 
+typedef struct DeerParam {
+    TreeType type;
+    VarType vt;                     // only integer
+    char *id;                       // only id
+} DeerParam;
+
 typedef struct DeerVarDecl {
     TreeType type;
     VarType vt;                     // only integer
@@ -67,18 +75,18 @@ typedef struct DeerVarDecl {
     int arr_size;                   // array size while is_array is true
 } DeerVarDecl;
 
-typedef struct DeerVar {
-    TreeType type;
-    char *id;                   // only id
-    DeerSimpleExpr *index;
-} DeerVar;
-
 typedef struct DeerSimpleExpr {
     TreeType type;
     OperateType op;
     DeerNode *lchild;
     DeerNode *rchild;
 } DeerSimpleExpr;
+
+typedef struct DeerVar {
+    TreeType type;
+    char *id;                   // only id
+    DeerSimpleExpr *index;
+} DeerVar;
 
 typedef struct DeerExprStmt {
     TreeType type;
@@ -97,10 +105,13 @@ typedef struct DeerIfStmt {
 
 typedef struct DeerWhileStmt {
     TreeType type;
+    DeerExprStmt *condition;
+    DeerLinkedList *block;
 } DeerWhileStmt;
 
 typedef struct DeerReturnStmt {
     TreeType type;
+    DeerExprStmt *expr;
 } DeerReturnStmt;
 
 typedef struct DeerFuncArgs {
@@ -129,10 +140,10 @@ typedef struct DeerFuncDecl {
 
 typedef struct DeerDeclList {
     TreeType type;
-    DeerLinkedList *decls;      // DeerVarDecl / DeerFuncDecl
+    DeerLinkedList *decls;          // DeerVarDecl / DeerFuncDecl
 } DeerDeclList;
 
-#define CREATE_NODE(_type_) ((_type_ *) dtree_new_node(sizeof(_type_), TT_##_type_))
+#define CREATE_NODE(_type_) ((Deer##_type_ *) dtree_new_node(sizeof(Deer##_type_), TT_##_type_))
 
 extern DeerNode *dtree_new_node(size_t s, TreeType t);
 

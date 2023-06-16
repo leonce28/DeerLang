@@ -45,7 +45,8 @@
         "macro.h": "c",
         "locale": "c",
         "thread": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "assert.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

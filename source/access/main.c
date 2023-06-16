@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <assert.h>
 
 #include "common/struct.h"
@@ -31,7 +32,6 @@ static void deer_token_list_print(DeerLinkedList *list)
 // extern
 ////////////////////////////////////////////////////////////////////////////////
 extern char *optarg;
-extern int getopt();
 
 ////////////////////////////////////////////////////////////////////////////////
 // function

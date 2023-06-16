@@ -105,8 +105,8 @@ typedef struct _virtual_machine {
 typedef struct CodeGenerator {
     char size[VAR_SIZE_MAX];
     char *cur_space;
-    const DeerMultiTree *tree;
-    DeerMultiTree *node;
+    const DeerDeclList *tree;
+    DeerDeclList *node;
     const symbol_table *table;
     code_map *c_map;
     code_list *cl;

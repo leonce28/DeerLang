@@ -5,9 +5,10 @@
 static DeerListCell *cell = nullptr;
 static char *curr_scope = nullptr;
 
-DeerNode *make_expr_stmt();
-DeerNode *make_stmt();
-DeerNode *make_stmt_list();
+DeerNode *make_raw_stmt();
+DeerExprStmt *make_expr_stmt();
+DeerLinkedList *make_stmt_list();
+DeerSimpleExpr *make_simple_expr();
 
 void match_token(TokenType type)
 {
@@ -36,6 +37,7 @@ VarType scan_type()
             vt = VT_VOID;
             break;
         default:
+            vt = VT_UNDEFINE;
             invalid_token(CURRENT_TOKEN());
             break;
     }
@@ -44,17 +46,17 @@ VarType scan_type()
     return vt;
 }
 
-DeerNode *make_param()
+DeerParam *make_param()
 {
     /*
         EBNF:
             param ::= type id [ '[' ']' ]
     */
-    DeerNode *param = NEW_AST_NODE("Param", TOKEN_PARAM);
-    dtree_append(param, scan_type());
+    DeerParam *param = CREATE_NODE(Param);
+    param->vt = scan_type();
 
     if (TOKEN_IS_MATCH(TOKEN_ID)) {
-        dtree_append(param, dtree_create(CURRENT_TOKEN()));
+        param->id = CURRENT_TOKEN_STR();
         match_token(TOKEN_ID);
     } else {
         invalid_token(CURRENT_TOKEN());
@@ -91,22 +93,7 @@ DeerLinkedList *make_param_list()
     return param_list;
 }
 
-DeerNode *make_params()
-{
-    /*
-        EBNF:
-            params ::= [ param_list ]
-    */
-
-    if (TOKEN_IS_MATCH(TOKEN_INT) || 
-        TOKEN_IS_MATCH(TOKEN_VOID)) {
-        return make_param_list();
-    }
-
-    return nullptr;
-}
-
-DeerNode *make_var_declared()
+DeerVarDecl *make_var_declared()
 {
     /*
         EBNF:
@@ -181,7 +168,7 @@ DeerLinkedList *make_arg_list()
     return arg_list;
 }
 
-DeerNode *make_func_call()
+DeerFuncCall *make_func_call()
 {
     /*
         EBNF:
@@ -209,7 +196,7 @@ DeerNode *make_func_call()
     return func_call;
 }
 
-DeerNode *make_var()
+DeerVar *make_var()
 {
     /*
         EBNF:
@@ -231,10 +218,10 @@ DeerNode *make_var()
         match_token(TOKEN_RIGHT_SQUARE_BRACKET);
     }
 
-    return (DeerNode *)var;
+    return var;
 }
 
-DeerNode *make_number()
+DeerNumber *make_number()
 {
 
     DeerNumber *num = CREATE_NODE(Number);
@@ -246,17 +233,17 @@ DeerNode *make_number()
         invalid_token(CURRENT_TOKEN());
     }
 
-    return (DeerNode *)num;
+    return num;
 }
 
-DeerNode *scan_mul_op()
+OperateType scan_mul_op()
 {
     /*
         EBNF:
             mul_op ::= '*' 
                     | '/'
     */
-    OperateType op = nullptr;
+    OperateType op;
 
     switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_MULTIPLY:
@@ -266,6 +253,7 @@ DeerNode *scan_mul_op()
             op = OT_DIVIDE;
             break;
         default:
+            op = OT_UNDEFINE;
             invalid_token(CURRENT_TOKEN());
             break;
     } 
@@ -287,19 +275,19 @@ DeerNode *make_factor()
    switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LEFT_ROUND_BRACKET:
             match_token(TOKEN_LEFT_ROUND_BRACKET);
-            factor = make_expr_stmt();
+            factor = (DeerNode *) make_expr_stmt();
             match_token(TOKEN_RIGHT_ROUND_BRACKET);
             break;
         case TOKEN_NUMBER:
-            factor = make_number();
+            factor = (DeerNode *) make_number();
             break;
         case TOKEN_ID:
             next = dcell_next(cell);
             if (next && TOKEN_IS_MATCH2(dcell_data(DeerToken, next), 
                                         TOKEN_LEFT_ROUND_BRACKET)) {
-                factor = make_func_call();
+                factor = (DeerNode *) make_func_call();
             } else {
-                factor = make_var();
+                factor = (DeerNode *) make_var();
             }
             break;
         default:
@@ -317,7 +305,7 @@ OperateType scan_add_op()
             add_op ::= +
                     | -
     */
-    OperateType op = nullptr;
+    OperateType op;
 
     switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_PLUS:
@@ -327,6 +315,7 @@ OperateType scan_add_op()
             op = OT_MINUS;
             break;
         default:
+            op = OT_UNDEFINE;
             invalid_token(CURRENT_TOKEN());
             break;
     } 
@@ -342,12 +331,12 @@ DeerSimpleExpr *make_term()
     */
     DeerSimpleExpr *term = CREATE_NODE(SimpleExpr);
 
-    term->lchild = make_factor();
+    term->lchild = (DeerNode *) make_factor();
 
     while (TOKEN_IS_MATCH(TOKEN_MULTIPLY) || 
            TOKEN_IS_MATCH(TOKEN_DIVIDE)) {
         term->op = scan_mul_op();
-        term->rchild = make_factor();
+        term->rchild = (DeerNode *) make_factor();
     }
 
     return term;
@@ -361,18 +350,18 @@ DeerSimpleExpr *make_add_expr()
     */
     DeerSimpleExpr *add_expr = CREATE_NODE(SimpleExpr);
 
-    add_expr->lchild = make_term();
+    add_expr->lchild = (DeerNode *) make_term();
 
     while (TOKEN_IS_MATCH(TOKEN_PLUS) || 
            TOKEN_IS_MATCH(TOKEN_MINUS)) {
         add_expr->op = scan_add_op();
-        add_expr->rchild = make_term();
+        add_expr->rchild = (DeerNode *) make_term();
     }
 
     return add_expr;
 }
 
-OperateType *scan_op()
+OperateType scan_op()
 { 
     /*
         EBNF:
@@ -404,6 +393,7 @@ OperateType *scan_op()
             op = OT_NOT_EQ;
             break;
         default:
+            op = OT_UNDEFINE;
             invalid_token(CURRENT_TOKEN());
             break;
     }
@@ -421,7 +411,7 @@ DeerSimpleExpr *make_simple_expr()
     */
     DeerSimpleExpr *simple_expr = CREATE_NODE(SimpleExpr);
     
-    simple_expr->lchild = make_add_expr();
+    simple_expr->lchild = (DeerNode *) make_add_expr();
 
     switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LESS:
@@ -431,7 +421,7 @@ DeerSimpleExpr *make_simple_expr()
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
             simple_expr->op = scan_op();
-            simple_expr->rchild = make_add_expr();
+            simple_expr->rchild = (DeerNode *) make_add_expr();
             break;
         default:
             break;
@@ -440,14 +430,21 @@ DeerSimpleExpr *make_simple_expr()
     return simple_expr;
 }
 
-DeerNode *make_expr_stmt()
+DeerExprStmt *make_expr_stmt()
 {
     /*
         EBNF:
             expr_stmt ::= var '=' expr
                         | simple_expr
     */
-    DeerExprStmt *expr_stmt = CREATE_NODE(ExprStmt);
+    DeerExprStmt *expr_stmt = nullptr; ;
+
+    if (!TOKEN_IS_MATCH(TOKEN_ID) && !TOKEN_IS_MATCH(TOKEN_NUMBER) &&
+        !TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) { 
+        return expr_stmt;
+    } 
+
+    expr_stmt = CREATE_NODE(ExprStmt);
 
     if (TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
         TOKEN_IS_MATCH(TOKEN_NUMBER)) {
@@ -458,43 +455,28 @@ DeerNode *make_expr_stmt()
             expr_stmt->simple = make_simple_expr();
         } else {
             DeerListCell *back = cell;
-            expr->var = make_var();
+            expr_stmt->var = make_var();
 
             if (TOKEN_IS_MATCH(TOKEN_ASSIGN)) {
                 match_token(TOKEN_ASSIGN);
-                expr->is_assign = true;
-                expr->sub = make_expr_stmt();
+                expr_stmt->is_assign = true;
+                expr_stmt->sub = make_expr_stmt();
             } else {
-                expr->var = nullptr;
+                expr_stmt->var = nullptr;
                 cell = back;
-                expr->simple = make_simple_expr();
+                expr_stmt->simple = make_simple_expr();
             }
         }
     } else {
         invalid_token(CURRENT_TOKEN());
     }
 
-    return (DeerNode *)expr;
-}
-
-DeerNode *make_expr_stmt_stmt()
-{
-    /*
-        EBNF:
-            expr_stmt ::= [ expr ] ';'
-    */
-    DeerNode *expr_stmt = nullptr;
-
-    if (TOKEN_IS_MATCH(TOKEN_ID) || TOKEN_IS_MATCH(TOKEN_NUMBER) ||
-        TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) { 
-        expr_stmt = make_expr_stmt();
-    }
-
     match_token(TOKEN_SEMICOLON);
+
     return expr_stmt;
 }
 
-DeerNode *make_if_stmt()
+DeerIfStmt *make_if_stmt()
 {
     /*
         EBNF:
@@ -527,43 +509,43 @@ DeerNode *make_if_stmt()
     return if_stmt;
 }
 
-DeerNode *make_while_stmt()
+DeerWhileStmt *make_while_stmt()
 {
     /*
         EBNF:
             while_stmt ::= while '(' expr ')' stmt_list
     */
-    DeerNode *while_stmt = NEW_AST_NODE("WhileStmt", TOKEN_WHILE_STMT);
+    DeerWhileStmt *while_stmt = CREATE_NODE(WhileStmt);
 
     match_token(TOKEN_WHILE);
     match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    dtree_append(while_stmt, make_expr_stmt());
+    while_stmt->condition = make_expr_stmt();
 
     match_token(TOKEN_RIGHT_ROUND_BRACKET);
     match_token(TOKEN_LEFT_CURLY_BRACKET);
 
-    dtree_append(while_stmt, make_stmt_list());
+    while_stmt->block = make_stmt_list();
 
     match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
     return while_stmt;
 }
 
-DeerNode *make_return_stmt()
+DeerReturnStmt *make_return_stmt()
 {
     /*
         EBNF:
             return_stmt ::= return [ expr ] ';'
     */
-    DeerNode *return_stmt = NEW_AST_NODE("ReturnStmt", TOKEN_RETURN_STMT);
+    DeerReturnStmt *return_stmt = CREATE_NODE(ReturnStmt);
 
     match_token(TOKEN_RETURN);
 
     if (TOKEN_IS_MATCH(TOKEN_ID) ||
         TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
         TOKEN_IS_MATCH(TOKEN_NUMBER)) {
-        dtree_append(return_stmt, make_expr_stmt());
+        return_stmt->expr = make_expr_stmt();
     }
 
     match_token(TOKEN_SEMICOLON);
@@ -571,14 +553,14 @@ DeerNode *make_return_stmt()
     return return_stmt;
 }
 
-DeerNode *make_stmt()
+DeerNode *make_raw_stmt()
 {
     /*
         EBNF:
-            stmt ::= expr_stmt
-                   | if_stmt
-                   | while_stmt
-                   | return_stmt
+            rwa_stmt ::= expr_stmt
+                        | if_stmt
+                        | while_stmt
+                        | return_stmt
     */
 
     DeerNode *stmt = nullptr;
@@ -587,16 +569,16 @@ DeerNode *make_stmt()
         case TOKEN_ID:
         case TOKEN_LEFT_ROUND_BRACKET:
         case TOKEN_NUMBER:
-            stmt = make_expr_stmt();
+            stmt = (DeerNode *) make_expr_stmt();
             break;
         case TOKEN_IF:
-            stmt = make_if_stmt();
+            stmt = (DeerNode *) make_if_stmt();
             break;
         case TOKEN_WHILE:
-            stmt = make_while_stmt();
+            stmt = (DeerNode *) make_while_stmt();
             break;
         case TOKEN_RETURN:
-            stmt = make_return_stmt();
+            stmt = (DeerNode *) make_return_stmt();
             break;
         default:
             invalid_token(CURRENT_TOKEN());
@@ -610,7 +592,7 @@ DeerLinkedList *make_stmt_list()
 {
     /*
         EBNF:
-            stmt_list ::= { stmt }
+            stmt_list ::= { raw_stmt }
     */
     DeerLinkedList *stmt_list = nullptr;
 
@@ -623,7 +605,7 @@ DeerLinkedList *make_stmt_list()
             case TOKEN_IF:
             case TOKEN_WHILE:
             case TOKEN_RETURN:
-                stmt_list = dtree_append(stmt_list, make_stmt());
+                stmt_list = dlist_push_back(stmt_list, make_raw_stmt());
                 break;
             default:
                 flag = false;
@@ -634,7 +616,7 @@ DeerLinkedList *make_stmt_list()
     return stmt_list;
 }
 
-DeerNode *make_func_declared()
+DeerFuncDecl *make_func_declared()
 {
     /*
         EBNF:
@@ -667,6 +649,7 @@ DeerNode *make_func_declared()
     match_token(TOKEN_RIGHT_CURLY_BRACKET);
 
     curr_scope = nullptr;
+
     return func_decl;
 }
 
@@ -691,9 +674,9 @@ DeerNode *make_declared()
     next = dcell_next(next);
     if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_SQUARE_BRACKET) || 
         TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_SEMICOLON)) {
-        node = make_var_declared();
+        node = (DeerNode *) make_var_declared();
     } else if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_ROUND_BRACKET)) {
-        node = make_func_declared();
+        node = (DeerNode *) make_func_declared();
     } else {
         invalid_token(CURRENT_TOKEN());
     }
@@ -710,7 +693,7 @@ DeerDeclList *make_declared_list()
     DeerDeclList *decl_list = CREATE_NODE(DeclList);
 
     while (cell) {
-        dtree_append(decl_list, make_declared());
+        decl_list->decls = dlist_push_back(decl_list->decls, make_declared());
     }
 
     return decl_list;
