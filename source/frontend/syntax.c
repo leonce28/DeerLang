@@ -186,7 +186,8 @@ DeerFuncCall *make_func_call()
 
     match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    if (TOKEN_IS_MATCH(TOKEN_ID) || TOKEN_IS_MATCH(TOKEN_NUMBER) ||
+    if (TOKEN_IS_MATCH(TOKEN_ID) || 
+        TOKEN_IS_MATCH(TOKEN_NUMBER) ||
         TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) {
         func_call->args = make_arg_list();
     }
@@ -323,42 +324,61 @@ OperateType scan_add_op()
     return op;
 }
 
-DeerSimpleExpr *make_term()
+DeerNode *make_term()
 {
     /*
         EBNF:
             term ::= factor { mul_op factor }
     */
-    DeerSimpleExpr *term = CREATE_NODE(SimpleExpr);
+    DeerSimpleExpr *term = nullptr;
+    const DeerListCell *next = nullptr;
 
-    term->lchild = (DeerNode *) make_factor();
-
-    while (TOKEN_IS_MATCH(TOKEN_MULTIPLY) || 
-           TOKEN_IS_MATCH(TOKEN_DIVIDE)) {
-        term->op = scan_mul_op();
-        term->rchild = (DeerNode *) make_factor();
+    next = dcell_next(cell);
+    if (next || (!TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_MULTIPLY) && 
+                 !TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_DIVIDE))) {
+        return make_factor();
     }
 
-    return term;
+    term = CREATE_NODE(SimpleExpr);
+    term->lchild = (DeerNode *) make_factor();
+    term->op = scan_mul_op();
+    term->rchild = (DeerNode *) make_factor();
+
+    // while (TOKEN_IS_MATCH(TOKEN_MULTIPLY) || 
+    //        TOKEN_IS_MATCH(TOKEN_DIVIDE)) {
+    //     term->op = scan_mul_op();
+    //     term->rchild = (DeerNode *) make_factor();
+    // }
+
+    return (DeerNode *)term;
 }
 
-DeerSimpleExpr *make_add_expr()
+DeerNode *make_add_expr()
 {
     /*
         EBNF:
             add_expr ::= term { add_op term }
     */
-    DeerSimpleExpr *add_expr = CREATE_NODE(SimpleExpr);
-
-    add_expr->lchild = (DeerNode *) make_term();
-
-    while (TOKEN_IS_MATCH(TOKEN_PLUS) || 
-           TOKEN_IS_MATCH(TOKEN_MINUS)) {
-        add_expr->op = scan_add_op();
-        add_expr->rchild = (DeerNode *) make_term();
+    const DeerListCell *next = nullptr;
+    DeerSimpleExpr *add_expr = nullptr;
+    
+    next = dcell_next(cell);
+    if (next || (!TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_PLUS) && 
+                 !TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_MINUS))) {
+        return make_term();
     }
 
-    return add_expr;
+    add_expr = CREATE_NODE(SimpleExpr);
+    add_expr->lchild = (DeerNode *) make_term();
+    add_expr->op = scan_add_op();
+    add_expr->rchild = (DeerNode *) make_term();
+
+    // while (TOKEN_IS_MATCH(TOKEN_PLUS) || 
+    //        TOKEN_IS_MATCH(TOKEN_MINUS)) {
+
+    // }
+
+    return (DeerNode *) add_expr;
 }
 
 OperateType scan_op()
@@ -410,8 +430,8 @@ DeerSimpleExpr *make_simple_expr()
 
     */
     DeerSimpleExpr *simple_expr = CREATE_NODE(SimpleExpr);
-    
-    simple_expr->lchild = (DeerNode *) make_add_expr();
+
+    simple_expr->lchild = make_add_expr();
 
     switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LESS:
@@ -421,7 +441,7 @@ DeerSimpleExpr *make_simple_expr()
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
             simple_expr->op = scan_op();
-            simple_expr->rchild = (DeerNode *) make_add_expr();
+            simple_expr->rchild = make_add_expr();
             break;
         default:
             break;
@@ -471,7 +491,7 @@ DeerExprStmt *make_expr_stmt()
         invalid_token(CURRENT_TOKEN());
     }
 
-    match_token(TOKEN_SEMICOLON);
+    // match_token(TOKEN_SEMICOLON);
 
     return expr_stmt;
 }
@@ -557,7 +577,7 @@ DeerNode *make_raw_stmt()
 {
     /*
         EBNF:
-            rwa_stmt ::= expr_stmt
+            raw_stmt ::= expr_stmt
                         | if_stmt
                         | while_stmt
                         | return_stmt

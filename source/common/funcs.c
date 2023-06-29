@@ -10,12 +10,14 @@ void invalid_call(const char *state)
 void invalid_token(const DeerToken *token)
 {
     printf("invalid DeerToken: %s in line %d\n", token->token_str, token->line_no);
-    // exit(0);
+#if 1
+    printf("division by zero: %d\n",  token->line_no / (token ? 0 : 1));
+#endif
 }
 
 void invalid_instuction(const int line)
 {
-    printf("invalid instuction in line %d\n", line);
+    printf("invalid Instuction in line %d\n", line);
     exit(0);
 }
 
