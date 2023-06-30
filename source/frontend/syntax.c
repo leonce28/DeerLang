@@ -6,8 +6,9 @@ static DeerListCell *cell = nullptr;
 static char *curr_scope = nullptr;
 
 DeerNode *make_raw_stmt();
-DeerExprStmt *make_expr_stmt();
+DeerNode *make_expr_stmt();
 DeerLinkedList *make_stmt_list();
+DeerAssignExpr *make_assign_expr();
 DeerSimpleExpr *make_simple_expr();
 
 void match_token(TokenType type)
@@ -153,16 +154,16 @@ DeerLinkedList *make_arg_list()
 {
     /*
         EBNF:
-            arg_list ::= expr { ',' expr }
+            arg_list ::= simple_expr { ',' simple_expr }
     */
     
     DeerLinkedList *arg_list = nullptr;
 
-    arg_list = dlist_push_back(arg_list, make_expr_stmt());
+    arg_list = dlist_push_back(arg_list, make_simple_expr());
 
     while (TOKEN_IS_MATCH(TOKEN_COMMA)) {
         match_token(TOKEN_COMMA);
-        dlist_push_back(arg_list, make_expr_stmt());
+        dlist_push_back(arg_list, make_simple_expr());
     }
 
     return arg_list;
@@ -450,50 +451,73 @@ DeerSimpleExpr *make_simple_expr()
     return simple_expr;
 }
 
-DeerExprStmt *make_expr_stmt()
+DeerAssignExpr *make_assign_expr()
 {
     /*
         EBNF:
-            expr_stmt ::= var '=' expr
-                        | simple_expr
+            assign_expr ::= var '=' expr
     */
-    DeerExprStmt *expr_stmt = nullptr; ;
+    DeerVar *var = nullptr;
+    DeerListCell *back = cell;
+    DeerListCell *next = dcell_next(cell);
+    DeerAssignExpr *assign_expr = nullptr;
 
-    if (!TOKEN_IS_MATCH(TOKEN_ID) && !TOKEN_IS_MATCH(TOKEN_NUMBER) &&
-        !TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) { 
-        return expr_stmt;
-    } 
-
-    expr_stmt = CREATE_NODE(ExprStmt);
-
-    if (TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
-        TOKEN_IS_MATCH(TOKEN_NUMBER)) {
-        expr_stmt->simple = make_simple_expr();
-    } else if (TOKEN_IS_MATCH(TOKEN_ID)) {
-        DeerListCell *next = dcell_next(cell);
-        if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_ROUND_BRACKET)) {
-            expr_stmt->simple = make_simple_expr();
-        } else {
-            DeerListCell *back = cell;
-            expr_stmt->var = make_var();
-
-            if (TOKEN_IS_MATCH(TOKEN_ASSIGN)) {
-                match_token(TOKEN_ASSIGN);
-                expr_stmt->is_assign = true;
-                expr_stmt->sub = make_expr_stmt();
-            } else {
-                expr_stmt->var = nullptr;
-                cell = back;
-                expr_stmt->simple = make_simple_expr();
-            }
-        }
-    } else {
-        invalid_token(CURRENT_TOKEN());
+    // 如果是函数
+    if (TOKEN_IS_MATCH2(dcell_data(DeerToken, next), TOKEN_LEFT_ROUND_BRACKET)) {
+        return nullptr;
     }
 
-    // match_token(TOKEN_SEMICOLON);
+    var = make_var();
 
-    return expr_stmt;
+    if (!var || !TOKEN_IS_MATCH(TOKEN_ASSIGN)) {
+        cell = back;
+        return nullptr;
+    } 
+
+    match_token(TOKEN_ASSIGN);
+
+    assign_expr = CREATE_NODE(AssignExpr);
+
+    assign_expr->var = var;
+    assign_expr->expr = make_simple_expr();
+
+    return assign_expr;
+}
+
+DeerNode *make_expr_stmt()
+{
+    /*
+        EBNF:
+            expr_stmt ::= assign_expr
+                        | simple_expr
+    */
+    DeerAssignExpr *assign_expr = nullptr;
+
+    if (!TOKEN_IS_MATCH(TOKEN_ID) && 
+        !TOKEN_IS_MATCH(TOKEN_NUMBER) &&
+        !TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET)) { 
+        return nullptr;
+    } 
+
+    // 只能是简单表达式
+    if (TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
+        TOKEN_IS_MATCH(TOKEN_NUMBER)) {
+        return (DeerNode *) make_simple_expr();
+    } 
+
+    if (!TOKEN_IS_MATCH(TOKEN_ID)) {
+        invalid_token(CURRENT_TOKEN());
+    }
+    
+    // 判断是否是赋值操作
+    if ((assign_expr = make_assign_expr()) != nullptr) {
+        return (DeerNode *) assign_expr;
+    }
+
+    // 不是赋值操作，那自然是简单表达式
+    return (DeerNode *) make_simple_expr();
+
+    // match_token(TOKEN_SEMICOLON);
 }
 
 DeerIfStmt *make_if_stmt()
@@ -507,7 +531,7 @@ DeerIfStmt *make_if_stmt()
     match_token(TOKEN_IF);
     match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    if_stmt->condition = make_expr_stmt();
+    if_stmt->condition = make_simple_expr();
 
     match_token(TOKEN_RIGHT_ROUND_BRACKET);
 
@@ -540,7 +564,7 @@ DeerWhileStmt *make_while_stmt()
     match_token(TOKEN_WHILE);
     match_token(TOKEN_LEFT_ROUND_BRACKET);
 
-    while_stmt->condition = make_expr_stmt();
+    while_stmt->condition = make_simple_expr();
 
     match_token(TOKEN_RIGHT_ROUND_BRACKET);
     match_token(TOKEN_LEFT_CURLY_BRACKET);

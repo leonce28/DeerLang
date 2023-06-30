@@ -13,8 +13,8 @@ typedef enum TreeType {
     TT_IfStmt,          // AST: IfStmt
     TT_WhileStmt,       // AST: WhileStmt
     TT_ReturnStmt,      // AST: ReturnStmt
-    TT_ExprStmt,        // AST: ExprStmt
     TT_Var,             // AST: Var
+    TT_AssignExpr,      // AST: AssignExpr
     TT_SimpleExpr,      // AST: SimpleExpr
     TT_FuncCall,        // AST: FuncCall
     TT_Number,          // AST: Number
@@ -88,30 +88,28 @@ typedef struct DeerVar {
     DeerSimpleExpr *index;
 } DeerVar;
 
-typedef struct DeerExprStmt {
+typedef struct DeerAssignExpr {
     TreeType type;
-    bool is_assign;
     DeerVar *var;
-    DeerSimpleExpr *simple;
-    struct DeerExprStmt *sub;
-} DeerExprStmt;
+    DeerSimpleExpr *expr;
+} DeerAssignExpr;
 
 typedef struct DeerIfStmt {
     TreeType type;
-    DeerExprStmt *condition;
+    DeerSimpleExpr *condition;
     DeerLinkedList *if_block;
     DeerLinkedList *else_block;
 } DeerIfStmt; 
 
 typedef struct DeerWhileStmt {
     TreeType type;
-    DeerExprStmt *condition;
+    DeerSimpleExpr *condition;
     DeerLinkedList *block;
 } DeerWhileStmt;
 
 typedef struct DeerReturnStmt {
     TreeType type;
-    DeerExprStmt *expr;
+    DeerNode *expr; // AssignExpr or SimpleExpr
 } DeerReturnStmt;
 
 typedef struct DeerFuncArgs {
