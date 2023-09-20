@@ -20,7 +20,7 @@ typedef struct DeerLinkedList {
 #define dlist_head(list)            ((list) ? ((list)->head) : (NULL))
 
 #define foreach(__type__, __cell__, __list__) \
-    for (DeerListCell *deer_##__cell__ = ((__list__)->head); \
+    if (__list__) for (DeerListCell *deer_##__cell__ = ((__list__)->head); \
         (deer_##__cell__ && \
         (__cell__ = (__type__ *)((deer_##__cell__)->data)) != NULL); \
         (deer_##__cell__ = (deer_##__cell__)->next))

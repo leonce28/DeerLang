@@ -59,154 +59,163 @@ void token_push_char(DeerToken *token, char ch)
     token->token_str[token->token_len++] = ch;
 }
 
-symbol *create_symbol(const char *var_name, int var_idx, int var_size)
+Symbol *create_symbol(const char *name, int idx, int size)
 {
-    assert(var_name != NULL);
+    assert(name);
 
-    symbol *s = (symbol *)malloc(sizeof(symbol));
-    memset(s, 0, sizeof(symbol));
-    strncpy(s->var_name, var_name, MIN(VAR_NAME_MAX, strlen(var_name)));
-    s->var_idx = var_idx;
-    s->var_size = var_size;
+    Symbol *s = (Symbol *)malloc(sizeof(Symbol));
+    memset(s, 0, sizeof(Symbol));
+    strncpy(s->name, name, MIN(VAR_NAME_MAX, strlen(name)));
+    s->idx = idx;
+    s->size = size;
 
     return s;
 }
 
-symbol *find_symbol(const symbol_table *table, const char *space_name, const char *var_name)
+// Symbol *find_symbol(const SymbolTable *table, const char *space_name, const char *var_name)
+// {
+//     assert(table != NULL && space_name != NULL && var_name != NULL);
+
+//     int idx;
+//     SymbolTable *space = find_symbol_space(table, space_name);
+//     if (space == NULL) {
+//         return NULL;
+//     }
+
+//     for (idx = 0; idx < space->s_idx; ++idx) {
+//         if (strcmp(var_name, space->s[idx]->var_name) == 0) {
+//             return space->s[idx];
+//         }
+//     }
+
+//     return NULL;
+// }
+
+SymbolSpace *create_symbol_space(const char* space_name)
 {
-    assert(table != NULL && space_name != NULL && var_name != NULL);
+    assert(space_name);
 
-    int idx;
-    symbol_space *space = find_symbol_space(table, space_name);
-    if (space == NULL) {
-        return NULL;
-    }
-
-    for (idx = 0; idx < space->s_idx; ++idx) {
-        if (strcmp(var_name, space->s[idx]->var_name) == 0) {
-            return space->s[idx];
-        }
-    }
-
-    return NULL;
-}
-
-symbol_space *create_symbol_space(const char* space_name)
-{
-    assert(space_name != NULL);
-
-    symbol_space *space = (symbol_space *)malloc(sizeof(symbol_space));
-    memset(space, 0, sizeof(symbol_space));
-    strncpy(space->space_name, space_name, MIN(SPACE_NAME_MAX, strlen(space_name)));
-    space->s_idx = 0;
-    space->s = (symbol **)malloc(TABLE_SYMBOL_MAX * sizeof(symbol *));
+    SymbolSpace *space = (SymbolSpace *)malloc(sizeof(SymbolSpace));
+    assert(space);
+    memset(space, 0, sizeof(SymbolSpace));
+    strncpy(space->name, space_name, MIN(SPACE_NAME_MAX, strlen(space_name)));
 
     return space;
 }
 
-void init_space_symbol(symbol_space *space, const int size)
-{
-    assert(space != NULL);
+// void init_space_symbol(symbol_space *space, const int size)
+// {
+//     assert(space != NULL);
 
-    for (space->s_idx = 0; space->s_idx < size; ++space->s_idx) {
-        space->s[space->s_idx] = create_symbol("", 0, 0);
-    }
-}
+//     for (space->s_idx = 0; space->s_idx < size; ++space->s_idx) {
+//         space->s[space->s_idx] = create_symbol("", 0, 0);
+//     }
+// }
 
-symbol_space *get_global_space(const symbol_table *table)
-{
-    assert(table != NULL && (table->ss_idx > 0));
-    return table->ss[0];
-}
+// symbol_space *get_global_space(const symbol_table *table)
+// {
+//     assert(table != NULL && (table->ss_idx > 0));
+//     return table->ss[0];
+// }
 
-symbol_space *find_symbol_space(const symbol_table *table, const char *space_name)
-{
-    int ss_idx;
+// symbol_space *find_symbol_space(const symbol_table *table, const char *space_name)
+// {
+//     int ss_idx;
 
-    for (ss_idx = 0; ss_idx < table->ss_idx; ++ss_idx) {
-        if (strcmp(space_name, table->ss[ss_idx]->space_name) == 0) {
-            return table->ss[ss_idx];
-        }
-    }
+//     for (ss_idx = 0; ss_idx < table->ss_idx; ++ss_idx) {
+//         if (strcmp(space_name, table->ss[ss_idx]->space_name) == 0) {
+//             return table->ss[ss_idx];
+//         }
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
-symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
-{
-    assert(table != NULL && (*table) != NULL && space_name != NULL);
+// symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
+// {
+//     assert(table != NULL && (*table) != NULL && space_name != NULL);
     
-    symbol_space *space = find_symbol_space(*table, space_name);
-    if (NULL != space) {
-        return space;
+//     symbol_space *space = find_symbol_space(*table, space_name);
+//     if (NULL != space) {
+//         return space;
+//     }
+
+//     (*table)->ss[(*table)->ss_idx] = create_symbol_space(space_name);
+
+//     return (*table)->ss[(*table)->ss_idx++];
+// }
+
+// symbol_table *create_symbol_table()
+// {
+//     symbol_table *table = (symbol_table *)malloc(sizeof(symbol_table));
+//     memset(table, 0, sizeof(symbol_table));
+//     table->ss_idx = 0;
+//     table->ss = (symbol_space **)malloc(TABLE_SPACE_MAX * sizeof(symbol_space *));
+//     table->ss[table->ss_idx++] = create_symbol_space(NAMESPACE_GLOBAL);
+//     return table;
+// }
+
+void symbol_space_print(const SymbolSpace *space)
+{
+    assert(space);
+    const Symbol *symbol = nullptr;
+    printf("SymbolSpace: %s { \n", space->name);
+
+    foreach (Symbol, symbol, space->symbols) {
+        printf("  name: %s, idx: %d, size: %d\n", symbol->name, symbol->idx, symbol->size);
     }
 
-    (*table)->ss[(*table)->ss_idx] = create_symbol_space(space_name);
-
-    return (*table)->ss[(*table)->ss_idx++];
+    printf("} \n\n");
 }
 
-symbol_table *create_symbol_table()
-{
-    symbol_table *table = (symbol_table *)malloc(sizeof(symbol_table));
-    memset(table, 0, sizeof(symbol_table));
-    table->ss_idx = 0;
-    table->ss = (symbol_space **)malloc(TABLE_SPACE_MAX * sizeof(symbol_space *));
-    table->ss[table->ss_idx++] = create_symbol_space(NAMESPACE_GLOBAL);
-    return table;
-}
 
-void symbol_table_print(const symbol_table *table)
+void symbol_table_print(const SymbolTable *table)
 {
-    assert(table != NULL);
-    
-    int table_idx, space_idx;
-    for (table_idx = 0; table_idx < table->ss_idx; ++table_idx) {
-        printf("space_name: %s, size: %d\n", table->ss[table_idx]->space_name, table->ss[table_idx]->s_idx);
-        
-        for (space_idx = 0; space_idx < table->ss[table_idx]->s_idx; ++space_idx) {
-            printf("\tvar_name: %s, var_idx: %d, var_size: %d\n",
-                table->ss[table_idx]->s[space_idx]->var_name,
-                table->ss[table_idx]->s[space_idx]->var_idx,
-                table->ss[table_idx]->s[space_idx]->var_size);
-        }
+    assert(table);
+    const SymbolSpace *space = nullptr;
+
+    symbol_space_print(table->global);
+    symbol_space_print(table->access);
+
+    foreach (SymbolSpace, space, table->spaces) {
+        symbol_space_print(space);
     }
 }
 
-map_list *create_map_list(const char *name)
-{
-    assert(name != NULL);
+// map_list *create_map_list(const char *name)
+// {
+//     assert(name != NULL);
 
-    map_list *maps = (map_list *)malloc(sizeof(map_list));
-    memset(maps, 0, sizeof(map_list));
+//     map_list *maps = (map_list *)malloc(sizeof(map_list));
+//     memset(maps, 0, sizeof(map_list));
 
-    strncpy(maps->name, name, MIN(MAP_NAME_MAX, strlen(name)));
-    return maps;
-}
+//     strncpy(maps->name, name, MIN(MAP_NAME_MAX, strlen(name)));
+//     return maps;
+// }
 
-map_list *find_map_list(code_map *c_map, const char *space)
-{
-    int m_idx;
+// map_list *find_map_list(code_map *c_map, const char *space)
+// {
+//     int m_idx;
 
-    for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
-        if (strcmp(space, c_map->maps[m_idx]->name) == 0) {
-            return c_map->maps[m_idx];
-        }
-    }
+//     for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
+//         if (strcmp(space, c_map->maps[m_idx]->name) == 0) {
+//             return c_map->maps[m_idx];
+//         }
+//     }
 
-    return NULL;
-}
+//     return NULL;
+// }
 
-code_list *create_code_list()
-{
-    code_list *cl = (code_list *)malloc(sizeof(code_list));
-    memset(cl, 0, sizeof(code_list));
+// code_list *create_code_list()
+// {
+//     code_list *cl = (code_list *)malloc(sizeof(code_list));
+//     memset(cl, 0, sizeof(code_list));
 
-    cl->c_idx = 0;
-    cl->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
+//     cl->c_idx = 0;
+//     cl->c = (code **)malloc(MASP_CODE_MAX * sizeof(code *));
 
-    return cl;
-}
+//     return cl;
+// }
 
 func_jump *create_func_jump(char *func_name, int jump_num)
 {
@@ -249,66 +258,62 @@ int get_func_jump_num(func_jump_map *jumps, char *name)
     return 0;
 }
 
-code *create_code()
+Code *create_code(Instruction ins, char *offset)
 {
-    code *c = (code *)malloc(sizeof(code));
-    memset(c, 0, sizeof(code));
+    Code *code = (Code *)malloc(sizeof(Code));
+    memset(code, 0, sizeof(Code));
 
-    return c;
+    code->ins = ins;
+
+    if (offset) {
+        strncpy(code->offset, offset, VAR_OFFSET_MAX);
+    }
+
+    return code;
 }
 
-code *create_code2(instruction ins, char *offset)
-{
-    code *c = create_code();
+// int code_list_push(code_list *cl, instruction ins, char *offset)
+// {
+//     // undo clear offset
+//     assert(cl != NULL && offset != NULL);
 
-    c->ins = ins;
-    strncpy(c->offset, offset, VAR_OFFSET_MAX);
-
-    return c;
-}
-
-int code_list_push(code_list *cl, instruction ins, char *offset)
-{
-    // undo clear offset
-    assert(cl != NULL && offset != NULL);
-
-    cl->c[cl->c_idx++] = create_code2(ins, offset);
+//     cl->c[cl->c_idx++] = create_code2(ins, offset);
     
-    return cl->c_idx - 1;
-}
+//     return cl->c_idx - 1;
+// }
 
-void code_list_set(code_list *cl, const int idx, char *offset)
-{
-    assert(cl != NULL && offset != NULL && cl->c_idx >= idx);
+// void code_list_set(code_list *cl, const int idx, char *offset)
+// {
+//     assert(cl != NULL && offset != NULL && cl->c_idx >= idx);
 
-    strncpy(cl->c[idx]->offset, offset, VAR_OFFSET_MAX);
-}
+//     strncpy(cl->c[idx]->offset, offset, VAR_OFFSET_MAX);
+// }
 
-void code_list_push2(code_list *cl, code* c)
-{
-    assert(cl != NULL && c != NULL);
+// void code_list_push2(code_list *cl, code* c)
+// {
+//     assert(cl != NULL && c != NULL);
 
-    cl->c[cl->c_idx++] = c;
-}
+//     cl->c[cl->c_idx++] = c;
+// }
 
-void code_list_append(code_list *codes, code_list *extras)
-{
-    assert(codes != NULL && extras != NULL);
-    int idx;
+// void code_list_append(code_list *codes, code_list *extras)
+// {
+//     assert(codes != NULL && extras != NULL);
+//     int idx;
 
-    for (idx = 0; idx < extras->c_idx; ++idx) {
-        codes->c[codes->c_idx++] = extras->c[idx];
-        // need free ?
-    }
-}
+//     for (idx = 0; idx < extras->c_idx; ++idx) {
+//         codes->c[codes->c_idx++] = extras->c[idx];
+//         // need free ?
+//     }
+// }
 
-void code_list_print(code_list *cl)
-{
-    int idx;
-    for (idx = 0; idx < cl->c_idx; ++idx) {
-        printf("%d %s\n", cl->c[idx]->ins, cl->c[idx]->offset);
-    }
-}
+// void code_list_print(code_list *cl)
+// {
+//     int idx;
+//     for (idx = 0; idx < cl->c_idx; ++idx) {
+//         printf("%d %s\n", cl->c[idx]->ins, cl->c[idx]->offset);
+//     }
+// }
 
 void func_jump_map_print(const func_jump_map *jumps)
 {
@@ -318,44 +323,46 @@ void func_jump_map_print(const func_jump_map *jumps)
     }
 }
 
-code_map *create_code_map()
+CodeMap *create_code_map(const char *name, DeerLinkedList *codes)
 {
-    code_map *cm = (code_map *)malloc(sizeof(code_map));
-    memset(cm, 0, sizeof(code_map));
-    cm->m_idx = 0;
-    cm->maps = (map_list **)malloc(MAP_LIST_MAX * sizeof(map_list *));
+    CodeMap *map = (CodeMap *)malloc(sizeof(CodeMap));
 
-    return cm;
+    memset(map, 0, sizeof(CodeMap));
+
+    strncpy(map->name, name, MIN(MAP_NAME_MAX, strlen(name)));
+    map->codes = codes;
+
+    return map;
 } 
 
-void set_code_map(code_map *c_map, const char *cur_space, const code_list *input_cl)
-{
-    int idx;
-    code *c;
-    c_map->maps[c_map->m_idx] = create_map_list(cur_space);
-    c_map->maps[c_map->m_idx]->cl = create_code_list();
+// void set_code_map(code_map *c_map, const char *cur_space, const code_list *input_cl)
+// {
+//     int idx;
+//     code *c;
+//     c_map->maps[c_map->m_idx] = create_map_list(cur_space);
+//     c_map->maps[c_map->m_idx]->cl = create_code_list();
 
-    for (idx = 0; idx < input_cl->c_idx; ++idx) {
-        c = create_code2(input_cl->c[idx]->ins, input_cl->c[idx]->offset);
-        c_map->maps[c_map->m_idx]->cl->c[c_map->maps[c_map->m_idx]->cl->c_idx] = c;
-        ++c_map->maps[c_map->m_idx]->cl->c_idx;
-    }
+//     for (idx = 0; idx < input_cl->c_idx; ++idx) {
+//         c = create_code2(input_cl->c[idx]->ins, input_cl->c[idx]->offset);
+//         c_map->maps[c_map->m_idx]->cl->c[c_map->maps[c_map->m_idx]->cl->c_idx] = c;
+//         ++c_map->maps[c_map->m_idx]->cl->c_idx;
+//     }
 
-    ++c_map->m_idx;
-}
+//     ++c_map->m_idx;
+// }
 
-void code_list_clean(code_list *cl)
-{
-    int idx;
+// void code_list_clean(code_list *cl)
+// {
+//     int idx;
 
-    for (idx = 0; idx < cl->c_idx; ++idx) {
-        if (cl->c[idx]) {
-            free(cl->c[idx]);
-            cl->c[idx] = NULL;
-        }
-    }
-    cl->c_idx = 0;
-}
+//     for (idx = 0; idx < cl->c_idx; ++idx) {
+//         if (cl->c[idx]) {
+//             free(cl->c[idx]);
+//             cl->c[idx] = NULL;
+//         }
+//     }
+//     cl->c_idx = 0;
+// }
 
 code_segment *create_code_segment()
 {
@@ -377,7 +384,7 @@ segment *create_segment()
     return seg;
 }
 
-segment *create_segment2(instruction ins, int offset)
+segment *create_segment2(Instruction ins, int offset)
 {
     segment *seg = create_segment();
 
@@ -387,7 +394,7 @@ segment *create_segment2(instruction ins, int offset)
     return seg;
 }
 
-void code_segment_push(code_segment *cs, instruction ins, int offset)
+void code_segment_push(code_segment *cs, Instruction ins, int offset)
 {
     assert(cs != NULL);
 
@@ -398,15 +405,15 @@ void code_segment_push(code_segment *cs, instruction ins, int offset)
     cs->data[cs->size++] = create_segment2(ins, offset);
 }
 
-void code_map_print(const code_map *c_map)
+void code_map_print(const DeerLinkedList *maps)
 {
-    assert(c_map != NULL);
+    // assert(c_map != NULL);
 
-    int m_idx;
-    for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
-        printf("name: %s, code list:\n", c_map->maps[m_idx]->name);
-        code_list_print(c_map->maps[m_idx]->cl);
-    }
+    // int m_idx;
+    // for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
+    //     printf("name: %s, code list:\n", c_map->maps[m_idx]->name);
+    //     code_list_print(c_map->maps[m_idx]->cl);
+    // }
 }
 
 virtual_machine *create_virtual_machine()
@@ -506,140 +513,140 @@ int file_read_content(const char *file_path, char **str)
     return CMM_SUCCESS;
 }
 
-int file_write_content(code_list *codes, const char *asm_file)
+int file_write_content(const DeerLinkedList *codes, const char *asm_file)
 {
-    FILE *fp;
-    int idx, line_len, data_len;
-    char line[VAR_OFFSET_MAX * 2];
-    char *data = NULL;
+    // FILE *fp;
+    // int idx, line_len, data_len;
+    // char line[VAR_OFFSET_MAX * 2];
+    // char *data = NULL;
 
-    if (codes == NULL || asm_file == NULL) {
-        return CMM_FAILED;
-    }
+    // if (codes == NULL || asm_file == NULL) {
+    //     return CMM_FAILED;
+    // }
 
-    if (strlen(asm_file) == 0) {
-        asm_file = DEFAULT_ASM_PATH;
-    }
+    // if (strlen(asm_file) == 0) {
+    //     asm_file = DEFAULT_ASM_PATH;
+    // }
 
-    data = (char *)malloc(codes->c_idx * (VAR_OFFSET_MAX * 2));
-    data_len = 0;
+    // data = (char *)malloc(codes->c_idx * (VAR_OFFSET_MAX * 2));
+    // data_len = 0;
 
-    fp = fopen(asm_file, "w");
-    if (fp == NULL) {
-        printf("fopen file failed, file path: %s.\n", asm_file);
-        return CMM_FAILED;
-    }
+    // fp = fopen(asm_file, "w");
+    // if (fp == NULL) {
+    //     printf("fopen file failed, file path: %s.\n", asm_file);
+    //     return CMM_FAILED;
+    // }
 
-    for (idx = 0; idx < codes->c_idx; ++idx) {
-        switch (codes->c[idx]->ins) {
-            case INS_LDC:
-                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "LDC %s\n", codes->c[idx]->offset);
-                strncpy(data + data_len, line, line_len);
-                data_len += line_len;
-                break;
-            case INS_LD:
-                strcpy(data + data_len, "LD\n");
-                data_len += 3;
-                break;
-            case INS_ALD:
-                strcpy(data + data_len, "ALD\n");
-                data_len += 4;
-                break;
-            case INS_ST:
-                strcpy(data + data_len, "ST\n");
-                data_len += 3;
-                break;
-            case INS_AST:
-                strcpy(data + data_len, "__AST\n");
-                data_len += 6;
-                break;
-            case INS_PUSH:
-                strcpy(data + data_len, "PUSH\n");
-                data_len += 5;
-                break;
-            case INS_POP:
-                strcpy(data + data_len, "POP\n");
-                data_len += 4;
-                break;
-            case INS_JMP:
-                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JMP %s\n", codes->c[idx]->offset);
-                strncpy(data + data_len, line, line_len);
-                data_len += line_len;
-                break;
-            case INS_JZ:
-                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JZ %s\n", codes->c[idx]->offset);
-                strncpy(data + data_len, line, line_len);
-                data_len += line_len;
-                break;
-            case INS_ADD:
-                strcpy(data + data_len, "ADD\n");
-                data_len += 4;
-                break;
-            case INS_SUB:
-                strcpy(data + data_len, "SUB\n");
-                data_len += 4;
-                break;
-            case INS_MUL:
-                strcpy(data + data_len, "MUL\n");
-                data_len += 4;
-                break;
-            case INS_DIV:
-                strcpy(data + data_len, "DIV\n");
-                data_len += 4;
-                break;
-            case INS_LT:
-                strcpy(data + data_len, "LT\n");
-                data_len += 3;
-                break;
-            case INS_LE:
-                strcpy(data + data_len, "LE\n");
-                data_len += 3;
-                break;
-            case INS_GT:
-                strcpy(data + data_len, "GT\n");
-                data_len += 3;
-                break;
-            case INS_GE:
-                strcpy(data + data_len, "GE\n");
-                data_len += 3;
-                break;
-            case INS_EQ:
-                strcpy(data + data_len, "EQ\n");
-                data_len += 3;
-                break;
-            case INS_NE:
-                strcpy(data + data_len, "NE\n");
-                data_len += 3;
-                break;
-            case INS_IN:
-                strcpy(data + data_len, "IN\n");
-                data_len += 3;
-                break;
-            case INS_OUT:
-                strcpy(data + data_len, "OUT\n");
-                data_len += 4;
-                break;
-            case INS_ADDR:
-                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "ADDR %s\n", codes->c[idx]->offset);
-                strncpy(data + data_len, line, line_len);
-                data_len += line_len;
-                break;
-            case INS_CALL:
-                line_len = snprintf(line, VAR_OFFSET_MAX * 2, "CALL %s\n", codes->c[idx]->offset);
-                strncpy(data + data_len, line, line_len);
-                data_len += line_len;
-                break;
-            case INS_RET:
-                strcpy(data + data_len, "RET\n");
-                data_len += 4;
-                break;
-            default:
-                invalid_call("output_asm_file");
-        }
-    }
+    // for (idx = 0; idx < codes->c_idx; ++idx) {
+    //     switch (codes->c[idx]->ins) {
+    //         case INS_LDC:
+    //             line_len = snprintf(line, VAR_OFFSET_MAX * 2, "LDC %s\n", codes->c[idx]->offset);
+    //             strncpy(data + data_len, line, line_len);
+    //             data_len += line_len;
+    //             break;
+    //         case INS_LD:
+    //             strcpy(data + data_len, "LD\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_ALD:
+    //             strcpy(data + data_len, "ALD\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_ST:
+    //             strcpy(data + data_len, "ST\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_AST:
+    //             strcpy(data + data_len, "__AST\n");
+    //             data_len += 6;
+    //             break;
+    //         case INS_PUSH:
+    //             strcpy(data + data_len, "PUSH\n");
+    //             data_len += 5;
+    //             break;
+    //         case INS_POP:
+    //             strcpy(data + data_len, "POP\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_JMP:
+    //             line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JMP %s\n", codes->c[idx]->offset);
+    //             strncpy(data + data_len, line, line_len);
+    //             data_len += line_len;
+    //             break;
+    //         case INS_JZ:
+    //             line_len = snprintf(line, VAR_OFFSET_MAX * 2, "JZ %s\n", codes->c[idx]->offset);
+    //             strncpy(data + data_len, line, line_len);
+    //             data_len += line_len;
+    //             break;
+    //         case INS_ADD:
+    //             strcpy(data + data_len, "ADD\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_SUB:
+    //             strcpy(data + data_len, "SUB\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_MUL:
+    //             strcpy(data + data_len, "MUL\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_DIV:
+    //             strcpy(data + data_len, "DIV\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_LT:
+    //             strcpy(data + data_len, "LT\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_LE:
+    //             strcpy(data + data_len, "LE\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_GT:
+    //             strcpy(data + data_len, "GT\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_GE:
+    //             strcpy(data + data_len, "GE\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_EQ:
+    //             strcpy(data + data_len, "EQ\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_NE:
+    //             strcpy(data + data_len, "NE\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_IN:
+    //             strcpy(data + data_len, "IN\n");
+    //             data_len += 3;
+    //             break;
+    //         case INS_OUT:
+    //             strcpy(data + data_len, "OUT\n");
+    //             data_len += 4;
+    //             break;
+    //         case INS_ADDR:
+    //             line_len = snprintf(line, VAR_OFFSET_MAX * 2, "ADDR %s\n", codes->c[idx]->offset);
+    //             strncpy(data + data_len, line, line_len);
+    //             data_len += line_len;
+    //             break;
+    //         case INS_CALL:
+    //             line_len = snprintf(line, VAR_OFFSET_MAX * 2, "CALL %s\n", codes->c[idx]->offset);
+    //             strncpy(data + data_len, line, line_len);
+    //             data_len += line_len;
+    //             break;
+    //         case INS_RET:
+    //             strcpy(data + data_len, "RET\n");
+    //             data_len += 4;
+    //             break;
+    //         default:
+    //             invalid_call("output_asm_file");
+    //     }
+    // }
 
-    fwrite(data, data_len, 1, fp);
-    fclose(fp);
-    free(data);
+    // fwrite(data, data_len, 1, fp);
+    // fclose(fp);
+    // free(data);
     return CMM_SUCCESS;
 }

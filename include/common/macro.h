@@ -24,8 +24,7 @@
 #define TABLE_SPACE_MAX             1024
 #define FILE_PATH_MAX               1024
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
-#define NAMESPACE_ENTRY             "main"
-#define NULL_STRING                 ""
+#define NAMESPACE_ACCESS            "main"
 #define DEFAULT_ASM_PATH            "./a.out"
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
@@ -121,7 +120,7 @@ typedef enum LexicalStage {
     STAGE_DONE,
 } LexicalStage; 
 
-typedef enum _instruction {
+typedef enum Instruction {
     // Load
     INS_LDC,
     INS_LD,
@@ -163,4 +162,4 @@ typedef enum _instruction {
     // Functional
     INS_CALL,
     INS_RET,
-} instruction;
+} Instruction;

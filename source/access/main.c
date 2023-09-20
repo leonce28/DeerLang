@@ -215,11 +215,11 @@ static void generate_asm(DeerCompilerHandle *handle)
     if (semantic_analysis(handle)) {
         invalid_call("semantic analysis");
     }
-    // symbol_table_print(table);
+    symbol_table_print(handle->table);
 
-    if (generate_code(handle)) {
-        invalid_call("generate code");
-    }
+    // if (generate_code(handle)) {
+    //     invalid_call("generate code");
+    // }
     // code_list_print(codes);
 
     if (file_write_content(handle->codes, handle->asm_file)) {
@@ -276,11 +276,11 @@ void compiler_init(const int argc, char **argv)
         }
     }
 
-    handle->generator->node = NULL;
-    handle->generator->c_map = create_code_map();
-    handle->generator->cl = create_code_list();
-    handle->generator->codes = create_code_list();
-    handle->generator->jumps = create_jump_map();
+    // handle->generator->node = NULL;
+    // handle->generator->c_map = create_code_map();
+    // handle->generator->cl = create_code_list();
+    // handle->generator->codes = create_code_list();
+    // handle->generator->jumps = create_jump_map();
 }
 
 void compiler_run()

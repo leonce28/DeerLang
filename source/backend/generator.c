@@ -444,107 +444,127 @@
 //     }
 // }
 
-// void generate_stmt_list_code(CodeGenerator *generator)
-// {
-//     int idx;
-//     DeerAST *node;
+void generate_stmt_list_code(CodeGenerator *generator)
+{
+    // int idx;
+    // DeerAST *node;
 
-//     // stmt_list ::= { stmt }
-//     for (idx = 0, node = generator->node; idx < node->sub_idx; ++idx) {
-//         generator->node = node->sub_list[idx];
-//         generate_stmt_code(generator);
-//     }
-// }
+    // // stmt_list ::= { stmt }
+    // for (idx = 0, node = generator->node; idx < node->sub_idx; ++idx) {
+    //     generator->node = node->sub_list[idx];
+    //     generate_stmt_code(generator);
+    // }
+}
 
-// void generate_global_var_code(CodeGenerator *generator)
-// {
-//     int s_idx, idx;
-//     symbol *sb;
-//     symbol_space *space = find_symbol_space(generator->table, NAMESPACE_GLOBAL);
+void generate_codes_global(DeerCompilerHandle *handle)
+{
+    assert(handle && handle->table && handle->table->global);
 
-//     for (s_idx = 0; s_idx < space->s_idx; ++s_idx) {
-//         sb = space->s[s_idx];
+    int idx;
+    const Symbol *symbol = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
+    const SymbolSpace *global = handle->table->global;
 
-//         // Array
-//         if (sb->var_size) {
-//             // Calc the array start address (variable number + 1)
-//             snprintf(generator->size, VAR_SIZE_MAX, "%d", sb->var_idx + 1);
-//             code_list_push(generator->cl, INS_LDC, generator->size);
-//         }
+    foreach (Symbol, symbol, global->symbols) {
+        // Array
+        if (symbol->size) {
+            // Calc the array start address (variable number + 1)
+            snprintf(offset, VAR_SIZE_MAX, "%d", symbol->idx + 1);
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, offset));
+        }
 
-//         // Push the array start address
-//         // (Or only a meaningless int for global scalar memeory)
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
+        // Push the array start address
+        // (Or only a meaningless int for global scalar memeory)
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
 
-//         // Push array content (by array size times)
-//         for (idx = 0; idx < sb->var_size; ++idx) {
-//             code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//         }
-//     }
-// }
+        // Push array content (by array size times)
+        for (idx = 0; idx < symbol->size; ++idx) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+        }
+    }
+}
 
-// void generate_main_prepare_code(CodeGenerator *generator)
-// {
-//     int s_idx, idx;
-//     symbol_space *main = find_symbol_space(generator->table, NAMESPACE_ENTRY);
+void generate_codes_access(DeerCompilerHandle *handle)
+{
+    assert(handle && handle->table && handle->table->access);
 
-//     for (s_idx = 0; s_idx < main->s_idx; ++s_idx) {
-//         if (main->s[s_idx]->var_size) {
-//             for (idx = 0; idx < main->s[s_idx]->var_size; ++idx) {
-//                 code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//             }
-//             snprintf(generator->size, VAR_SIZE_MAX, "%d", main->s[s_idx]->var_size);
-//             code_list_push(generator->cl, INS_ADDR, generator->size);
-//             code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//         } else {
-//             code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//         }
-//     }
+    const Symbol *symbol = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
+    const SymbolSpace *access = handle->table->access;
 
-//     // Call the "main" function automatically
-//     code_list_push(generator->cl, INS_CALL, NAMESPACE_ENTRY);
-// }
+    foreach (Symbol, symbol, access->symbols) {
+        if (symbol->size) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, nullptr));
 
-// void set_global_code_map(CodeGenerator *generator)
-// {
-//     generate_global_var_code(generator);
-//     generate_main_prepare_code(generator);
+            snprintf(offset, VAR_SIZE_MAX, "%d", symbol->idx);
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_ADDR, offset));
 
-//     set_code_map(generator->c_map, NAMESPACE_GLOBAL, generator->cl);
-//     code_list_clean(generator->cl);
-// }
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+        } else {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+        }
+    }
 
-// int _create_code_map(CodeGenerator *generator)
-// {
-//     int idx;
-//     DeerAST *node;
+    // Call the "main" function automatically
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_CALL, NAMESPACE_ACCESS));
+}
 
-//     set_global_code_map(generator);
+int _create_code_map(DeerCompilerHandle *handle)
+{
+    // int idx;
+    const DeerNode *node = nullptr;
 
-//     // declared_list ::= declared { declared }
-//     for (idx = 0; idx < generator->tree->sub_idx; ++idx) {
-//         node = generator->tree->sub_list[idx];
+    generate_codes_global(handle);
+    generate_codes_access(handle);
 
-//         // declared ::= local_declared | func_declared
-//         if (TOKEN_TYPE_MATCH(node, TOKEN_FUNC_DECL)) {
+    handle->maps = dlist_push_back(handle->maps, create_code_map(NAMESPACE_GLOBAL, handle->codes));
+    handle->codes = nullptr;
 
-//             // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
-//             generator->cur_space = node->sub_list[1]->data->token_str;
-//             generator->node = node->sub_list[4];
-//             generate_stmt_list_code(generator);
+    // declared_list ::= declared { declared }
+    foreach (DeerNode, node, handle->ast->decls) {
 
-//             if (strcmp(NAMESPACE_ENTRY, generator->cur_space) != 0) {
-//                 code_list_push(generator->cl, INS_RET, NULL_STRING);
-//             }
+        // declared ::= local_declared | func_declared
+        if (node->type == TT_VarDecl) {
+            continue;
+        }
 
-//             set_code_map(generator->c_map, generator->cur_space, generator->cl);
-//         }
+        // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
+        // generator->cur_space = node->sub_list[1]->data->token_str;
+        // generator->node = node->sub_list[4];
+        // generate_stmt_list_code(generator);
 
-//         code_list_clean(generator->cl);
-//     }
+        // if (strcmp(NAMESPACE_ACCESS, generator->cur_space) != 0) {
+        //     code_list_push(generator->cl, INS_RET, NULL_STRING);
+        // }
 
-//     return CMM_SUCCESS;
-// }
+        // set_code_map(generator->c_map, generator->cur_space, generator->cl);
+
+        handle->codes = nullptr;
+    }
+
+    // for (idx = 0; idx < handle->tree->sub_idx; ++idx) {
+    //     node = generator->tree->sub_list[idx];
+
+    //     // declared ::= local_declared | func_declared
+    //     if (TOKEN_TYPE_MATCH(node, TOKEN_FUNC_DECL)) {
+
+    //         // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
+    //         generator->cur_space = node->sub_list[1]->data->token_str;
+    //         generator->node = node->sub_list[4];
+    //         generate_stmt_list_code(generator);
+
+    //         if (strcmp(NAMESPACE_ACCESS, generator->cur_space) != 0) {
+    //             code_list_push(generator->cl, INS_RET, NULL_STRING);
+    //         }
+
+    //         set_code_map(generator->c_map, generator->cur_space, generator->cl);
+    //     }
+
+    //     code_list_clean(generator->cl);
+    // }
+
+    return CMM_SUCCESS;
+}
 
 // int _merge_code_map(CodeGenerator *generator)
 // {
@@ -566,7 +586,7 @@
 //         codes = generator->c_map->maps[idx]->cl;
 //         func_name = generator->c_map->maps[idx]->name;
 //         if (strcmp(func_name, NAMESPACE_GLOBAL) == 0 || 
-//             strcmp(func_name, NAMESPACE_ENTRY) == 0) {
+//             strcmp(func_name, NAMESPACE_ACCESS) == 0) {
 //             continue;
 //         }
 //         code_list_append(generator->codes, codes);
@@ -576,12 +596,12 @@
 //     }
 
 //     // the "main" function must be the last function
-//     maps = find_map_list(generator->c_map, NAMESPACE_ENTRY);
+//     maps = find_map_list(generator->c_map, NAMESPACE_ACCESS);
 //     if (!maps || !maps->cl) {
 //         invalid_call("find_map_list main failed in merge_code_map.");
 //     }
 //     code_list_append(generator->codes, maps->cl);
-//     set_func_jump_map(generator->jumps, NAMESPACE_ENTRY, jump_num);
+//     set_func_jump_map(generator->jumps, NAMESPACE_ACCESS, jump_num);
 
 //     return CMM_SUCCESS;
 // }
@@ -606,10 +626,10 @@ int generate_code(DeerCompilerHandle *handle)
     // handle->generator->tree = handle->ast;
     // handle->generator->table = handle->table;
 
-    // if (_create_code_map(handle->generator)) {
-    //     invalid_call("create code map");
-    // }
-    // // code_map_print(generator->c_map);
+    if (_create_code_map(handle)) {
+        invalid_call("create code map");
+    }
+    // code_map_print(generator->c_map);
 
     // if (_merge_code_map(handle->generator)) {
     //     invalid_call("merge code map");

@@ -19,49 +19,34 @@ typedef struct DeerLexical {
     LexicalStage stage;
 } DeerLexical;
 
-// pair<string, <int, int>>
-typedef struct _symbol {
-    char var_name[VAR_NAME_MAX];
-    int var_idx;
-    int var_size;
-} symbol;
+typedef struct Symbol {
+    char name[VAR_NAME_MAX];
+    int idx;
+    int size;
+} Symbol;
 
-// pair<string, pair<string, <int, int>>>
-typedef struct symbol_space {
-    char space_name[SPACE_NAME_MAX];
-    int s_idx;
-    symbol **s;
-} symbol_space;
+typedef struct SymbolSpace {
+    char name[SPACE_NAME_MAX];
+    DeerLinkedList *symbols;
+} SymbolSpace;
 
-// vector<pair<string, pair<string, <int, int>>>>
-typedef struct _symbol_table {
-    int ss_idx;
-    symbol_space **ss;
-} symbol_table;
+typedef struct SymbolTable {
+    SymbolSpace *global;
+    SymbolSpace *access;
+    DeerLinkedList *spaces;
+} SymbolTable;
 
 // pair<int, string>
-typedef struct _code {
-    instruction ins; 
+typedef struct Code {
+    Instruction ins; 
     char offset[VAR_OFFSET_MAX];
-} code;
-
-// vector<pair<int, string>
-typedef struct _code_list {
-    int c_idx;
-    code **c;
-} code_list;
-
-// <string, vector<pair<int, string>>
-typedef struct _map_list {
-    char name[MAP_NAME_MAX];
-    code_list *cl;
-} map_list;
+} Code;
 
 // unordered_map<string, vector<pair<int, string>>>
-typedef struct _code_map {
-    int m_idx;
-    map_list **maps;
-} code_map;
+typedef struct CodeMap {
+    char name[MAP_NAME_MAX];
+    DeerLinkedList *codes;
+} CodeMap;
 
 // Function name => Function start IP
 typedef struct _func_jump {
@@ -77,7 +62,7 @@ typedef struct _func_jump_map {
 
 // pair<int, int>
 typedef struct _segment {
-    instruction ins;
+    Instruction ins;
     int offset;
 } segment;
 
@@ -106,11 +91,11 @@ typedef struct CodeGenerator {
     char size[VAR_SIZE_MAX];
     char *cur_space;
     const DeerDeclList *tree;
+    const DeerDeclList *table;
     DeerDeclList *node;
-    const symbol_table *table;
-    code_map *c_map;
-    code_list *cl;
-    code_list *codes;
+    // code_map *c_map;
+    // code_list *cl;
+    // code_list *codes;
     func_jump_map *jumps;
 } CodeGenerator;
 
@@ -119,10 +104,14 @@ typedef struct DeerCompilerHandle {
     char asm_file[FILE_PATH_MAX];
     char *file_content;
     DeerLinkedList *tokens;
+    DeerLinkedList *codes;
+    DeerLinkedList *maps;
     DeerDeclList *ast;
     DeerLexical *lex;
-    symbol_table *table;
-    code_list *codes;
+    SymbolTable *table;
+
+    // symbol_table *table;
+    // code_list *codes;
     code_segment *cs;
     CodeGenerator *generator;
 } DeerCompilerHandle;
