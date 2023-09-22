@@ -1,3 +1,4 @@
+#include <string.h>
 #include "common/list.h"
 
 static DeerLinkedList *dlist_create() 
@@ -57,5 +58,39 @@ DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data)
     list->size++;
 
     return list;
+}
+
+DeerLinkedList *dlist_reverse_copy(const DeerLinkedList *list, size_t size)
+{
+    if (!list || list->size == 0 || size <= 0) {
+        return NULL;
+    }
+
+    const DeerListCell *curr = NULL;
+    DeerListCell *prev = NULL, *copy = NULL;
+    DeerLinkedList *reverse = malloc(sizeof(DeerLinkedList));
+
+    curr = list->head;
+
+    for (; curr; copy = NULL) {
+
+        copy = (DeerListCell *)malloc(sizeof(DeerListCell));
+        assert(copy);
+        copy->data = malloc(size);
+        assert(copy->data);
+        memcpy(copy->data, curr->data, size);
+
+        copy->next = prev;
+
+        curr = curr->next;
+
+        prev = copy;
+    }
+
+    reverse->head = prev;
+    reverse->tail = list->head;
+    reverse->size = list->size;
+
+    return reverse;
 }
 

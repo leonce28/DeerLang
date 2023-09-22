@@ -1,0 +1,34 @@
+int max(int a, int b) 
+{
+    int c;
+    int d;
+    int e;
+
+    if (a > b) {
+        return a;
+    }
+
+    if (b > a) {
+        return b;
+    }
+    
+    c = 1;
+    d = 2;
+    e = 3;
+
+    return c + d + e;
+}
+
+int main()
+{
+    int A;
+    int B;
+    int C;
+
+    A = input();
+    B = input();
+
+    C = max(A, B);
+
+    output(C);
+}

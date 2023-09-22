@@ -7,11 +7,13 @@
 #include <assert.h>
 
 #include "common/struct.h"
+#include "common/print.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // public
 ////////////////////////////////////////////////////////////////////////////////
 void invalid_call(const char *state);
+void invalid_node(const DeerNode *n);
 void invalid_token(const DeerToken *t);
 void invalid_instuction(const int line);
 
@@ -24,7 +26,6 @@ int file_write_content(const DeerLinkedList *codes, const char *asm_file);
 ////////////////////////////////////////////////////////////////////////////////
 // DeerToken
 ////////////////////////////////////////////////////////////////////////////////
-void token_print(const DeerToken *t);
 DeerToken *create_token(const char *str, int type);
 void token_push_char(DeerToken *t, char ch);
 
@@ -39,13 +40,15 @@ void token_push_char(DeerToken *t, char ch);
 ////////////////////////////////////////////////////////////////////////////////
 // symbol_space *get_global_space(const symbol_table *table);
 // symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
-// symbol_space *find_symbol_space(const symbol_table *table, const char *space_name);
-// Symbol *find_symbol(const symbol_table *table, const char *space_name, const char *var_name);
 
-SymbolSpace *create_symbol_space(const char *space_name);
+SymbolTable *create_symbol_table();
+
+SymbolSpace *create_symbol_space(const char *s);
+const SymbolSpace *find_symbol_space(const SymbolTable *t, const char *s);
+
 Symbol *create_symbol(const char *var_name, int var_idx, int var_size);
-// void init_space_symbol(symbol_space *space, const int size);
-void symbol_table_print(const SymbolTable *table);
+const Symbol *find_symbol(const SymbolTable *t, const char *s, const char *i);
+const Symbol *find_symbol_global(const SymbolTable *table, const char *id);
 
 Code *create_code(Instruction ins, char *offset);
 
@@ -76,7 +79,6 @@ void code_segment_push(code_segment *cs, Instruction ins, int offset);
 // code_map
 ////////////////////////////////////////////////////////////////////////////////
 // void set_code_map(code_map *c_map, const char *cur_space, const code_list *cl);
-void code_map_print(const DeerLinkedList *maps); 
 CodeMap *create_code_map(const char *name, DeerLinkedList *codes);
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -28,7 +28,7 @@ typedef enum VarType {
 } VarType;
 
 typedef enum OperateType {
-    OT_UNDEFINE,             // invalid
+    OT_UNDEFINE,             // undefine
     OT_PLUS,                 // +
     OT_MINUS,                // -
     OT_MULTIPLY,             // *
@@ -109,7 +109,7 @@ typedef struct DeerWhileStmt {
 
 typedef struct DeerReturnStmt {
     TreeType type;
-    DeerNode *expr; // AssignExpr or SimpleExpr
+    DeerSimpleExpr *expr;
 } DeerReturnStmt;
 
 typedef struct DeerFuncArgs {

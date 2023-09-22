@@ -3,343 +3,299 @@
 #include "backend/generator.h"
 #include "common/funcs.h"
 
-// void generate_expr_code(CodeGenerator *generator);
-// void generate_stmt_list_code(CodeGenerator *generator);
+void gcode_simple_expr(const DeerSimpleExpr *expr, DeerCompilerHandle *handle);
+void gcode_stmt_list(const DeerLinkedList *stmt_list, DeerCompilerHandle *handle);
 
-// void generate_number_code(CodeGenerator *generator)
-// {
-//     code_list_push(generator->cl, INS_LDC, generator->node->data->token_str);
-// }
+void gcode_number(DeerNumber *number, DeerCompilerHandle *handle)
+{
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, nullptr));
+}
 
-// void generate_arg_list_code(CodeGenerator *generator)
-// {
-//     // arg_list ::= expr { ',' expr }
-//     int idx;
-//     DeerAST *node = generator->node;
+void gcode_arg_list(const DeerLinkedList *arg_list, DeerCompilerHandle *handle)
+{
+    assert(arg_list && handle);
+    const DeerSimpleExpr *simple = nullptr;
 
-//     for (idx = node->sub_idx - 1; idx >= 0; --idx) {
-//         generator->node = node->sub_list[idx];
-//         generate_expr_code(generator);
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//     }
-// }
+    // arg_list ::= expr { ',' expr }
+    foreach (DeerSimpleExpr, simple, arg_list) {
+        gcode_simple_expr(simple, handle);
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+    }
+}
 
-// void generate_call_code(CodeGenerator *generator)
-// {
-//     // call ::= id '(' [ arg_list ] ')'
-//     int idx, p_idx, top_idx, arr_idx;
-//     symbol_space *space = NULL;
-//     symbol_space *pairs = NULL;
-//     DeerAST *node = generator->node;
-//     char *func_name = node->sub_list[0]->data->token_str;
+void gcode_func_call(const DeerFuncCall *func, DeerCompilerHandle *handle)
+{
+    // call ::= id '(' [ arg_list ] ')'
 
-//     // xxx = input();
-//     if (strcmp(func_name, "input") == 0) {
-//         code_list_push(generator->cl, INS_IN, NULL_STRING);
-//         return;
-//     }
-//     // output(xxx);
-//     else if (strcmp(func_name, "output") == 0) {
-//         generator->node = node->sub_list[1]->sub_list[0];
-//         generate_expr_code(generator);
+    int local_size = 0;
+    int idx = 0, a_idx = 0;
+    const Symbol *symbol = nullptr;
+    SymbolSpace *reverse = nullptr;
+    const SymbolSpace *space = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
 
-//         code_list_push(generator->cl, INS_OUT, NULL_STRING);
-//         return;
-//     }
+    // xxx = input();
+    if (strcmp(func->fname, "input") == 0) {
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_IN, nullptr));
+        return ;
+    }
 
-//     // user define function.
-//     space = find_symbol_space(generator->table, func_name);
-//     pairs = create_symbol_space(func_name);
-//     init_space_symbol(pairs, space->s_idx);
+    // output(xxx);
+    if (strcmp(func->fname, "output") == 0) {
+        if (func->args) {
+            gcode_arg_list(func->args, handle);
+        }
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_OUT, nullptr));
+        return ;
+    }
 
-//     // ..., Local5, Local4, Local3, Param2, Param1, Param0
-//     for (idx = 0; idx < space->s_idx; ++idx) {
-//         p_idx = pairs->s_idx - space->s[idx]->var_idx - 1;
-//         strncpy(pairs->s[p_idx]->var_name, space->s[idx]->var_name, MIN(VAR_NAME_MAX, strlen(space->s[idx]->var_name)));
-//         pairs->s[p_idx]->var_idx = space->s[idx]->var_idx;
-//         pairs->s[p_idx]->var_size = space->s[idx]->var_size;
-//     }
+    // user define function.
+    space = find_symbol_space(handle->table, func->fname);
+    assert(space);
 
-//     // We only need local variable here
-//     top_idx = pairs->s_idx - (node->sub_list[1] ? node->sub_list[1]->sub_idx : 0);
+    // reverse symbols to: ..., Local5, Local4, Local3, Param2, Param1, Param0
+    reverse = create_symbol_space(func->fname);
+    reverse->symbols = dlist_reverse_copy(space->symbols, sizeof(Symbol));
 
-//     // Push local variable
-//     for (idx = 0; idx < top_idx; ++idx) {
-//         if (pairs->s[idx]->var_size) {
-//             // Array, Push array content (by array size times)
-//             for (arr_idx = 0; arr_idx < pairs->s[idx]->var_size; ++arr_idx) {
-//                 code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//             }
-//             snprintf(generator->size, VAR_SIZE_MAX, "%d", pairs->s[idx]->var_size);
-//             code_list_push(generator->cl, INS_ADDR, generator->size);
-//             code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//         } else {
-//             // Scalar
-//             code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-//         }
-//     }
+    // symbol_space_print(reverse);
 
-//     // Push parameter
-//     if (node->sub_list[1]) {
-//         generator->node = node->sub_list[1];
-//         generate_arg_list_code(generator);
-//     }
+    // We only need local variable here
+    if (reverse->symbols) {
+        local_size = reverse->symbols->size - (func->args ? func->args->size : 0);
+    }
 
-//     code_list_push(generator->cl, INS_CALL, func_name);
+    // Push local variable
+    foreach (Symbol, symbol, reverse->symbols) {
+        if (idx++ >= local_size) {
+            break;
+        }
 
-//     // After call, we need several "POP" to pop all variables.
-//     for (idx = 0; idx < space->s_idx; ++idx) {
-//         // Any variable needs a "POP"
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
+        // Scalar
+        if (symbol->size == 0) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+            continue;
+        }
 
-//         // Pop array content (by array size times)
-//         for (arr_idx = 0; arr_idx < space->s[idx]->var_size; ++arr_idx) {
-//             code_list_push(generator->cl, INS_POP, NULL_STRING);
-//         }
-//     }
-// }
+        // Array, Push array content (by array size times)
+        for (a_idx = 0; a_idx < symbol->size; ++a_idx) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+        }
+        snprintf(offset, VAR_SIZE_MAX, "%d", symbol->size);
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_ADDR, offset));
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+    }
 
-// void generate_var_code(CodeGenerator *generator)
-// {
-//     // var ::= id [ '[' expr ']' ]
-//     symbol *sb = NULL;
-//     DeerAST *node = generator->node;
+    // Push parameter
+    if (func->args) {
+        gcode_arg_list(func->args, handle);
+    }
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_CALL, func->fname));
 
-//     // is local var in current function ?
-//     sb = find_symbol(generator->table, generator->cur_space, node->sub_list[0]->data->token_str);
+    // After call, we need several "POP" to pop all variables.
+    foreach (Symbol, symbol, space->symbols) {
+        // Any variable needs a "POP"
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
 
-//     if (sb) {
-//         // local var
-//         snprintf(generator->size, VAR_SIZE_MAX, "%d", sb->var_idx);
-//         code_list_push(generator->cl, INS_LDC, generator->size);
-//         code_list_push(generator->cl, INS_LD, NULL_STRING);
-//     } else {
-//         // global var
-//         sb = find_symbol(generator->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
-//         assert(sb != NULL);
+        // Pop array content (by array size times)
+        for (a_idx = 0; a_idx < symbol->size; ++a_idx) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
+        }
+    }
+}
 
-//         snprintf(generator->size, VAR_SIZE_MAX, "%d", sb->var_idx);
-//         code_list_push(generator->cl, INS_LDC, generator->size);
-//         code_list_push(generator->cl, INS_ALD, NULL_STRING);
-//     }
+void gcode_var(const DeerVar *var, DeerCompilerHandle *handle)
+{
+    // var ::= id [ '[' expr ']' ]
+    bool is_global = false;
+    const Symbol *symbol = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
 
-//     // array
-//     if (node->sub_list[1]) {
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
+    // Is local var or global ? INS_LD or INS_ALD.
+    if ((symbol = find_symbol(handle->table, handle->space, var->id)) == nullptr) {
+        is_global = true;
+        symbol = find_symbol_global(handle->table, var->id);
+    }
+
+    assert(symbol);
+
+    snprintf(offset, VAR_SIZE_MAX, "%d", symbol->idx);
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, offset));
+    handle->codes = dlist_push_back(handle->codes, create_code(is_global ? INS_LD : INS_ALD, nullptr));
+
+    // Array
+    if (symbol->idx) {
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, offset));
         
-//         generator->node = node->sub_list[1];
-//         generate_expr_code(generator);
+        gcode_simple_expr(var->index, handle);
 
-//         code_list_push(generator->cl, INS_ADD, NULL_STRING);
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
-//         code_list_push(generator->cl, INS_ALD, NULL_STRING);
-//     }
-// }
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_ADD, offset));
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, offset));
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_ALD, offset));
+    }
+}
 
-// void generate_factor_code(CodeGenerator *generator)
-// {
-//     // factor ::= '(' expr ')' | var | call | num
-//     switch (generator->node->data->type) {
-//         case TOKEN_EXPR:
-//             generate_expr_code(generator);
-//             break;
-//         case TOKEN_NUMBER:
-//             generate_number_code(generator);
-//             break;
-//         case TOKEN_CALL:
-//             generate_call_code(generator);
-//             break;
-//         case TOKEN_VAR:
-//             generate_var_code(generator);
-//             break;
-//         default:
-//             invalid_token(generator->node->data);
-//     }
-// }
+void gcode_factor(const DeerNode *node, DeerCompilerHandle *handle)
+{
+    assert(node && handle);
 
-// void generate_mul_op_code(CodeGenerator *generator)
-// {
-//     // mul_op ::= '*' | '/')
-//     if (TOKEN_TYPE_MATCH(generator->node, TOKEN_MULTIPLY)) {
-//         code_list_push(generator->cl, INS_MUL, NULL_STRING);
-//     } else {
-//         code_list_push(generator->cl, INS_DIV, NULL_STRING);
-//     }
-// }
+    // factor ::= '(' expr ')' | var | call | num
+    switch (node->type) {
+        case TT_SimpleExpr:
+            gcode_simple_expr((DeerSimpleExpr *)node, handle);
+            break;
+        case TT_Number:
+            gcode_number((DeerNumber *)node, handle);
+            break;
+        case TT_FuncCall:
+            gcode_func_call((DeerFuncCall *)node, handle);
+            break;
+        case TT_Var:
+            gcode_var((DeerVar *)node, handle);
+            break;
+        default:
+            invalid_node(node);
+            break;
+    }
+}
 
-// void generate_term_code(CodeGenerator *generator)
-// {
-//     int idx;
-//     DeerAST *node = generator->node;
+void gcode_operate_type(OperateType type, DeerCompilerHandle *handle)
+{
+    switch (type) {
+        // rel_op ::= '<' | '<' '=' | '>' | '>' '=' | '=' '=' | '!' '='
+        case OT_LESS:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_LT, nullptr));
+            break;
+        case OT_LESS_EQ:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_LE, nullptr));
+            break;
+        case OT_GREATER:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_GT, nullptr));
+            break;
+        case OT_GREATER_EQ:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_GE, nullptr));
+            break;
+        case OT_EQUAL:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_EQ, nullptr));
+            break;
+        case OT_NOT_EQ:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_NE, nullptr));
+            break;
 
-//     // term ::= factor { mul_op factor }
-//     generator->node = node->sub_list[0];
-//     generate_factor_code(generator);
+        // add_op ::= '+' | '-'
+        case OT_PLUS:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_ADD, nullptr));
+            break;
+        case OT_MINUS:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_SUB, nullptr));
+            break;
 
-//     for (idx = 1; idx < node->sub_idx; idx += 2) {
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
+        // mul_op ::= '*' | '/')
+        case OT_MULTIPLY:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_MUL, nullptr));
+            break;
+        case OT_DIVIDE:
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_DIV, nullptr));
+            break;
+        
+        // invalid type
+        default:
+            assert(0);
+            break;
+    }
+}
 
-//         generator->node = node->sub_list[idx + 1];
-//         generate_factor_code(generator);
+void gcode_simple_expr(const DeerSimpleExpr *simple, DeerCompilerHandle *handle)
+{
+    assert(handle);
 
-//         generator->node = node->sub_list[idx];
-//         generate_mul_op_code(generator);
+    if (!simple) {
+        return ;
+    }
 
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
-//     }
-// }
+    // var | call | num
+    if (simple->type != TT_SimpleExpr) {
+        gcode_factor((DeerNode *)simple, handle);
+        return ;
+    }
 
-// void generate_add_op_code(CodeGenerator *generator)
-// {
-//     // add_op ::= '+' | '-'
-//     if (TOKEN_TYPE_MATCH(generator->node, TOKEN_PLUS)) {
-//         code_list_push(generator->cl, INS_ADD, NULL_STRING);
-//     } else {
-//         code_list_push(generator->cl, INS_SUB, NULL_STRING);
-//     }
-// }
+    // simple_expr ::= add_expr { rel_op add_expr }
+    // add_expr ::= term { add_op term }
+    // term ::= factor { mul_op factor }
+    // factor ::= '(' expr ')' | var | call | num
+    switch (simple->op) {
+        case OT_UNDEFINE:
+            gcode_factor(simple->lchild, handle);
+            break;
+        case OT_LESS:
+        case OT_LESS_EQ:
+        case OT_GREATER:
+        case OT_GREATER_EQ:
+        case OT_EQUAL:
+        case OT_NOT_EQ:
+        case OT_PLUS:
+        case OT_MINUS:
+        case OT_MULTIPLY:
+        case OT_DIVIDE:
+            gcode_simple_expr((DeerSimpleExpr *)simple->lchild, handle);
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
+            gcode_simple_expr((DeerSimpleExpr *)simple->rchild, handle);
+            gcode_operate_type(simple->op, handle);
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
+            break;
+        default:
+            break;
+    }
+}
 
-// void generate_add_expr_code(CodeGenerator *generator)
-// {
-//     int idx;
-//     DeerAST *node = generator->node;
+void gcode_assign_expr(const DeerAssignExpr *assign, DeerCompilerHandle *handle)
+{
+    assert(assign && handle);
 
-//     // add_expr ::= term { add_op term }
-//     generator->node = node->sub_list[0];
-//     generate_term_code(generator);
+    bool is_global = false;
+    const Symbol *symbol = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
 
-//     for (idx = 1; idx < node->sub_idx; idx += 2) {
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
+    gcode_simple_expr(assign->expr, handle);
 
-//         generator->node = node->sub_list[idx + 1];
-//         generate_term_code(generator);
+    // var ::= id [ '[' expr ']' ]
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
 
-//         generator->node = node->sub_list[idx];
-//         generate_add_op_code(generator);
+    // check is local var in current function ?
+    symbol = find_symbol(handle->table, handle->space, assign->var->id);
 
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
-//     }
-// }
+    // maybe global var ?
+    if (!symbol) {
+        is_global = 1;
+        symbol = find_symbol_global(handle->table, assign->var->id);
+    }
 
-// void generate_rel_op_code(CodeGenerator *generator)
-// {
-//     // rel_op ::= '<' | '<' '=' | '>' | '>' '=' | '=' '=' | '!' '='
-//     switch (generator->node->data->type) {
-//         case TOKEN_LESS:
-//             code_list_push(generator->cl, INS_LT, NULL_STRING);
-//             break;
-//         case TOKEN_LESS_EQUAL:
-//             code_list_push(generator->cl, INS_LE, NULL_STRING);
-//             break;
-//         case TOKEN_GREATER:
-//             code_list_push(generator->cl, INS_GT, NULL_STRING);
-//             break;
-//         case TOKEN_GREATER_EQUAL:
-//             code_list_push(generator->cl, INS_GE, NULL_STRING);
-//             break;
-//         case TOKEN_EQUAL:
-//             code_list_push(generator->cl, INS_EQ, NULL_STRING);
-//             break;
-//         case TOKEN_NOT_EQUAL:
-//             code_list_push(generator->cl, INS_NE, NULL_STRING);
-//             break;
-//         default:
-//             invalid_token(generator->node->data);
-//     }
-// }
+    assert(symbol);
 
-// void generate_simple_expr_code(CodeGenerator *generator)
-// {
-//     // simple_expr ::= add_expr [ rel_op add_expr ]
+    snprintf(offset, VAR_SIZE_MAX, "%d", symbol->idx);
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, offset));
 
-//     DeerAST *node = generator->node;
+    // is Scalar ?
+    if (!symbol->idx) {
+        handle->codes = dlist_push_back(handle->codes, create_code(is_global ? INS_AST : INS_ST, nullptr));
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
+        return ;
+    }
 
-//     if (node == NULL) {
-//         return;
-//     }
+    // Array, Get the (start) pointer (is already an absolute address)
+    handle->codes = dlist_push_back(handle->codes, create_code(is_global ? INS_ALD : INS_LD, nullptr));
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, nullptr));
 
-//     if (!node->sub_list[1] && !node->sub_list[2]) {
-//         generator->node = node->sub_list[0];
-//         generate_add_expr_code(generator);
-//     } else {
-//         generator->node = node->sub_list[0];
-//         generate_add_expr_code(generator);
-    
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
+    gcode_var(assign->var, handle);
 
-//         generator->node = node->sub_list[2];
-//         generate_add_expr_code(generator);
+    // Pointer[Index] (Pointer + Index)
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_ADD, nullptr));
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
 
-//         generator->node = node->sub_list[1];
-//         generate_rel_op_code(generator);
+    // Save by absolute address
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_AST, nullptr));
 
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
-//     }
-// }
-
-// void generate_assign_code(CodeGenerator *generator)
-// {
-//     int is_global = 0;
-//     symbol *sb = NULL;
-//     DeerAST *node = generator->node;
-
-//     // var ::= id [ '[' expr ']' ]
-//     code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-
-//     // is local var in current function ?
-//     sb = find_symbol(generator->table, generator->cur_space, node->sub_list[0]->data->token_str);
-    
-//     // maybe global var ?
-//     if (!sb) {
-//         is_global = 1;
-//         sb = find_symbol(generator->table, NAMESPACE_GLOBAL, node->sub_list[0]->data->token_str);
-//     }
-    
-//     snprintf(generator->size, VAR_SIZE_MAX, "%d", sb->var_idx);
-//     code_list_push(generator->cl, INS_LDC, generator->size);
-
-//     // scalar or array
-//     if (!node->sub_list[1]) {
-//         code_list_push(generator->cl, is_global ? INS_AST : INS_ST, NULL_STRING);
-//     } else {
-//         // Get the (start) pointer (is already an absolute address)
-//         code_list_push(generator->cl, is_global ? INS_ALD : INS_LD, NULL_STRING);
-//         code_list_push(generator->cl, INS_PUSH, NULL_STRING);
-
-//         generator->node = node->sub_list[0];
-//         generate_expr_code(generator);
-
-//         // Pointer[Index] (Pointer + Index)
-//         code_list_push(generator->cl, INS_ADD, NULL_STRING);
-//         code_list_push(generator->cl, INS_POP, NULL_STRING);
-
-//         // Save by absolute address
-//         code_list_push(generator->cl, INS_AST, NULL_STRING);
-//     }
-
-//     code_list_push(generator->cl, INS_POP, NULL_STRING);
-// }
-
-// void generate_expr_code(CodeGenerator *generator)
-// {
-//     DeerAST *node = generator->node;
-
-//     /* expr_stmt ::= [ expr ] ';'
-//      * expr ::= var '=' expr | simple_expr
-//      *
-//      * => expr_stmt ::= [ var '=' expr ] ';' | [ simple_expr ] ';'
-//      */
-//     if (!node->sub_list[1]) {
-//         generator->node = node->sub_list[0];
-//         generate_simple_expr_code(generator);
-//     } else {
-//         generator->node = node->sub_list[1];
-//         generate_expr_code(generator);
-
-//         generator->node = node->sub_list[0];
-//         generate_assign_code(generator);
-//     }
-// }
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
+}
 
 // void generate_if_stmt_code(CodeGenerator *generator)
 // { 
@@ -349,14 +305,14 @@
 //     // if_stmt :: = if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
 
 //     generator->node = node->sub_list[0];
-//     generate_expr_code(generator);
+//     gcode_simple_expr(generator);
 
 //     if (!node->sub_list[2]) {
 //         if_size = generator->cl->c_idx;
 //         cl_idx = code_list_push(generator->cl, INS_JZ, NULL_STRING);
 //         generator->node = node->sub_list[1];
 
-//         generate_stmt_list_code(generator);
+//         gcode_stmt_list(generator);
 //         if_size = generator->cl->c_idx - if_size;
         
 //         snprintf(generator->size, VAR_SIZE_MAX, "%d", if_size);
@@ -368,7 +324,7 @@
 //         cl_idx = code_list_push(generator->cl, INS_JZ, NULL_STRING);
 //         generator->node = node->sub_list[1];
 
-//         generate_stmt_list_code(generator);
+//         gcode_stmt_list(generator);
 //         if_size = generator->cl->c_idx - if_size;
 
 //         snprintf(generator->size, VAR_SIZE_MAX, "%d", if_size + 1); // else JMP INSTRUCTION
@@ -380,7 +336,7 @@
 //         cl_idx = code_list_push(generator->cl, INS_JMP, NULL_STRING);
 //         generator->node = node->sub_list[2];
 
-//         generate_stmt_list_code(generator);
+//         gcode_stmt_list(generator);
 //         else_size = generator->cl->c_idx - else_size;
 
 //         snprintf(generator->size, VAR_SIZE_MAX, "%d", else_size);
@@ -395,13 +351,13 @@
 
 //     // while_stmt ::= while '(' expr ')' stmt_list
 //     generator->node = node->sub_list[0];
-//     generate_expr_code(generator);
+//     gcode_simple_expr(generator);
 
 //     snprintf(generator->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx + 1);
 //     code_list_push(generator->cl, INS_JZ, generator->size);
 
 //     generator->node = node->sub_list[1];
-//     generate_stmt_list_code(generator);
+//     gcode_stmt_list(generator);
 
 //     snprintf(generator->size, VAR_SIZE_MAX, "-%d", node->sub_list[0]->sub_idx - 1);
 //     code_list_push(generator->cl, INS_JMP, generator->size);
@@ -414,46 +370,43 @@
 //     // return_stmt ::= return [ expr ] ';'
 //     if (node->sub_list[0]) {
 //         generator->node = node->sub_list[0];
-//         generate_expr_code(generator);
+//         gcode_simple_expr(generator);
 //     }
 // }
 
-// void generate_stmt_code(CodeGenerator *generator)
-// {
-//     // stmt ::= expr_stmt | if_stmt | while_stmt | return_stmt
-    
-//     if (NULL == generator->node) {
-//         return;
-//     }
-
-//     switch (generator->node->data->type) {
-//         case TOKEN_EXPR:
-//             generate_expr_code(generator);
-//             break;
-//         case TOKEN_IF_STMT:
-//             generate_if_stmt_code(generator);
-//             break;
-//         case TOKEN_WHILE_STMT:
-//             generate_while_stmt_code(generator);
-//             break;
-//         case TOKEN_RETURN_STMT:
-//             generate_return_stmt_code(generator);
-//             break;
-//         default:
-//             invalid_token(generator->node->data);
-//     }
-// }
-
-void generate_stmt_list_code(CodeGenerator *generator)
+void gcode_stmt_list(const DeerLinkedList *stmt_list, DeerCompilerHandle *handle)
 {
-    // int idx;
-    // DeerAST *node;
+    assert(stmt_list && handle);
 
-    // // stmt_list ::= { stmt }
-    // for (idx = 0, node = generator->node; idx < node->sub_idx; ++idx) {
-    //     generator->node = node->sub_list[idx];
-    //     generate_stmt_code(generator);
-    // }
+    const DeerNode *node = nullptr;
+
+    // stmt_list ::= { simple_expr | assign_expr | if_stmt | 
+    //                 while_stmt | return_stmt }
+    foreach (DeerNode, node, stmt_list) {
+        switch (node->type) {
+            case TT_SimpleExpr:
+                gcode_simple_expr((DeerSimpleExpr *)node, handle);
+                break;
+            case TT_AssignExpr:
+                gcode_assign_expr((const DeerAssignExpr *)node, handle);
+                break;
+            case TT_IfStmt:
+                // gcode_if_stmt(generator);
+                break;
+            case TT_WhileStmt:
+                // gcode_while_stmt(generator);
+                break;
+            case TT_ReturnStmt:
+                // gcode_return_stmt(generator);
+                break;
+            case TT_FuncCall:
+                // gcode_return_stmt(generator);
+                break;
+            default:
+                invalid_node(node);
+                break;
+        }
+    }
 }
 
 void generate_codes_global(DeerCompilerHandle *handle)
@@ -509,7 +462,7 @@ void generate_codes_access(DeerCompilerHandle *handle)
     handle->codes = dlist_push_back(handle->codes, create_code(INS_CALL, NAMESPACE_ACCESS));
 }
 
-int _create_code_map(DeerCompilerHandle *handle)
+int generate_code_map(DeerCompilerHandle *handle)
 {
     // int idx;
     const DeerNode *node = nullptr;
@@ -518,7 +471,6 @@ int _create_code_map(DeerCompilerHandle *handle)
     generate_codes_access(handle);
 
     handle->maps = dlist_push_back(handle->maps, create_code_map(NAMESPACE_GLOBAL, handle->codes));
-    handle->codes = nullptr;
 
     // declared_list ::= declared { declared }
     foreach (DeerNode, node, handle->ast->decls) {
@@ -528,40 +480,18 @@ int _create_code_map(DeerCompilerHandle *handle)
             continue;
         }
 
-        // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
-        // generator->cur_space = node->sub_list[1]->data->token_str;
-        // generator->node = node->sub_list[4];
-        // generate_stmt_list_code(generator);
-
-        // if (strcmp(NAMESPACE_ACCESS, generator->cur_space) != 0) {
-        //     code_list_push(generator->cl, INS_RET, NULL_STRING);
-        // }
-
-        // set_code_map(generator->c_map, generator->cur_space, generator->cl);
-
         handle->codes = nullptr;
+        handle->space = ((DeerFuncDecl *)node)->fname;
+
+        // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
+        gcode_stmt_list(((DeerFuncDecl *)node)->stmt_list, handle);
+
+        if (strcmp(NAMESPACE_ACCESS, handle->space) != 0) {
+            handle->codes = dlist_push_back(handle->codes, create_code(INS_RET, nullptr));
+        } 
+
+        handle->maps = dlist_push_back(handle->maps, create_code_map(handle->space, handle->codes));
     }
-
-    // for (idx = 0; idx < handle->tree->sub_idx; ++idx) {
-    //     node = generator->tree->sub_list[idx];
-
-    //     // declared ::= local_declared | func_declared
-    //     if (TOKEN_TYPE_MATCH(node, TOKEN_FUNC_DECL)) {
-
-    //         // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
-    //         generator->cur_space = node->sub_list[1]->data->token_str;
-    //         generator->node = node->sub_list[4];
-    //         generate_stmt_list_code(generator);
-
-    //         if (strcmp(NAMESPACE_ACCESS, generator->cur_space) != 0) {
-    //             code_list_push(generator->cl, INS_RET, NULL_STRING);
-    //         }
-
-    //         set_code_map(generator->c_map, generator->cur_space, generator->cl);
-    //     }
-
-    //     code_list_clean(generator->cl);
-    // }
 
     return CMM_SUCCESS;
 }
@@ -626,10 +556,10 @@ int generate_code(DeerCompilerHandle *handle)
     // handle->generator->tree = handle->ast;
     // handle->generator->table = handle->table;
 
-    if (_create_code_map(handle)) {
+    if (generate_code_map(handle)) {
         invalid_call("create code map");
     }
-    // code_map_print(generator->c_map);
+    code_maps_print(handle->maps);
 
     // if (_merge_code_map(handle->generator)) {
     //     invalid_call("merge code map");

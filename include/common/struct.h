@@ -103,6 +103,7 @@ typedef struct DeerCompilerHandle {
     char cmm_file[FILE_PATH_MAX];
     char asm_file[FILE_PATH_MAX];
     char *file_content;
+    const char *space;
     DeerLinkedList *tokens;
     DeerLinkedList *codes;
     DeerLinkedList *maps;

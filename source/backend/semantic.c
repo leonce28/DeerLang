@@ -47,10 +47,15 @@ static void analysis_func_decl(const DeerFuncDecl *fd, SymbolSpace *space)
 
 int semantic_analysis(DeerCompilerHandle *handle)
 {
+    assert(handle);
+
     int idx = 0;
     SymbolSpace *space = nullptr;
     SymbolTable *table = nullptr;
     const DeerNode *node = nullptr;
+
+    handle->table = create_symbol_table();
+    table = handle->table;
 
     table->global = create_symbol_space(NAMESPACE_GLOBAL);
     table->access = create_symbol_space(NAMESPACE_ACCESS);

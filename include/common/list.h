@@ -26,4 +26,5 @@ typedef struct DeerLinkedList {
         (deer_##__cell__ = (deer_##__cell__)->next))
 
 extern DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data);
+extern DeerLinkedList *dlist_reverse_copy(const DeerLinkedList *list, size_t size);
 extern void dlist_distory(DeerLinkedList *list);

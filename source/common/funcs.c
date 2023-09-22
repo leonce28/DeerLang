@@ -7,9 +7,14 @@ void invalid_call(const char *state)
     exit(0);
 }
 
+void invalid_node(const DeerNode *n)
+{
+    printf("invalid node: %d\n", n->type);
+}
+
 void invalid_token(const DeerToken *token)
 {
-    printf("invalid DeerToken: %s in line %d\n", token->token_str, token->line_no);
+    printf("invalid token: '%s' in line %d\n", token->token_str, token->line_no);
 #if 1
     printf("division by zero: %d\n",  token->line_no / (token ? 0 : 1));
 #endif
@@ -17,7 +22,7 @@ void invalid_token(const DeerToken *token)
 
 void invalid_instuction(const int line)
 {
-    printf("invalid Instuction in line %d\n", line);
+    printf("invalid instuction in line %d\n", line);
     exit(0);
 }
 
@@ -38,13 +43,6 @@ DeerToken *create_token(const char *str, int type)
         strncpy(token->token_str, str, token->token_len);
     }
     return token;
-}
-
-void token_print(const DeerToken *token)
-{
-    assert(token);
-    printf("line_no: %d, token_str: \"%s\", token_len: %d, type: %d\n",
-            token->line_no, token->token_str, token->token_len, token->type);
 }
 
 void token_push_char(DeerToken *token, char ch)
@@ -72,24 +70,44 @@ Symbol *create_symbol(const char *name, int idx, int size)
     return s;
 }
 
-// Symbol *find_symbol(const SymbolTable *table, const char *space_name, const char *var_name)
-// {
-//     assert(table != NULL && space_name != NULL && var_name != NULL);
+const Symbol *find_symbol(const SymbolTable *table, const char *name, const char *id)
+{
+    assert(table && name && id);
 
-//     int idx;
-//     SymbolTable *space = find_symbol_space(table, space_name);
-//     if (space == NULL) {
-//         return NULL;
-//     }
+    const Symbol *symbol = nullptr;
+    const SymbolSpace *space = nullptr;
+    
+    if ((space = find_symbol_space(table, name)) == nullptr) {
+        return nullptr;
+    }
 
-//     for (idx = 0; idx < space->s_idx; ++idx) {
-//         if (strcmp(var_name, space->s[idx]->var_name) == 0) {
-//             return space->s[idx];
-//         }
-//     }
+    foreach (Symbol, symbol, space->symbols) {
+        if (strcmp(id, symbol->name) == 0) {
+            return symbol;
+        }
+    }
 
-//     return NULL;
-// }
+    return nullptr;
+}
+
+const Symbol *find_symbol_global(const SymbolTable *table, const char *id)
+{
+    assert(table && id);
+
+    const Symbol *symbol = nullptr;
+    
+    if (table->global == nullptr) {
+        return nullptr;
+    }
+
+    foreach (Symbol, symbol, table->global->symbols) {
+        if (strcmp(id, symbol->name) == 0) {
+            return symbol;
+        }
+    }
+
+    return nullptr;
+}
 
 SymbolSpace *create_symbol_space(const char* space_name)
 {
@@ -118,18 +136,25 @@ SymbolSpace *create_symbol_space(const char* space_name)
 //     return table->ss[0];
 // }
 
-// symbol_space *find_symbol_space(const symbol_table *table, const char *space_name)
-// {
-//     int ss_idx;
+// exclude global namespace
+const SymbolSpace *find_symbol_space(const SymbolTable *table, const char *name)
+{
+    assert(table && name);
+    const SymbolSpace *space = nullptr;
 
-//     for (ss_idx = 0; ss_idx < table->ss_idx; ++ss_idx) {
-//         if (strcmp(space_name, table->ss[ss_idx]->space_name) == 0) {
-//             return table->ss[ss_idx];
-//         }
-//     }
-
-//     return NULL;
-// }
+    // main function
+    if (strcmp(name, NAMESPACE_ACCESS) == 0) {
+        return table->access;
+    } 
+    
+    foreach (SymbolSpace, space, table->spaces) {
+        if (strcmp(name, space->name) == 0) {
+            return space;
+        } 
+    }
+  
+    return nullptr;
+}
 
 // symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
 // {
@@ -145,41 +170,11 @@ SymbolSpace *create_symbol_space(const char* space_name)
 //     return (*table)->ss[(*table)->ss_idx++];
 // }
 
-// symbol_table *create_symbol_table()
-// {
-//     symbol_table *table = (symbol_table *)malloc(sizeof(symbol_table));
-//     memset(table, 0, sizeof(symbol_table));
-//     table->ss_idx = 0;
-//     table->ss = (symbol_space **)malloc(TABLE_SPACE_MAX * sizeof(symbol_space *));
-//     table->ss[table->ss_idx++] = create_symbol_space(NAMESPACE_GLOBAL);
-//     return table;
-// }
-
-void symbol_space_print(const SymbolSpace *space)
+SymbolTable *create_symbol_table()
 {
-    assert(space);
-    const Symbol *symbol = nullptr;
-    printf("SymbolSpace: %s { \n", space->name);
-
-    foreach (Symbol, symbol, space->symbols) {
-        printf("  name: %s, idx: %d, size: %d\n", symbol->name, symbol->idx, symbol->size);
-    }
-
-    printf("} \n\n");
-}
-
-
-void symbol_table_print(const SymbolTable *table)
-{
-    assert(table);
-    const SymbolSpace *space = nullptr;
-
-    symbol_space_print(table->global);
-    symbol_space_print(table->access);
-
-    foreach (SymbolSpace, space, table->spaces) {
-        symbol_space_print(space);
-    }
+    SymbolTable *table = (SymbolTable *)malloc(sizeof(SymbolTable));
+    memset(table, 0, sizeof(SymbolTable));
+    return table;
 }
 
 // map_list *create_map_list(const char *name)
@@ -403,17 +398,6 @@ void code_segment_push(code_segment *cs, Instruction ins, int offset)
     }
 
     cs->data[cs->size++] = create_segment2(ins, offset);
-}
-
-void code_map_print(const DeerLinkedList *maps)
-{
-    // assert(c_map != NULL);
-
-    // int m_idx;
-    // for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
-    //     printf("name: %s, code list:\n", c_map->maps[m_idx]->name);
-    //     code_list_print(c_map->maps[m_idx]->cl);
-    // }
 }
 
 virtual_machine *create_virtual_machine()

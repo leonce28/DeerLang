@@ -278,7 +278,7 @@ DeerNode *make_factor()
    switch (CURRENT_TOKEN_TYPE()) {
         case TOKEN_LEFT_ROUND_BRACKET:
             match_token(TOKEN_LEFT_ROUND_BRACKET);
-            factor = (DeerNode *) make_expr_stmt();
+            factor = (DeerNode *) make_simple_expr();
             match_token(TOKEN_RIGHT_ROUND_BRACKET);
             break;
         case TOKEN_NUMBER:
@@ -438,7 +438,7 @@ DeerSimpleExpr *make_simple_expr()
 
     */
     DeerNode *temp = nullptr;
-    DeerSimpleExpr *simple_expr = nullptr; 
+    DeerSimpleExpr *simple = nullptr; 
 
     temp = make_add_expr();
 
@@ -449,18 +449,22 @@ DeerSimpleExpr *make_simple_expr()
         case TOKEN_GREATER_EQUAL:
         case TOKEN_EQUAL:
         case TOKEN_NOT_EQUAL:
-            simple_expr = CREATE_NODE(SimpleExpr);
-            simple_expr->op = scan_op();
-            simple_expr->rchild = make_add_expr();
+            simple = CREATE_NODE(SimpleExpr);
+            simple->op = scan_op();
+            simple->rchild = make_add_expr();
             break;
         default:
             break;
     }
 
-    if (simple_expr) {
-        simple_expr->lchild = temp;
-        return simple_expr;
-    } 
+    if (simple) {
+        simple->lchild = temp;
+        return simple;
+    } else if (temp->type != TT_SimpleExpr) {
+        simple = CREATE_NODE(SimpleExpr);
+        simple->lchild = temp;
+        return simple;
+    }
 
     return (DeerSimpleExpr *)temp;
 }
@@ -604,7 +608,7 @@ DeerReturnStmt *make_return_stmt()
     if (TOKEN_IS_MATCH(TOKEN_ID) ||
         TOKEN_IS_MATCH(TOKEN_LEFT_ROUND_BRACKET) ||
         TOKEN_IS_MATCH(TOKEN_NUMBER)) {
-        return_stmt->expr = make_expr_stmt();
+        return_stmt->expr = make_simple_expr();
     }
 
     match_token(TOKEN_SEMICOLON);
