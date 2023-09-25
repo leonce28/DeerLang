@@ -297,82 +297,84 @@ void gcode_assign_expr(const DeerAssignExpr *assign, DeerCompilerHandle *handle)
     handle->codes = dlist_push_back(handle->codes, create_code(INS_POP, nullptr));
 }
 
-// void generate_if_stmt_code(CodeGenerator *generator)
-// { 
-//     int cl_idx, if_size, else_size;
-//     DeerAST *node = generator->node;
+void gcode_if_stmt(const DeerIfStmt *if_stmt, DeerCompilerHandle *handle)
+{ 
+    assert(if_stmt && handle);
 
-//     // if_stmt :: = if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
+    Code *code = nullptr;
+    char offset[VAR_SIZE_MAX] = { 0 };
+    int index, if_size, else_size;
 
-//     generator->node = node->sub_list[0];
-//     gcode_simple_expr(generator);
+    // if_stmt :: = if '(' expr ')' '{' stmt_list '}' [ else '{' stmt_list '}' ]
+    gcode_simple_expr(if_stmt->condition, handle);
 
-//     if (!node->sub_list[2]) {
-//         if_size = generator->cl->c_idx;
-//         cl_idx = code_list_push(generator->cl, INS_JZ, NULL_STRING);
-//         generator->node = node->sub_list[1];
 
-//         gcode_stmt_list(generator);
-//         if_size = generator->cl->c_idx - if_size;
-        
-//         snprintf(generator->size, VAR_SIZE_MAX, "%d", if_size);
-//         code_list_set(generator->cl, cl_idx, generator->size);
-//     } else {
+    // if stmt
+    code = create_code(INS_JZ, nullptr);
+    handle->codes = dlist_push_back(handle->codes, code);
+    index = handle->codes->size;
 
-//         /* if begin */
-//         if_size = generator->cl->c_idx;
-//         cl_idx = code_list_push(generator->cl, INS_JZ, NULL_STRING);
-//         generator->node = node->sub_list[1];
+    gcode_stmt_list(if_stmt->if_block, handle);
 
-//         gcode_stmt_list(generator);
-//         if_size = generator->cl->c_idx - if_size;
+    if_size = handle->codes->size - index;
 
-//         snprintf(generator->size, VAR_SIZE_MAX, "%d", if_size + 1); // else JMP INSTRUCTION
-//         code_list_set(generator->cl, cl_idx, generator->size);
-//         /* if end */
+    if (if_stmt->else_block) {
+        if_size += 1;   // else JMP INSTRUCTION
+    }
 
-//         /* else begin */
-//         else_size = generator->cl->c_idx;
-//         cl_idx = code_list_push(generator->cl, INS_JMP, NULL_STRING);
-//         generator->node = node->sub_list[2];
+    snprintf(offset, VAR_SIZE_MAX, "%d", if_size); 
+    strncpy(code->offset, offset, VAR_OFFSET_MAX);
 
-//         gcode_stmt_list(generator);
-//         else_size = generator->cl->c_idx - else_size;
+    // no else stmt
+    if (!if_stmt->else_block) {
+        handle->codes = dlist_push_back(handle->codes, create_code(INS_JZ, nullptr));
+        return ;
+    }
 
-//         snprintf(generator->size, VAR_SIZE_MAX, "%d", else_size);
-//         code_list_set(generator->cl, cl_idx, generator->size);
-//         /* else end */
-//     }
-// }
+    // else stmt
+    code = create_code(INS_JMP, nullptr);
+    handle->codes = dlist_push_back(handle->codes, code);
+    index = handle->codes->size;
 
-// void generate_while_stmt_code(CodeGenerator *generator)
-// { 
-//     DeerAST *node = generator->node;
+    gcode_stmt_list(if_stmt->else_block, handle);
 
-//     // while_stmt ::= while '(' expr ')' stmt_list
-//     generator->node = node->sub_list[0];
-//     gcode_simple_expr(generator);
+    else_size = handle->codes->size - index;
 
-//     snprintf(generator->size, VAR_SIZE_MAX, "%d", node->sub_list[1]->sub_idx + 1);
-//     code_list_push(generator->cl, INS_JZ, generator->size);
+    snprintf(offset, VAR_SIZE_MAX, "%d", else_size); 
+    strncpy(code->offset, offset, VAR_OFFSET_MAX);
+}
 
-//     generator->node = node->sub_list[1];
-//     gcode_stmt_list(generator);
+void gcode_while_stmt(const DeerWhileStmt *while_stmt, DeerCompilerHandle *handle)
+{ 
+    assert(while_stmt && handle);
 
-//     snprintf(generator->size, VAR_SIZE_MAX, "-%d", node->sub_list[0]->sub_idx - 1);
-//     code_list_push(generator->cl, INS_JMP, generator->size);
-// }
+    int index = 0;
+    char offset[VAR_SIZE_MAX] = { 0 };
 
-// void generate_return_stmt_code(CodeGenerator *generator)
-// { 
-//     DeerAST *node = generator->node;
+    // while_stmt ::= while '(' expr ')' stmt_list
 
-//     // return_stmt ::= return [ expr ] ';'
-//     if (node->sub_list[0]) {
-//         generator->node = node->sub_list[0];
-//         gcode_simple_expr(generator);
-//     }
-// }
+    // condition
+    index = handle->codes->size;
+    gcode_simple_expr(while_stmt->condition, handle);
+
+    snprintf(offset, VAR_SIZE_MAX, "%d", while_stmt->block->size + 1);
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_JZ, offset));
+
+    // block
+    gcode_stmt_list(while_stmt->block, handle);
+
+    // jump to condition
+    snprintf(offset, VAR_SIZE_MAX, "-%d", handle->codes->size - index);
+    handle->codes = dlist_push_back(handle->codes, create_code(INS_JMP, offset));
+}
+
+void gcode_return_stmt(const DeerReturnStmt *return_stmt, DeerCompilerHandle *handle)
+{ 
+    assert(return_stmt && handle);
+
+    // return_stmt ::= return [ expr ] ';'
+    gcode_simple_expr(return_stmt->expr, handle);
+}
 
 void gcode_stmt_list(const DeerLinkedList *stmt_list, DeerCompilerHandle *handle)
 {
@@ -391,16 +393,16 @@ void gcode_stmt_list(const DeerLinkedList *stmt_list, DeerCompilerHandle *handle
                 gcode_assign_expr((const DeerAssignExpr *)node, handle);
                 break;
             case TT_IfStmt:
-                // gcode_if_stmt(generator);
+                gcode_if_stmt((const DeerIfStmt *)node, handle);
                 break;
             case TT_WhileStmt:
-                // gcode_while_stmt(generator);
+                gcode_while_stmt((const DeerWhileStmt *)node, handle);
                 break;
             case TT_ReturnStmt:
-                // gcode_return_stmt(generator);
+                gcode_return_stmt((const DeerReturnStmt *)node, handle);
                 break;
             case TT_FuncCall:
-                // gcode_return_stmt(generator);
+                gcode_func_call((const DeerFuncCall *)node, handle);
                 break;
             default:
                 invalid_node(node);
