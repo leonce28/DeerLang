@@ -1,16 +1,20 @@
 #include <string.h>
 #include "common/list.h"
 
+#ifndef nullptr
+#define nullptr     NULL
+#endif
+
 static DeerLinkedList *dlist_create() 
 {
     DeerLinkedList *list = malloc(sizeof(DeerLinkedList));
 
     if (!list) {
-        return NULL;
+        return nullptr;
     }
 
-    list->head = NULL;
-    list->tail = NULL;
+    list->head = nullptr;
+    list->tail = nullptr;
     list->size = 0;
 
     return list;
@@ -18,7 +22,7 @@ static DeerLinkedList *dlist_create()
 
 void dlist_distory(DeerLinkedList *list)
 {
-    DeerListCell *next = NULL;
+    DeerListCell *next = nullptr;
     DeerListCell *node = list->head;
 
     while (node) {
@@ -46,7 +50,7 @@ DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data)
     assert(cell);
 
     cell->data = data;
-    cell->next = NULL;
+    cell->next = nullptr;
 
     if (list->tail) {
         list->tail->next = cell;
@@ -63,16 +67,16 @@ DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data)
 DeerLinkedList *dlist_reverse_copy(const DeerLinkedList *list, size_t size)
 {
     if (!list || list->size == 0 || size <= 0) {
-        return NULL;
+        return nullptr;
     }
 
-    const DeerListCell *curr = NULL;
-    DeerListCell *prev = NULL, *copy = NULL;
+    const DeerListCell *curr = nullptr;
+    DeerListCell *prev = nullptr, *copy = nullptr;
     DeerLinkedList *reverse = malloc(sizeof(DeerLinkedList));
 
     curr = list->head;
 
-    for (; curr; copy = NULL) {
+    for (; curr; copy = nullptr) {
 
         copy = (DeerListCell *)malloc(sizeof(DeerListCell));
         assert(copy);
@@ -93,4 +97,25 @@ DeerLinkedList *dlist_reverse_copy(const DeerLinkedList *list, size_t size)
 
     return reverse;
 }
+
+DeerLinkedList *dlist_append_merge(DeerLinkedList *l1, const DeerLinkedList *l2, size_t size)
+{
+    void *data = nullptr;
+    const DeerListCell *cell = nullptr;
+
+    if (!l2) {
+        return l1;
+    }
+
+    for (cell = l2->head; cell; cell = cell->next) {
+        data = malloc(size);
+        assert(data);
+        memcpy(data, cell->data, size);
+
+        l1 = dlist_push_back(l1, data);
+    }
+
+    return l1;
+}
+
 

@@ -23,7 +23,7 @@ static void invalid_stage(LexicalStage stage)
 
 static void next_stage_start(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (isalpha(*lex->str)) {
         lex->stage = STAGE_IN_ID;
@@ -159,7 +159,7 @@ static void next_stage_in_id(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_number(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (isdigit(*lex->str)) {
         token_push_char(token, *lex->str++);
@@ -171,7 +171,7 @@ static void next_stage_in_number(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_divide(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (*lex->str == '*') {
         lex->stage = STAGE_IN_COMMENT;
@@ -185,7 +185,7 @@ static void next_stage_in_divide(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_comment(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (*lex->str == '*') {
         lex->stage = STAGE_END_COMMENT;
@@ -198,7 +198,7 @@ static void next_stage_in_comment(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_end_comment(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (*lex->str == '/') {
         lex->stage = STAGE_START;
@@ -214,7 +214,7 @@ static void next_stage_end_comment(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_less(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     lex->stage = STAGE_DONE;
 
@@ -228,7 +228,7 @@ static void next_stage_in_less(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_greater(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     lex->stage = STAGE_DONE;
 
@@ -242,7 +242,7 @@ static void next_stage_in_greater(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_assign(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     lex->stage = STAGE_DONE;
 
@@ -256,7 +256,7 @@ static void next_stage_in_assign(DeerLexical *lex, DeerToken *token)
 
 static void next_stage_in_not(DeerLexical *lex, DeerToken *token)
 {
-    assert(lex != NULL && token != NULL);
+    assert(lex && token);
 
     if (*lex->str == '=') {
         lex->stage = STAGE_DONE;
@@ -269,9 +269,9 @@ static void next_stage_in_not(DeerLexical *lex, DeerToken *token)
 
 static DeerToken *lexical_next(DeerLexical *lex)
 {
-    assert(lex != NULL);
+    assert(lex);
 
-    DeerToken *token = create_token(NULL, TOKEN_END);
+    DeerToken *token = create_token(nullptr, TOKEN_END);
 
     while (lex->stage != STAGE_DONE) {
         switch (lex->stage) {
@@ -328,7 +328,7 @@ int lexical_analysis(DeerCompilerHandle *handle)
         .stage = STAGE_START
     };
 
-    while ((token = lexical_next(&lex)) != NULL && 
+    while ((token = lexical_next(&lex)) != nullptr && 
             token->type != TOKEN_END) {
         token_list = dlist_push_back(token_list, token);
         lex.stage = STAGE_START;

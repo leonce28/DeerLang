@@ -2,10 +2,10 @@
 
 int load_code_segment(char *data, code_segment **cs_p)
 {
-    assert(data != NULL);
+    assert(data);
 
     int line = 0;
-    char *end = NULL;
+    char *end = nullptr;
 
     code_segment *cs = create_code_segment();
     for (end = data + strlen(data); data < end; ++line) {
@@ -183,7 +183,7 @@ static void exec_instruction(segment *seg, virtual_machine *vm)
 
 int vm_execute(const code_segment *cs)
 {
-    assert(cs != NULL);
+    assert(cs);
 
     virtual_machine *vm = create_virtual_machine();
 

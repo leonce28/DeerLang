@@ -49,16 +49,10 @@ typedef struct CodeMap {
 } CodeMap;
 
 // Function name => Function start IP
-typedef struct _func_jump {
-    char *name;
-    int jump_num;
-} func_jump;
-
-// unordered_map func_jump
-typedef struct _func_jump_map {
-    int f_idx;
-    func_jump **fj;
-} func_jump_map;
+typedef struct FuncJump {
+    char name[MAP_NAME_MAX];
+    int start;
+} FuncJump;
 
 // pair<int, int>
 typedef struct _segment {
@@ -93,10 +87,6 @@ typedef struct CodeGenerator {
     const DeerDeclList *tree;
     const DeerDeclList *table;
     DeerDeclList *node;
-    // code_map *c_map;
-    // code_list *cl;
-    // code_list *codes;
-    func_jump_map *jumps;
 } CodeGenerator;
 
 typedef struct DeerCompilerHandle {
@@ -106,6 +96,7 @@ typedef struct DeerCompilerHandle {
     const char *space;
     DeerLinkedList *tokens;
     DeerLinkedList *codes;
+    DeerLinkedList *jumps;
     DeerLinkedList *maps;
     DeerDeclList *ast;
     DeerLexical *lex;

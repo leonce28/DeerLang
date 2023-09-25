@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef nullptr
 #define nullptr                     NULL
+#endif
 
 #ifndef bool
 #define bool                       short

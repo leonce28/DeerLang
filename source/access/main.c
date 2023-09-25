@@ -49,7 +49,7 @@ static void generate_asm(DeerCompilerHandle *handle)
     if (generate_code(handle)) {
         invalid_call("generate code");
     }
-    // code_list_print(handle->codes);
+    code_list_print(handle->codes);
 
     if (file_write_content(handle->codes, handle->asm_file)) {
         invalid_call("output asm file");
@@ -73,9 +73,9 @@ static void execute_code(DeerCompilerHandle *handle)
 
 void compiler_init(const int argc, char **argv)
 {
-    int option;
+    assert(argv);
 
-    assert(argv != NULL);
+    int option;
 
     NEW(handle, DeerCompilerHandle);
     NEW(handle->lex, DeerLexical);
@@ -104,12 +104,6 @@ void compiler_init(const int argc, char **argv)
                 break;
         }
     }
-
-    // handle->generator->node = NULL;
-    // handle->generator->c_map = create_code_map();
-    // handle->generator->cl = create_code_list();
-    // handle->generator->codes = create_code_list();
-    // handle->generator->jumps = create_jump_map();
 }
 
 void compiler_run()

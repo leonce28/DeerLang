@@ -466,13 +466,13 @@ void generate_codes_access(DeerCompilerHandle *handle)
 
 int generate_code_map(DeerCompilerHandle *handle)
 {
-    // int idx;
     const DeerNode *node = nullptr;
 
     generate_codes_global(handle);
     generate_codes_access(handle);
 
     handle->maps = dlist_push_back(handle->maps, create_code_map(NAMESPACE_GLOBAL, handle->codes));
+    handle->codes = nullptr;
 
     // declared_list ::= declared { declared }
     foreach (DeerNode, node, handle->ast->decls) {
@@ -482,7 +482,6 @@ int generate_code_map(DeerCompilerHandle *handle)
             continue;
         }
 
-        handle->codes = nullptr;
         handle->space = ((DeerFuncDecl *)node)->fname;
 
         // func_declared ::= type id '(' params ')' '{' local_del stmt_list '}'
@@ -493,86 +492,90 @@ int generate_code_map(DeerCompilerHandle *handle)
         } 
 
         handle->maps = dlist_push_back(handle->maps, create_code_map(handle->space, handle->codes));
+        handle->codes = nullptr;
     }
 
     return CMM_SUCCESS;
 }
 
-// int _merge_code_map(CodeGenerator *generator)
-// {
-//     int idx, jump_num;
-//     char *func_name = NULL;
-//     map_list *maps = NULL;
-//     code_list *codes = NULL;
+int generate_jump_map(DeerCompilerHandle *handle)
+{
+    assert(handle && handle->maps);
 
-//     // global code
-//     maps = find_map_list(generator->c_map, NAMESPACE_GLOBAL);
-//     if (!maps || !maps->cl) {
-//         invalid_call("find_map_list global failed in merge_code_map.");
-//     }
-//     jump_num = maps->cl->c_idx;
-//     code_list_append(generator->codes, maps->cl);
+    int jump = 0;
+    CodeMap *map = nullptr;
 
-//     // other functions
-//     for (idx = 0; idx < generator->c_map->m_idx; ++idx) {
-//         codes = generator->c_map->maps[idx]->cl;
-//         func_name = generator->c_map->maps[idx]->name;
-//         if (strcmp(func_name, NAMESPACE_GLOBAL) == 0 || 
-//             strcmp(func_name, NAMESPACE_ACCESS) == 0) {
-//             continue;
-//         }
-//         code_list_append(generator->codes, codes);
-//         set_func_jump_map(generator->jumps, func_name, jump_num);
-//         jump_num += codes->c_idx;
+    // global map
+    map = find_code_map(handle->maps, NAMESPACE_GLOBAL);
 
-//     }
+    assert(map && map->codes);
 
-//     // the "main" function must be the last function
-//     maps = find_map_list(generator->c_map, NAMESPACE_ACCESS);
-//     if (!maps || !maps->cl) {
-//         invalid_call("find_map_list main failed in merge_code_map.");
-//     }
-//     code_list_append(generator->codes, maps->cl);
-//     set_func_jump_map(generator->jumps, NAMESPACE_ACCESS, jump_num);
+    jump = map->codes->size;
 
-//     return CMM_SUCCESS;
-// }
+    handle->codes = dlist_append_merge(handle->codes, map->codes, sizeof(Code));
 
-// int _translate_call(CodeGenerator *generator)
-// {
-//     int IP, offset;
+    // other functions
+    foreach (CodeMap, map, handle->maps) {
+        assert(map && map->codes);
+        if (strcmp(map->name, NAMESPACE_GLOBAL) == 0 || 
+            strcmp(map->name, NAMESPACE_ACCESS) == 0) {
+            continue;
+        }
 
-//     // A virtual "IP"
-//     for (IP = 0; IP < generator->codes->c_idx; ++IP) {
-//         if (generator->codes->c[IP]->ins == INS_CALL) {
-//             offset = get_func_jump_num(generator->jumps, generator->codes->c[IP]->offset) - IP;
-//             snprintf(generator->codes->c[IP]->offset, VAR_OFFSET_MAX, "%d", offset);
-//         }
-//     }
+        handle->codes = dlist_append_merge(handle->codes, map->codes, sizeof(Code));
+        handle->jumps = dlist_push_back(handle->jumps, create_func_jump(map->name, jump));
 
-//     return CMM_SUCCESS;
-// }
+        jump += map->codes->size;
+    }
+
+    // the "main" function must be the last function
+    map = find_code_map(handle->maps, NAMESPACE_ACCESS);
+    assert(map && map->codes);
+
+    handle->codes = dlist_append_merge(handle->codes, map->codes, sizeof(Code));
+    handle->jumps = dlist_push_back(handle->jumps, create_func_jump(map->name, jump));
+
+    return CMM_SUCCESS;
+}
+
+int generate_func_call(DeerCompilerHandle *handle)
+{
+    assert(handle);
+
+    int IP = 0;
+    Code *code = nullptr;
+    FuncJump *jump = nullptr;
+
+    // A virtual "IP"
+    foreach (Code, code, handle->codes) {
+        if (code->ins == INS_CALL) {
+            jump = find_func_jump(handle->jumps, code->offset);
+            assert(jump);
+
+            snprintf(code->offset, VAR_OFFSET_MAX, "%d", jump->start - IP);
+        }
+
+        ++IP;
+    }
+
+    return CMM_SUCCESS;
+}
 
 int generate_code(DeerCompilerHandle *handle)
 {
-    // handle->generator->tree = handle->ast;
-    // handle->generator->table = handle->table;
-
     if (generate_code_map(handle)) {
-        invalid_call("create code map");
+        invalid_call("generate code map");
     }
-    code_maps_print(handle->maps);
+    // code_maps_print(handle->maps);
 
-    // if (_merge_code_map(handle->generator)) {
-    //     invalid_call("merge code map");
-    // }
-    // // code_list_print(generator->codes);
-    // // func_jump_map_print(generator->jumps);
+    if (generate_jump_map(handle)) {
+        invalid_call("generate jump map");
+    }
+    // func_jump_print(handle->jumps);
 
-    // if (_translate_call(handle->generator)) {
-    //     invalid_call("translate call");
-    // }
+    if (generate_func_call(handle)) {
+        invalid_call("generate func call");
+    }
 
-    // handle->codes = handle->generator->codes;
     return CMM_SUCCESS;
 }

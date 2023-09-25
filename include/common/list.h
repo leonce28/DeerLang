@@ -27,4 +27,5 @@ typedef struct DeerLinkedList {
 
 extern DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data);
 extern DeerLinkedList *dlist_reverse_copy(const DeerLinkedList *list, size_t size);
+extern DeerLinkedList *dlist_append_merge(DeerLinkedList *l1, const DeerLinkedList *l2, size_t size);
 extern void dlist_distory(DeerLinkedList *list);

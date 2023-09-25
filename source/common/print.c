@@ -212,6 +212,30 @@ void code_maps_print(DeerLinkedList *maps)
     }
 }
 
+void code_list_print(DeerLinkedList *codes)
+{
+    assert(codes);
+    const Code *code = nullptr;
+
+    printf("CodeList: { \n");
+
+    foreach (Code, code, codes) {
+        printf("  %2d: %s\n", code->ins, code->offset);
+    }
+
+    printf("} \n\n");
+}
+
+void func_jump_print(DeerLinkedList *jumps)
+{
+    assert(jumps);
+    const FuncJump *jump = nullptr;
+
+    foreach (FuncJump, jump, jumps) {
+        printf("FuncJump: [%s, %d] \n", jump->name, jump->start);
+    }
+}
+
 void token_print(const DeerToken *token)
 {
     assert(token);

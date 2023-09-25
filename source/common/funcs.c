@@ -2,7 +2,7 @@
 
 void invalid_call(const char *state)
 {
-    assert(state != NULL);
+    assert(state);
     printf("%s failed\n", state);
     exit(0);
 }
@@ -30,7 +30,7 @@ DeerToken *create_token(const char *str, int type)
 {
     DeerToken *token = (DeerToken *)malloc(sizeof(DeerToken));
     if (!token) {
-        return NULL;
+        return nullptr;
     }
 
     memset(token, 0, sizeof(DeerToken));
@@ -38,7 +38,7 @@ DeerToken *create_token(const char *str, int type)
     token->token_len = 0;
     token->line_no = 0;
 
-    if (str != NULL) {
+    if (str != nullptr) {
         token->token_len = MIN(TOKEN_STR_MAX, strlen(str));
         strncpy(token->token_str, str, token->token_len);
     }
@@ -123,7 +123,7 @@ SymbolSpace *create_symbol_space(const char* space_name)
 
 // void init_space_symbol(symbol_space *space, const int size)
 // {
-//     assert(space != NULL);
+//     assert(space != nullptr);
 
 //     for (space->s_idx = 0; space->s_idx < size; ++space->s_idx) {
 //         space->s[space->s_idx] = create_symbol("", 0, 0);
@@ -132,7 +132,7 @@ SymbolSpace *create_symbol_space(const char* space_name)
 
 // symbol_space *get_global_space(const symbol_table *table)
 // {
-//     assert(table != NULL && (table->ss_idx > 0));
+//     assert(table != nullptr && (table->ss_idx > 0));
 //     return table->ss[0];
 // }
 
@@ -158,10 +158,10 @@ const SymbolSpace *find_symbol_space(const SymbolTable *table, const char *name)
 
 // symbol_space *get_symbol_space(symbol_table **table, const char *space_name)
 // {
-//     assert(table != NULL && (*table) != NULL && space_name != NULL);
+//     assert(table != nullptr && (*table) != nullptr && space_name != nullptr);
     
 //     symbol_space *space = find_symbol_space(*table, space_name);
-//     if (NULL != space) {
+//     if (nullptr != space) {
 //         return space;
 //     }
 
@@ -179,26 +179,13 @@ SymbolTable *create_symbol_table()
 
 // map_list *create_map_list(const char *name)
 // {
-//     assert(name != NULL);
+//     assert(name != nullptr);
 
 //     map_list *maps = (map_list *)malloc(sizeof(map_list));
 //     memset(maps, 0, sizeof(map_list));
 
 //     strncpy(maps->name, name, MIN(MAP_NAME_MAX, strlen(name)));
 //     return maps;
-// }
-
-// map_list *find_map_list(code_map *c_map, const char *space)
-// {
-//     int m_idx;
-
-//     for (m_idx = 0; m_idx < c_map->m_idx; ++m_idx) {
-//         if (strcmp(space, c_map->maps[m_idx]->name) == 0) {
-//             return c_map->maps[m_idx];
-//         }
-//     }
-
-//     return NULL;
 // }
 
 // code_list *create_code_list()
@@ -211,47 +198,6 @@ SymbolTable *create_symbol_table()
 
 //     return cl;
 // }
-
-func_jump *create_func_jump(char *func_name, int jump_num)
-{
-    func_jump *jump = (func_jump *)malloc(sizeof(func_jump));
-    memset(jump, 0, sizeof(func_jump));
-
-    jump->name = func_name;
-    jump->jump_num = jump_num;
-
-    return jump;
-}
-
-func_jump_map *create_jump_map()
-{
-    func_jump_map *jumps = (func_jump_map *)malloc(sizeof(func_jump_map));
-    memset(jumps, 0, sizeof(func_jump_map));
-
-    jumps->f_idx = 0;
-    jumps->fj = (func_jump **)malloc(MASP_CODE_MAX * sizeof(func_jump *));
-
-    return jumps;
-}
-
-void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num)
-{
-    // fixed: need consider func_name conflict.
-    jumps->fj[jumps->f_idx++] = create_func_jump(func_name, jump_num);
-}
-
-int get_func_jump_num(func_jump_map *jumps, char *name)
-{
-    int idx;
-    for (idx = 0; idx < jumps->f_idx; ++idx) {
-        if (strncmp(jumps->fj[idx]->name, name, 
-            MIN(strlen(jumps->fj[idx]->name), strlen(name))) == 0) {
-            return jumps->fj[idx]->jump_num;
-        }
-    }
-
-    return 0;
-}
 
 Code *create_code(Instruction ins, char *offset)
 {
@@ -267,55 +213,34 @@ Code *create_code(Instruction ins, char *offset)
     return code;
 }
 
-// int code_list_push(code_list *cl, instruction ins, char *offset)
-// {
-//     // undo clear offset
-//     assert(cl != NULL && offset != NULL);
-
-//     cl->c[cl->c_idx++] = create_code2(ins, offset);
-    
-//     return cl->c_idx - 1;
-// }
-
-// void code_list_set(code_list *cl, const int idx, char *offset)
-// {
-//     assert(cl != NULL && offset != NULL && cl->c_idx >= idx);
-
-//     strncpy(cl->c[idx]->offset, offset, VAR_OFFSET_MAX);
-// }
-
-// void code_list_push2(code_list *cl, code* c)
-// {
-//     assert(cl != NULL && c != NULL);
-
-//     cl->c[cl->c_idx++] = c;
-// }
-
-// void code_list_append(code_list *codes, code_list *extras)
-// {
-//     assert(codes != NULL && extras != NULL);
-//     int idx;
-
-//     for (idx = 0; idx < extras->c_idx; ++idx) {
-//         codes->c[codes->c_idx++] = extras->c[idx];
-//         // need free ?
-//     }
-// }
-
-// void code_list_print(code_list *cl)
-// {
-//     int idx;
-//     for (idx = 0; idx < cl->c_idx; ++idx) {
-//         printf("%d %s\n", cl->c[idx]->ins, cl->c[idx]->offset);
-//     }
-// }
-
-void func_jump_map_print(const func_jump_map *jumps)
+FuncJump *create_func_jump(char *name, int start)
 {
-    int idx;
-    for (idx = 0; idx < jumps->f_idx; ++idx) {
-        printf("%s %d\n", jumps->fj[idx]->name, jumps->fj[idx]->jump_num);
+    assert(name);
+
+    FuncJump *jump = (FuncJump *)malloc(sizeof(FuncJump));
+    memset(jump, 0, sizeof(FuncJump));
+
+    strncpy(jump->name, name, MAP_NAME_MAX);
+    jump->start = start;
+
+    return jump;
+}
+
+FuncJump *find_func_jump(DeerLinkedList *jumps, const char *name)
+{
+    if (!jumps || !name) {
+        return nullptr;
     }
+
+    FuncJump *jump = nullptr;
+
+    foreach (FuncJump, jump, jumps) {
+        if (strcmp(jump->name, name) == 0) {
+            return jump;
+        }
+    }
+
+    return nullptr;
 }
 
 CodeMap *create_code_map(const char *name, DeerLinkedList *codes)
@@ -329,6 +254,23 @@ CodeMap *create_code_map(const char *name, DeerLinkedList *codes)
 
     return map;
 } 
+
+CodeMap *find_code_map(DeerLinkedList *maps, const char *name)
+{
+    if (!maps || !name) {
+        return nullptr;
+    }
+
+    CodeMap *map = nullptr;
+
+    foreach (CodeMap, map, maps) {
+        if (strcmp(map->name, name) == 0) {
+            return map;
+        }
+    }
+
+    return nullptr;
+}
 
 // void set_code_map(code_map *c_map, const char *cur_space, const code_list *input_cl)
 // {
@@ -353,7 +295,7 @@ CodeMap *create_code_map(const char *name, DeerLinkedList *codes)
 //     for (idx = 0; idx < cl->c_idx; ++idx) {
 //         if (cl->c[idx]) {
 //             free(cl->c[idx]);
-//             cl->c[idx] = NULL;
+//             cl->c[idx] = nullptr;
 //         }
 //     }
 //     cl->c_idx = 0;
@@ -391,7 +333,7 @@ segment *create_segment2(Instruction ins, int offset)
 
 void code_segment_push(code_segment *cs, Instruction ins, int offset)
 {
-    assert(cs != NULL);
+    assert(cs != nullptr);
 
     if (cs->size >= cs->capacity) {
         return;
@@ -427,42 +369,42 @@ vm_stack *create_vm_stack()
 
 int vm_stack_pop(vm_stack *vm)
 {
-    assert(vm != NULL && vm->size >= 0);
+    assert(vm && vm->size >= 0);
 
     return vm->data[vm->size-- - 1];
 }
 
 int vm_stack_back(const vm_stack *vm)
 {
-    assert(vm != NULL && vm->size < vm->capacity);
+    assert(vm && vm->size < vm->capacity);
 
     return vm->data[vm->size - 1];
 }
 
 int vm_stack_size(const vm_stack *vm)
 {
-    assert(vm != NULL);
+    assert(vm);
 
     return vm->size;
 }
 
 int vm_stack_get(const vm_stack *vm, const int index)
 {
-    assert(vm != NULL && index < vm->size);
+    assert(vm && index < vm->size);
 
     return vm->data[index];
 }
 
 void vm_stack_push(vm_stack *vm, const int value)
 {
-    assert(vm != NULL && vm->size < vm->capacity);
+    assert(vm && vm->size < vm->capacity);
 
     vm->data[vm->size++] = value;
 }
 
 void vm_stack_set(vm_stack *vm, const int index, const int value)
 {
-    assert(vm != NULL && index < vm->size);
+    assert(vm && index < vm->size);
 
     vm->data[index] = value;
 }
@@ -472,8 +414,7 @@ int file_read_content(const char *file_path, char **str)
     FILE *fp;
     size_t file_length, count = 1;
 
-    fp = fopen(file_path, "r");
-    if (fp == NULL) {
+    if ((fp = fopen(file_path, "r")) == nullptr) {
         printf("fopen file failed, file path: %s.\n", file_path);
         return CMM_FAILED;
     }
@@ -483,7 +424,7 @@ int file_read_content(const char *file_path, char **str)
     fseek(fp, 0, SEEK_SET);
 
     *str = (char *)malloc(file_length);
-    if ((*str) == NULL) {
+    if ((*str) == nullptr) {
         printf("malloc code string failed.\n");
         return CMM_FAILED;
     }
@@ -502,9 +443,9 @@ int file_write_content(const DeerLinkedList *codes, const char *asm_file)
     // FILE *fp;
     // int idx, line_len, data_len;
     // char line[VAR_OFFSET_MAX * 2];
-    // char *data = NULL;
+    // char *data = nullptr;
 
-    // if (codes == NULL || asm_file == NULL) {
+    // if (codes == nullptr || asm_file == nullptr) {
     //     return CMM_FAILED;
     // }
 
@@ -516,7 +457,7 @@ int file_write_content(const DeerLinkedList *codes, const char *asm_file)
     // data_len = 0;
 
     // fp = fopen(asm_file, "w");
-    // if (fp == NULL) {
+    // if (fp == nullptr) {
     //     printf("fopen file failed, file path: %s.\n", asm_file);
     //     return CMM_FAILED;
     // }

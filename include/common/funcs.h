@@ -30,17 +30,8 @@ DeerToken *create_token(const char *str, int type);
 void token_push_char(DeerToken *t, char ch);
 
 ////////////////////////////////////////////////////////////////////////////////
-// syntax_tree_list
+// SymbolTable
 ////////////////////////////////////////////////////////////////////////////////
-// DeerAST *create_ast_node(DeerToken *t);
-// void syntax_tree_print(const DeerAST *ast);
-
-////////////////////////////////////////////////////////////////////////////////
-// symbol_table
-////////////////////////////////////////////////////////////////////////////////
-// symbol_space *get_global_space(const symbol_table *table);
-// symbol_space *get_symbol_space(symbol_table **table, const char *space_name);
-
 SymbolTable *create_symbol_table();
 
 SymbolSpace *create_symbol_space(const char *s);
@@ -53,42 +44,22 @@ const Symbol *find_symbol_global(const SymbolTable *table, const char *id);
 Code *create_code(Instruction ins, char *offset);
 
 ////////////////////////////////////////////////////////////////////////////////
-// code_list
-////////////////////////////////////////////////////////////////////////////////
-// code_list *create_code_list();
-// int code_list_push(code_list *cl, Instruction ins, char *str);
-// void code_list_push2(code_list *cl, code *c);
-// void code_list_append(code_list *codes, code_list *extras);
-// void code_list_print(code_list *cl);
-// void code_list_set(code_list *cl, const int idx, char *offset);
-// void code_list_clean(code_list *cl);
-
-////////////////////////////////////////////////////////////////////////////////
 // code_segment
 ////////////////////////////////////////////////////////////////////////////////
 code_segment *create_code_segment();
 void code_segment_push(code_segment *cs, Instruction ins, int offset);
 
 ////////////////////////////////////////////////////////////////////////////////
-// map_list
+// CodeMap
 ////////////////////////////////////////////////////////////////////////////////
-// map_list *create_map_list(const char *name);
-// map_list *find_map_list(code_map *c_map, const char *space);
-
-////////////////////////////////////////////////////////////////////////////////
-// code_map
-////////////////////////////////////////////////////////////////////////////////
-// void set_code_map(code_map *c_map, const char *cur_space, const code_list *cl);
 CodeMap *create_code_map(const char *name, DeerLinkedList *codes);
+CodeMap *find_code_map(DeerLinkedList *maps, const char *name);
 
 ////////////////////////////////////////////////////////////////////////////////
 // func_jump_map
 ////////////////////////////////////////////////////////////////////////////////
-func_jump_map *create_jump_map();
-int get_func_jump_num(func_jump_map *jumps, char *name);
-func_jump *create_func_jump(char *func_name, int jump_num);
-void set_func_jump_map(func_jump_map *jumps, char *func_name, int jump_num);
-void func_jump_map_print(const func_jump_map *jumps);
+FuncJump *create_func_jump(char *name, int start);
+FuncJump *find_func_jump(DeerLinkedList *jumps, const char *name);
 
 ////////////////////////////////////////////////////////////////////////////////
 // virtual machine

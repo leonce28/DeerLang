@@ -22,4 +22,7 @@ void token_list_print(DeerLinkedList *list);
 
 void code_maps_print(DeerLinkedList *maps);
 
+void code_list_print(DeerLinkedList *codes);
+
+void func_jump_print(DeerLinkedList *jumps);
 #endif // __DEER_COMMON_PRINT_HEADER__
