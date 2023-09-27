@@ -5,6 +5,7 @@
 
 #include "common/list.h"
 #include "common/tree.h"
+#include "common/vector.h"
 
 typedef struct DeerToken {
     TokenType type;
@@ -55,44 +56,21 @@ typedef struct FuncJump {
 } FuncJump;
 
 // pair<int, int>
-typedef struct _segment {
-    Instruction ins;
+typedef struct Segment {
+    Instruction ins; 
     int offset;
-} segment;
+} Segment;
 
-// vector<pair<int, int>>
-typedef struct _code_segment {
-    int size;
-    int capacity;
-    segment **data;
-} code_segment;
-
-// vector<int>
-typedef struct _vm_stack {
-    int size;
-    int capacity;
-    int data[CODE_LSIT_MAX];
-} vm_stack;
-
-typedef struct _virtual_machine {
+typedef struct VirtualMachine {
     int ip;
     int ax;
     int bp;
-    vm_stack *ss;
-} virtual_machine;
-
-typedef struct CodeGenerator {
-    char size[VAR_SIZE_MAX];
-    char *cur_space;
-    const DeerDeclList *tree;
-    const DeerDeclList *table;
-    DeerDeclList *node;
-} CodeGenerator;
+    DeerVector *ss;
+} VirtualMachine;
 
 typedef struct DeerCompilerHandle {
-    char cmm_file[FILE_PATH_MAX];
-    char asm_file[FILE_PATH_MAX];
-    char *file_content;
+    char input[FILE_PATH_MAX];
+    char *content;
     const char *space;
     DeerLinkedList *tokens;
     DeerLinkedList *codes;
@@ -101,9 +79,5 @@ typedef struct DeerCompilerHandle {
     DeerDeclList *ast;
     DeerLexical *lex;
     SymbolTable *table;
-
-    // symbol_table *table;
-    // code_list *codes;
-    code_segment *cs;
-    CodeGenerator *generator;
+    VirtualMachine *vm;
 } DeerCompilerHandle;

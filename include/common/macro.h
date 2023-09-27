@@ -28,6 +28,7 @@
 #define NAMESPACE_GLOBAL            "__GLOBAL__"
 #define NAMESPACE_ACCESS            "main"
 #define DEFAULT_ASM_PATH            "./a.out"
+#define DEFAULT_INPUT_DEER          "../test/case/case1.deer"
 #define MIN(a, b)                   (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)                   (((a) > (b)) ? (a) : (b))
 #define AST_NODE_BACK(node)         (node->sub_list[node->sub_idx])

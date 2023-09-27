@@ -25,12 +25,8 @@ extern char *optarg;
 ////////////////////////////////////////////////////////////////////////////////
 // function
 ////////////////////////////////////////////////////////////////////////////////
-static void generate_asm(DeerCompilerHandle *handle)
+static void compiler_code(DeerCompilerHandle *handle)
 {
-    if (file_read_content(handle->cmm_file, &handle->file_content)) {
-        invalid_call("file read content");
-    }
-
     if (lexical_analysis(handle)) {
         invalid_call("DeerLexical analysis");
     }
@@ -50,24 +46,20 @@ static void generate_asm(DeerCompilerHandle *handle)
         invalid_call("generate code");
     }
     code_list_print(handle->codes);
-
-    if (file_write_content(handle->codes, handle->asm_file)) {
-        invalid_call("output asm file");
-    }
 }
 
-static void execute_code(DeerCompilerHandle *handle)
+static void compiler_exec(DeerCompilerHandle *handle)
 {
-    if (file_read_content(handle->asm_file, &handle->file_content)) {
-        invalid_call("file read content");
-    }
+    assert(handle && handle->codes && handle->vm);
 
-    if (load_code_segment(handle->file_content, &handle->cs)) {
-        invalid_call("load code list");
-    }
+    int size = handle->codes->size;
+    VirtualMachine *vm = handle->vm;
+    Code **cs = (Code **)dlist_to_array(handle->codes, sizeof(Code));
 
-    if (vm_execute(handle->cs)) {
-        invalid_call("virtual machine execute");
+    vm->ss = dvector_create(sizeof(Segment));
+
+    for (vm->ip = 0; vm->ip < size; ++vm->ip) {
+        execute_code(cs[vm->ip], vm);
     }
 }
 
@@ -79,26 +71,21 @@ void compiler_init(const int argc, char **argv)
 
     NEW(handle, DeerCompilerHandle);
     NEW(handle->lex, DeerLexical);
-    NEW(handle->generator, CodeGenerator);
 
     while ((option = getopt(argc, (char **)argv, "ho:i:r:")) != EOF) {
         switch (option) {
-            case 'o':
-                strncpy(handle->asm_file, optarg, FILE_PATH_MAX);
-                break;
-            case 'i':
-                strncpy(handle->cmm_file, optarg, FILE_PATH_MAX);
-                break;
             case 'r':
-                strncpy(handle->asm_file, optarg, FILE_PATH_MAX);
+                strncpy(handle->input, optarg, FILE_PATH_MAX);
                 break;
             case 'h':
+            case 'o':
+            case 'i':
             default:
-                printf("usage: compiler [option]\n");
+                printf("usage: deer -[option]\n");
                 printf("option: \n");
-                printf("  -i <file> \tinput cmm file path, default a.cmm.\n");
-                printf("  -o <file> \toutput asm file path, default a.out.\n");
-                printf("  -r <file> \texecute asm file, default a.out.\n");
+                // printf("  -i <file> \tinput cmm file path, default a.deer.\n");
+                // printf("  -o <file> \toutput asm file path, default a.out.\n");
+                printf("  -r <file> \trun a deer file, default ../test/case/case1.deer.\n");
                 printf("  -h \t\tshow this help message and exit.\n");
                 exit(0);
                 break;
@@ -106,21 +93,46 @@ void compiler_init(const int argc, char **argv)
     }
 }
 
-void compiler_run()
+int compiler_read(DeerCompilerHandle *handle)
 {
-    if (!PATH_IS_EMPTY(handle->cmm_file)) {
-        generate_asm(handle);
-    }
+    assert(handle);
 
-    if (!PATH_IS_EMPTY(handle->asm_file)) {
-        execute_code(handle);
-    }
+    FILE *fp = nullptr;
+    size_t length = 0, count;
+
+    fp = fopen(handle->input, "r");
+    assert(fp);
+
+    fseek(fp, 0, SEEK_END);
+    length = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+
+    handle->content = (char *)malloc(length);
+    assert(handle->content);
+
+    count = fread(handle->content, length, 1, fp);
+    assert(count == 1);
+
+    fclose(fp);
+    return CMM_SUCCESS;
 }
 
 int main(int argc, char **argv)
 {
     compiler_init(argc, argv);
-    compiler_run();
+
+    if (strlen(handle->input) == 0) {
+        strcpy(handle->input, DEFAULT_INPUT_DEER);
+    }
+    assert(strlen(handle->input) > 0);
+
+    compiler_read(handle);
+    assert(handle->content);
+
+    compiler_code(handle);
+    assert(handle->codes);
+
+    compiler_exec(handle);
 
     printf("finished.\n");
     return 0;

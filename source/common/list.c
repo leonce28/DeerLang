@@ -34,6 +34,27 @@ void dlist_distory(DeerLinkedList *list)
     free(list);
 }
 
+void *dlist_to_array(const DeerLinkedList *list, size_t size)
+{
+    assert(list && size > 0);
+
+    void *data, *buffer = nullptr, *array = nullptr;
+
+    if (list->size == 0) {
+        return nullptr;
+    }
+
+    array = malloc(list->size * size);
+    buffer = array;
+    assert(buffer);
+
+    foreach (void, data, list) {
+        memcpy(buffer, data, size);
+        buffer += size;
+    }
+
+    return array;
+}
 
 DeerLinkedList *dlist_push_back(DeerLinkedList *list, void *data)
 {

@@ -323,8 +323,8 @@ int lexical_analysis(DeerCompilerHandle *handle)
     DeerLinkedList *token_list = nullptr;
 
     DeerLexical lex = {
-        .str = handle->file_content,
-        .line_no = 1,       // begin at line 1.
+        .str = handle->content,
+        .line_no = 1,
         .stage = STAGE_START
     };
 

@@ -44,12 +44,6 @@ const Symbol *find_symbol_global(const SymbolTable *table, const char *id);
 Code *create_code(Instruction ins, char *offset);
 
 ////////////////////////////////////////////////////////////////////////////////
-// code_segment
-////////////////////////////////////////////////////////////////////////////////
-code_segment *create_code_segment();
-void code_segment_push(code_segment *cs, Instruction ins, int offset);
-
-////////////////////////////////////////////////////////////////////////////////
 // CodeMap
 ////////////////////////////////////////////////////////////////////////////////
 CodeMap *create_code_map(const char *name, DeerLinkedList *codes);
@@ -60,17 +54,5 @@ CodeMap *find_code_map(DeerLinkedList *maps, const char *name);
 ////////////////////////////////////////////////////////////////////////////////
 FuncJump *create_func_jump(char *name, int start);
 FuncJump *find_func_jump(DeerLinkedList *jumps, const char *name);
-
-////////////////////////////////////////////////////////////////////////////////
-// virtual machine
-////////////////////////////////////////////////////////////////////////////////
-virtual_machine *create_virtual_machine();
-vm_stack *create_vm_stack();
-int vm_stack_pop(vm_stack *vm);
-int vm_stack_back(const vm_stack *vm);
-int vm_stack_size(const vm_stack *vm);
-int vm_stack_get(const vm_stack *vm, const int index);
-void vm_stack_push(vm_stack *vm, const int value);
-void vm_stack_set(vm_stack *vm, const int index, const int value);
 
 #endif      // __DEER_COMMON_FUNCS_HEADER__
