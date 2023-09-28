@@ -52,6 +52,7 @@ Mkfile.old
 dkms.conf
 
 .vscode
+.vscode/
 .vs_code
 .vs_code/
 
