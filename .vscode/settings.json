@@ -46,7 +46,15 @@
         "locale": "c",
         "thread": "c",
         "typeinfo": "c",
-        "assert.h": "c"
+        "assert.h": "c",
+        "ios": "c",
+        "syntax.h": "c",
+        "cstring": "c",
+        "iosfwd": "cpp",
+        "__config": "c",
+        "atomic": "c",
+        "vector.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.default.compilerPath": "/usr/local/bin/g++-12"
 }

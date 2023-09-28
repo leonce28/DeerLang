@@ -120,10 +120,10 @@ void gcode_var(const DeerVar *var, DeerCompilerHandle *handle)
 
     snprintf(offset, VAR_SIZE_MAX, "%d", symbol->idx);
     handle->codes = dlist_push_back(handle->codes, create_code(INS_LDC, offset));
-    handle->codes = dlist_push_back(handle->codes, create_code(is_global ? INS_LD : INS_ALD, nullptr));
+    handle->codes = dlist_push_back(handle->codes, create_code(is_global ? INS_ALD : INS_LD, nullptr));
 
     // Array
-    if (symbol->idx) {
+    if (var->index) {
         handle->codes = dlist_push_back(handle->codes, create_code(INS_PUSH, offset));
         
         gcode_simple_expr(var->index, handle);
@@ -566,12 +566,12 @@ int generate_code(DeerCompilerHandle *handle)
     if (generate_code_map(handle)) {
         invalid_call("generate code map");
     }
-    // code_maps_print(handle->maps);
+    code_maps_print(handle->maps);
 
     if (generate_jump_map(handle)) {
         invalid_call("generate jump map");
     }
-    // func_jump_print(handle->jumps);
+    func_jump_print(handle->jumps);
 
     if (generate_func_call(handle)) {
         invalid_call("generate func call");
